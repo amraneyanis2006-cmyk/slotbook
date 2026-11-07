@@ -39,5 +39,5 @@ describe('seed (F-00)', () => {
 
     const statuses = (await prisma.booking.findMany({ select: { status: true } })).map((b) => b.status);
     expect(statuses).toEqual(expect.arrayContaining(['BOOKED', 'BOOKED', 'CANCELLED', 'COMPLETED', 'NO_SHOW']));
-  });
+  }, 30_000); // two full seeds incl. bcrypt cost 12 take ~4-5 s, above Vitest's 5 s default
 });
