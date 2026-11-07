@@ -1,10 +1,14 @@
 import { randomUUID } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import express, { type ErrorRequestHandler } from 'express';
 import session from 'express-session';
 import pgSession from 'connect-pg-simple';
 import { sessionOptions } from './config/session.js';
 import { AppError } from './errors.js';
+import { authRouter } from './routes/auth.js';
 import { healthRouter } from './routes/health.js';
+import { servicesRouter } from './routes/services.js';
+import { testOnlyRouter } from './routes/testOnly.js';
 
 // One session store (one pg pool) per process, shared by every app instance.
 const PgStore = pgSession(session);
@@ -22,25 +26,36 @@ export function createApp() {
   }));
 
   app.use('/api/health', healthRouter);
+  app.use('/api/auth', authRouter);
+  app.use('/api/services', servicesRouter);
+  if (process.env.NODE_ENV === 'test') app.use('/api/__test__', testOnlyRouter);
 
   app.use('/api', (_req, _res, next) => next(new AppError(404, 'NOT_FOUND', 'Not found.')));
 
-  const onError: ErrorRequestHandler = (err, _req, res, _next) => {
-    if (err instanceof AppError) {
-      res.status(err.status).json({ error: err.code, message: err.message, ...(err.fields && { fields: err.fields }) });
-      return;
-    }
-    if (err?.type === 'entity.parse.failed' || err?.type === 'entity.too.large') {
-      res.status(400).json({ error: 'BAD_REQUEST', message: 'The request body is not valid JSON or is too large.' });
-      return;
-    }
-    const requestId = randomUUID();
-    console.error(`[${requestId}]`, err);
-    res.set('X-Request-Id', requestId)
-      .status(500)
-      .json({ error: 'INTERNAL_ERROR', message: 'Something went wrong. Please try again.' });
-  };
-  app.use(onError);
+  app.use(errorHandler);
 
   return app;
 }
+
+/** Maps AppError to its status/code/message/fields; everything else is 500 INTERNAL_ERROR (details only in the log). */
+export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  if (err instanceof AppError) {
+    res.status(err.status).json({ error: err.code, message: err.message, ...(err.fields && { fields: err.fields }) });
+    return;
+  }
+  if (err?.type === 'entity.parse.failed' || err?.type === 'entity.too.large') {
+    res.status(400).json({ error: 'BAD_REQUEST', message: 'The request body is not valid JSON or is too large.' });
+    return;
+  }
+  // Race on the partial unique index booking_one_active_per_slot (BR-01, NFR-04); first used by F-04.
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002'
+      && /slotId|booking_one_active_per_slot/.test(String(err.meta?.target))) {
+    res.status(409).json({ error: 'SLOT_ALREADY_BOOKED', message: 'This slot has already been booked.' });
+    return;
+  }
+  const requestId = randomUUID();
+  console.error(`[${requestId}]`, err);
+  res.set('X-Request-Id', requestId)
+    .status(500)
+    .json({ error: 'INTERNAL_ERROR', message: 'Something went wrong. Please try again.' });
+};
