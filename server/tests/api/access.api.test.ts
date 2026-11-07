@@ -1,8 +1,10 @@
 import express from 'express';
+import { PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { createApp, errorHandler } from '../../src/app.js';
 import { requireRole } from '../../src/middleware/requireRole.js';
+import { addDays, bangkokDate } from '../../src/utils/time.js';
 import { loginAs } from '../helpers.js';
 
 type Role = 'CUSTOMER' | 'STAFF';
@@ -12,6 +14,8 @@ export const PROTECTED_ROUTES: { method: 'get' | 'post'; path: string; roles: Ro
   { method: 'post', path: '/api/auth/logout', roles: ['CUSTOMER', 'STAFF'] },
   { method: 'get', path: '/api/auth/me', roles: ['CUSTOMER', 'STAFF'] },
   { method: 'get', path: '/api/services', roles: ['CUSTOMER', 'STAFF'] },
+  { method: 'post', path: '/api/staff/slots', roles: ['STAFF'] },
+  { method: 'get', path: '/api/staff/slots', roles: ['STAFF'] },
 ];
 
 const ACCOUNT: Record<Role, string> = { CUSTOMER: 'cust.ploy@slotbook.test', STAFF: 'staff.anan@slotbook.test' };
@@ -53,9 +57,30 @@ describe('API-07 role restriction (F-02, NFR-02)', () => {
   }
 });
 
-// API-08 server-side identity (F-02, BR-08): the describe block arrives with its first test —
-// slot part (staffId in the body is ignored) in Issue #4, booking part (customerId) in Issue #5.
-// (Vitest fails an empty describe, and skipped tests are not allowed.)
+describe('API-08 server-side identity (F-02, BR-08)', () => {
+  const prisma = new PrismaClient();
+  afterAll(() => prisma.$disconnect());
+
+  it('API-08: staffId in the body is ignored; the slot belongs to the session staff member', async () => {
+    const mali = await prisma.user.findUniqueOrThrow({ where: { email: 'staff.mali@slotbook.test' } });
+    const anan = await prisma.user.findUniqueOrThrow({ where: { email: 'staff.anan@slotbook.test' } });
+    const service = await prisma.service.findUniqueOrThrow({ where: { name: 'Academic advising' } });
+    const agent = request.agent(app);
+    await loginAs(agent, 'staff.anan@slotbook.test');
+
+    // today+12 at 09:00 Bangkok: outside the seed range and the E2E dates.
+    const date = addDays(bangkokDate(new Date()), 12);
+    const res = await agent.post('/api/staff/slots')
+      .query({ staffId: mali.id })
+      .send({ serviceId: service.id, date, startTime: '09:00', staffId: mali.id, role: 'STAFF', userId: mali.id });
+
+    expect(res.status).toBe(201);
+    const row = await prisma.slot.findUniqueOrThrow({ where: { id: res.body.slot.id } });
+    expect(row.staffId).toBe(anan.id);
+  });
+
+  // Booking part (customerId in the body is ignored) is added by Issue #5.
+});
 
 describe('API-09 safe errors (F-02, NFR-06)', () => {
   for (const path of ['/api/__test__/throw', '/api/__test__/prisma-error']) {
