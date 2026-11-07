@@ -8,6 +8,7 @@ import { AppError } from './errors.js';
 import { authRouter } from './routes/auth.js';
 import { healthRouter } from './routes/health.js';
 import { servicesRouter } from './routes/services.js';
+import { staffSlotsRouter } from './routes/staffSlots.js';
 import { testOnlyRouter } from './routes/testOnly.js';
 
 // One session store (one pg pool) per process, shared by every app instance.
@@ -28,6 +29,7 @@ export function createApp() {
   app.use('/api/health', healthRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/services', servicesRouter);
+  app.use('/api/staff/slots', staffSlotsRouter);
   if (process.env.NODE_ENV === 'test') app.use('/api/__test__', testOnlyRouter);
 
   app.use('/api', (_req, _res, next) => next(new AppError(404, 'NOT_FOUND', 'Not found.')));
