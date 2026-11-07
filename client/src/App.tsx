@@ -3,8 +3,9 @@ import { AuthProvider } from './auth/AuthProvider';
 import { RequireRole } from './auth/RequireRole';
 import AppShell from './components/AppShell';
 import LoginPage from './pages/LoginPage';
+import MySlotsPage from './pages/MySlotsPage';
 
-// ponytail: placeholders until the feature Issues replace them (#4 My Slots, #5 Book, #6 My Bookings, #7 Schedule).
+// ponytail: placeholders until the feature Issues replace them (#5 Book, #6 My Bookings, #7 Schedule).
 const ComingSoon = ({ title, issue }: { title: string; issue: number }) => (
   <><h1>{title}</h1><p className="muted">Coming in Issue #{issue}.</p></>
 );
@@ -19,7 +20,7 @@ export default function App() {
           <Route path="/bookings" element={<ComingSoon title="My Bookings" issue={6} />} />
         </Route>
         <Route element={<RequireRole role="STAFF"><AppShell /></RequireRole>}>
-          <Route path="/staff/slots" element={<ComingSoon title="My Slots" issue={4} />} />
+          <Route path="/staff/slots" element={<MySlotsPage />} />
           <Route path="/staff/schedule" element={<ComingSoon title="Schedule" issue={7} />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />

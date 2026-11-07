@@ -49,3 +49,39 @@ form button[type="submit"] { margin-top: var(--space-4); }
 
 .login { max-width: 420px; }
 .page-loading { padding: var(--space-4); }
+
+/* Sections, panels, hints */
+h2 { font-size: 1.15rem; margin: var(--space-4) 0 var(--space-2); }
+.panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0 var(--space-3) var(--space-3); }
+.hint { color: var(--color-muted); margin: var(--space-1) 0 0; }
+.slot-form { display: grid; gap: 0 var(--space-3); grid-template-columns: 1fr; align-items: start; }
+.slot-form button { justify-self: start; }
+@media (min-width: 768px) { .slot-form { grid-template-columns: repeat(3, 1fr); } .slot-form button { grid-column: 1 / -1; } }
+
+/* Callout retry, empty state, skeleton, toast */
+.callout { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; margin: var(--space-2) 0; }
+.empty { padding: var(--space-4) var(--space-3); text-align: center; color: var(--color-muted); border: 1px dashed var(--color-border); border-radius: var(--radius); }
+.skeleton-row { height: 44px; margin-bottom: var(--space-2); border-radius: var(--radius); background: linear-gradient(90deg, #eceff3, #f6f7f9, #eceff3); }
+.toast { position: fixed; right: var(--space-3); bottom: var(--space-3); left: var(--space-3); max-width: 360px; margin-left: auto; padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--color-success); color: #fff; }
+
+/* Status badges */
+.status-open { background: #e6f4ea; color: var(--color-success); }
+.status-booked { background: #e8effd; color: var(--color-accent); }
+.status-closed, .status-cancelled, .status-no_show { background: #f1f2f4; color: var(--color-muted); }
+.status-completed { background: #e6f4ea; color: var(--color-success); }
+
+/* Table on ≥ 768 px, stacked cards below */
+.responsive-table { width: 100%; border-collapse: collapse; background: var(--color-surface); }
+.responsive-table th, .responsive-table td { text-align: left; padding: var(--space-2); border-bottom: 1px solid var(--color-border); }
+@media (max-width: 767px) {
+  .responsive-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display: block; }
+  .responsive-table tr { border: 1px solid var(--color-border); border-radius: var(--radius); margin-bottom: var(--space-2); padding: var(--space-2); }
+  .responsive-table td { border: 0; padding: 2px 0; }
+  .responsive-table td::before { content: attr(data-label) ": "; font-weight: 600; }
+}
+
+/* Dialog */
+.dialog-backdrop { position: fixed; inset: 0; display: grid; place-items: center; padding: var(--space-3); background: rgba(15, 23, 42, 0.45); }
+.dialog { width: 100%; max-width: 480px; background: var(--color-surface); border-radius: var(--radius); padding: var(--space-3) var(--space-4) var(--space-4); }
+label.required::after { content: " *"; color: var(--color-danger); }
