@@ -1,0 +1,24 @@
+/* SlotBook design tokens: calm neutrals, one accent colour, visible focus. */
+:root {
+  --color-bg: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-text: #1f2933;
+  --color-muted: #52606d;
+  --color-border: #d9dee4;
+  --color-accent: #1f6feb;
+  --color-accent-contrast: #ffffff;
+  --color-danger: #b42318;
+  --color-success: #067647;
+  --radius: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --focus-ring: 3px solid #f5a524;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); color: var(--color-text); background: var(--color-bg); line-height: 1.5; }
+:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+main { max-width: 960px; margin: 0 auto; padding: var(--space-4) var(--space-3); }
