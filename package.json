@@ -1,0 +1,22 @@
+{
+  "name": "slotbook",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20.12" },
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently -n api,web \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix server && npm run build --prefix client",
+    "test": "npm test --prefix server && npm test --prefix client",
+    "test:e2e": "playwright test",
+    "db:migrate": "npm run prisma --prefix server -- migrate deploy",
+    "db:migrate:dev": "npm run prisma --prefix server -- migrate dev",
+    "db:seed": "npm run prisma --prefix server -- db seed",
+    "db:reset": "npm run prisma --prefix server -- migrate reset"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "^20.19.0",
+    "concurrently": "^9.2.1"
+  }
+}
