@@ -1,0 +1,20 @@
+# Branch:  feature/2-platform-foundation
+# Commit:  6902e9d (test(F-00): give DB-02 a 30 s timeout (two seeds with bcrypt cost 12 exceed the 5 s default))
+# Date:    2026-11-07 15:53:18 +0700
+# Command: (cd server && npx vitest run)
+
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server
+
+ ✓ tests/db/seed.db.test.ts (1 test) 11215ms
+   ✓ seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password  11178ms
+ ✓ tests/api/health.api.test.ts (1 test) 859ms
+   ✓ GET /api/health (F-00) > API-25: returns 200 { status: "ok", database: "up" } without a session  854ms
+
+ Test Files  2 passed (2)
+      Tests  2 passed (2)
+   Start at  15:53:24
+   Duration  38.02s (transform 835ms, setup 0ms, collect 3.32s, tests 12.07s, environment 2ms, prepare 1.76s)
+
+
+# Exit code: 0
