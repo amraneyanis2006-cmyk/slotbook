@@ -53,9 +53,9 @@ describe('API-07 role restriction (F-02, NFR-02)', () => {
   }
 });
 
-describe('API-08 server-side identity (F-02, BR-08)', () => {
-  // Slot part (staffId in the body is ignored) is added by Issue #4; booking part (customerId) by Issue #5.
-});
+// API-08 server-side identity (F-02, BR-08): the describe block arrives with its first test —
+// slot part (staffId in the body is ignored) in Issue #4, booking part (customerId) in Issue #5.
+// (Vitest fails an empty describe, and skipped tests are not allowed.)
 
 describe('API-09 safe errors (F-02, NFR-06)', () => {
   for (const path of ['/api/__test__/throw', '/api/__test__/prisma-error']) {

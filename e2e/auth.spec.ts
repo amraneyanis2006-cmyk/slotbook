@@ -15,7 +15,10 @@ test('E2E-01: each role lands on its home with name and role in the header; logo
   const header = page.getByRole('banner');
   await expect(header).toContainText('Ploy Chai');
   await expect(header).toContainText('Customer');
+  await header.getByRole('link', { name: 'My Bookings' }).click();
+  await expect(page).toHaveURL(/\/bookings$/);
 
+  // Back after logout returns to an authenticated page: it must redirect to /login without showing data.
   await header.getByRole('button', { name: 'Log out' }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goBack();
