@@ -5,7 +5,7 @@
 | Linked requirements | FR-05, FR-06, BR-06, BR-07, BR-08, BR-09, NFR-08, NFR-09, NFR-10 |
 | Issue / owner / reviewer | Issue #4 — Yanis Amrane (author), Simeon Audouit (reviewer) |
 | Depends on | F-02 |
-| Contract version | 1.0 (2026-11-07) |
+| Contract version | 1.1 (2026-11-07) |
 
 ## 1. Behavior and Workflow
 
@@ -29,13 +29,18 @@
 | BR-07 | No own slot with status ≠ CANCELLED where `existing.startAt < new.endAt AND new.startAt < existing.endAt` (touching edges allowed) | 409 `SLOT_OVERLAP` "You already have a slot at this time." |
 | BR-08 | `staffId` taken from the session; any `staffId` in the body is ignored | — |
 
+**Check order (binding).** BR-06a (service) and BR-06b (format) first, then BR-06c (future), then BR-06d
+(opening hours). Errors are returned per field; for `startTime` only the first failing check is reported
+(a start that is both past and outside opening hours gets the "future" message).
+
 ## 3. API
 
 | Method and path | Request | Success | Errors |
 | :--- | :--- | :--- | :--- |
-| `GET /api/services` | — | `200 { "services": [ { "id": 1, "name": "Academic advising", "durationMin": 30 } ] }` (active, by name) | 401 |
 | `POST /api/staff/slots` | `{ "serviceId": 1, "date": "2026-11-10", "startTime": "09:30" }` | `201 { "slot": SlotStaffView }` | 401, 403, 422 `VALIDATION_ERROR`, 409 `SLOT_OVERLAP` |
 | `GET /api/staff/slots` | — | `200 { "slots": [SlotStaffView…] }` own slots with `startAt ≥ now`, status ≠ CANCELLED, ordered `startAt`, `id` | 401, 403 |
+
+The service select uses `GET /api/services`, delivered by F-02 (Issue #3).
 
 ```json
 SlotStaffView = {

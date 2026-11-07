@@ -5,7 +5,7 @@
 | Linked requirements | FR-07, FR-08, BR-01, BR-02, BR-03, BR-04, BR-08, BR-10, NFR-04, NFR-08, NFR-09 |
 | Issue / owner / reviewer | Issue #5 — Simeon Audouit (author), Yanis Amrane (reviewer) |
 | Depends on | F-03 (slots), F-02 (access) |
-| Contract version | 1.0 (2026-11-07) |
+| Contract version | 1.1 (2026-11-07) |
 
 ## 1. Behavior and Workflow (the Sprint 1 domain transaction)
 
@@ -17,12 +17,12 @@
 4. The server runs `bookingService.book(customerId = req.user.id, slotId, note)` in **one transaction**:
    1. `SELECT … FROM "Slot" WHERE id = $1 FOR UPDATE` → missing → 404 `NOT_FOUND`.
    2. `SELECT … FROM "User" WHERE id = customerId FOR UPDATE` (serialises the customer's own bookings).
-   3. BR-02: `status = OPEN` and `startAt ≥ now + 60 min`, else 409 `SLOT_NOT_BOOKABLE`.
+   3. BR-02: `status = OPEN`, `startAt ≥ now + 60 min` and the slot's service is active, else 409 `SLOT_NOT_BOOKABLE`.
    4. BR-01: no `BOOKED` booking on the slot, else 409 `SLOT_ALREADY_BOOKED`.
    5. BR-03: customer's `BOOKED` bookings with slot `startAt > now` < 3, else 409 `BOOKING_LIMIT_REACHED`.
    6. BR-04: no own `BOOKED` booking overlapping the slot time, else 409 `BOOKING_OVERLAP`.
-   7. Insert the booking with `reference = 'BK-' || year || '-' || lpad(nextval('booking_ref_seq'), 6, '0')`
-      (BR-10), `status = BOOKED`.
+   7. Take `seq = nextval('booking_ref_seq')` and insert the booking with `reference = formatReference(year, seq)`
+      (BR-10; `year` = Asia/Bangkok year of creation; `formatReference` throws above 999999), `status = BOOKED`.
    8. If the insert hits the partial unique index (Prisma `P2002`) → 409 `SLOT_ALREADY_BOOKED` (NFR-04).
 5. Success: the dialog shows "Booked! Reference BK-2026-000015" with a link to **My Bookings**; the slot
    disappears from the available list (list refreshed). A rule rejection shows the server message in the
@@ -32,10 +32,12 @@ The rule order above is binding (it decides which error wins when several rules 
 
 ## 2. Pure Rule Functions (`server/src/rules/bookingRules.ts`, unit-tested with a fixed clock)
 
-- `isBookable(slot, now)` → `null | 'SLOT_NOT_BOOKABLE'` (BR-02, lead time constant `BOOKING_LEAD_MIN = 60`).
+- `isBookable(slot, now)` → `null | 'SLOT_NOT_BOOKABLE'` (BR-02, lead time constant `BOOKING_LEAD_MIN = 60`; also
+  `SLOT_NOT_BOOKABLE` when the slot's service is inactive).
 - `checkCustomerLimits(activeFutureBookings, slot)` → `null | 'BOOKING_LIMIT_REACHED' | 'BOOKING_OVERLAP'`
   (BR-03 with `MAX_ACTIVE_BOOKINGS = 3`, BR-04 overlap = `a.start < b.end && b.start < a.end`).
-- `formatReference(year, seq)` → `BK-2026-000015` (BR-10).
+- `formatReference(year, seq)` → `BK-2026-000015` (BR-10); throws when `seq` > 999999. The service calls it with
+  `seq = nextval('booking_ref_seq')` and the Asia/Bangkok year of creation (no reference is built in SQL).
 
 ## 3. API
 
@@ -76,7 +78,7 @@ No schema change: uses `Booking`, the partial unique index and `booking_ref_seq`
 | AC-17 | A Customer books a bookable slot → 201 with a `BOOKED` booking whose reference matches `^BK-\d{4}-\d{6}$`, owned by the session customer; the slot no longer appears in the available list. |
 | AC-18 | Booking a slot that already has an active booking → 409 `SLOT_ALREADY_BOOKED`; the database still holds exactly one `BOOKED` booking for that slot. |
 | AC-19 | Two Customers booking the same slot **in parallel** → exactly one 201 and one 409; one active booking stored (NFR-04). The database itself rejects a second `BOOKED` row for the slot. |
-| AC-20 | A slot starting in less than 60 minutes, or CLOSED/CANCELLED → 409 `SLOT_NOT_BOOKABLE`; an unknown slot → 404; nothing stored. |
+| AC-20 | A slot starting in less than 60 minutes, CLOSED/CANCELLED, or whose service is inactive → 409 `SLOT_NOT_BOOKABLE`; an unknown slot → 404; nothing stored. |
 | AC-21 | A Customer with 3 active future bookings → 409 `BOOKING_LIMIT_REACHED`; a booking overlapping one of the customer's own active bookings → 409 `BOOKING_OVERLAP`; nothing stored. |
 | AC-22 | UI: the Customer filters by date/service, books a slot through the dialog and sees the reference; a rule rejection shows the server message and the list is refreshed. |
 

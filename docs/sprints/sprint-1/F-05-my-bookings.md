@@ -5,7 +5,7 @@
 | Linked requirements | FR-09, FR-10, BR-05, BR-08, BR-09, BR-11, BR-13, NFR-08, NFR-09 |
 | Issue / owner / reviewer | Issue #6 — Simeon Audouit (author), Yanis Amrane (reviewer) |
 | Depends on | F-04 |
-| Contract version | 1.0 (2026-11-07) |
+| Contract version | 1.1 (2026-11-07) |
 
 ## 1. Behavior and Workflow
 

@@ -12,12 +12,12 @@ now and receive AC/tests in their own sprint contracts.
 | FR-02 Log out | F-01 Authentication | Sprint 1; AC-04 / API-05, E2E-01 |
 | FR-03 Current user | F-01 Authentication | Sprint 1; AC-03 / API-04 |
 | FR-04 Role landing and navigation | F-01 + F-02 | Sprint 1; AC-05, AC-10 / UI-01, E2E-01, E2E-02 |
-| FR-05 Staff creates slot | F-03 Staff slots | Sprint 1; AC-11, AC-12, AC-15 / API-10, API-11, UI-02, E2E-03 |
+| FR-05 Staff creates slot | F-03 Staff slots | Sprint 1; AC-11, AC-12, AC-15 / UNIT-01, API-10, API-11, UI-02, E2E-03 |
 | FR-06 Staff lists own slots | F-03 Staff slots | Sprint 1; AC-14 / API-13 |
 | FR-07 Customer lists bookable slots | F-04 Book a slot | Sprint 1; AC-16 / API-14 |
 | FR-08 Customer books | F-04 Book a slot | Sprint 1; AC-17, AC-22 / UNIT-03, API-15, UI-03, E2E-04 |
 | FR-09 My bookings | F-05 My bookings | Sprint 1; AC-23, AC-27 / API-20, UI-04, E2E-05 |
-| FR-10 Cancel own booking | F-05 My bookings | Sprint 1; AC-25, AC-26 / API-22, API-23, E2E-05 |
+| FR-10 Cancel own booking | F-05 My bookings | Sprint 1; AC-25, AC-26 / UNIT-05, API-22, API-23, E2E-05 |
 | FR-11 Staff daily schedule | F-06 Schedule | Sprint 1; AC-28, AC-29 / API-24, E2E-06 |
 | FR-12 Edit / close slot | F-07 Slot maintenance | Sprint 2; contract in Sprint 2 |
 | FR-13 Cancel booked slot with reason | F-07 Slot maintenance | Sprint 2 |
@@ -60,14 +60,14 @@ now and receive AC/tests in their own sprint contracts.
 | Requirement | Feature / responsibility | Sprint and verification |
 | :--- | :--- | :--- |
 | NFR-01 Authentication required | F-02 `requireAuth` (every later endpoint joins the access table) | Established Sprint 1; AC-06 / API-06; re-verified every sprint |
-| NFR-02 Backend authorization | F-02 `requireRole` + service ownership | Established Sprint 1; AC-07, AC-24 / API-07, API-21, API-24 |
+| NFR-02 Backend authorization | F-02 `requireRole` + service ownership | Established Sprint 1; AC-07, AC-24, AC-28 / API-07, API-21, API-24 |
 | NFR-03 Password hashing | F-01 + F-00 seed | Sprint 1; AC-01, AC-32 / API-01, DB-02 |
 | NFR-04 Concurrency safety | F-04 + F-00 partial index | Sprint 1; AC-19 / API-17, DB-01 |
-| NFR-05 Session lifetime / logout | F-01 | Sprint 1; AC-01, AC-04 / API-01, API-05 |
+| NFR-05 Session lifetime / logout | F-01 | Sprint 1; AC-01, AC-04 / API-01, API-05, UNIT-06 |
 | NFR-06 Safe errors | F-02 error handler | Sprint 1; AC-09 / API-09 |
 | NFR-07 Reproducible setup, idempotent seed | F-00 | Sprint 1; AC-32 / DB-02 + MAN-02 clean-clone check at release |
 | NFR-08 Responsive UI | F-03..F-06 screens; F-18 later | Sprint 1 for S1 screens; AC-30 / E2E-07; re-verified each sprint |
-| NFR-09 Accessibility baseline | F-01..F-06 screens; F-18 full audit | Sprint 1 baseline; AC-30 / E2E-08, UI-01..UI-04; Sprint 3 audit |
+| NFR-09 Accessibility baseline | F-01..F-06 screens; F-18 full audit | Sprint 1 baseline; AC-30, AC-05, AC-15, AC-22, AC-27 / E2E-08, UI-01, UI-02, UI-03, UI-04; Sprint 3 audit |
 | NFR-10 Time correctness (UTC / Bangkok) | F-00 time helpers, F-03..F-05 rules | Sprint 1; AC-12, AC-20, AC-26 / UNIT-01, UNIT-04, UNIT-05 |
 | NFR-11 Performance p95 < 500 ms | F-12 Search (+ F-18 re-check) | Sprint 2; performance smoke test in Sprint 2 contract |
 | NFR-12 Deployability (env, stateless, Docker, GCP) | Designed in SDS §7 (Sprint 1); F-13 pipeline | Design Sprint 1 (health check AC-31 / API-25 for later container probes); verified Sprint 2 (Lab 5) |
@@ -78,5 +78,6 @@ now and receive AC/tests in their own sprint contracts.
 - **Uncovered requirements:** none. Every FR (22), BR (19) and NFR (13) above has a feature or system
   responsibility and an establishing sprint.
 - **Sprint 1 requirements without automated test:** none. Manual checks MAN-01/MAN-02 only supplement.
-- **Approved changes:** none yet (baseline 1.0). Changes will be added here with date, reason, approver
-  and the PR that made them.
+- **Approved changes:** 1.1 (2026-11-07) — 18 fixes from the pre-PR contract review, decided by Yanis Amrane,
+  reviewed in PR #9 (Issue #1); list in `sprints/sprint-1/README.md` version history and the PR body. Later
+  changes are added here with date, reason, approver and the PR that made them.

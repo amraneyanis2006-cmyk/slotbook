@@ -6,7 +6,7 @@
 | Team | EN-036 "Y Que Fue" — Yanis Amrane (69540460041), Simeon Audouit (65540460046) |
 | Theme | 1 — Appointment and Scheduling System (Sprint 1 roles: Customer / Staff) |
 | Product | **SlotBook** |
-| Version | 1.0 (Deliverable 1 baseline) — history in §8 |
+| Version | 1.1 (Deliverable 1 baseline + pre-review fixes) — history in §8 |
 
 ---
 
@@ -96,7 +96,7 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | ID | Rule | Error when violated | Sprint |
 | :--- | :--- | :--- | :--- |
 | BR-01 | **Exclusive slot.** A slot holds at most one active booking (status `BOOKED`). Enforced by the application **and** by a partial unique index in the database. | 409 `SLOT_ALREADY_BOOKED` | 1 |
-| BR-02 | **Bookable only in the future.** A slot can be booked only if it is `OPEN` and its start time is at least 60 minutes after the current time. | 409 `SLOT_NOT_BOOKABLE` | 1 |
+| BR-02 | **Bookable only in the future.** A slot can be booked only if it is `OPEN`, its service is active and its start time is at least 60 minutes after the current time. | 409 `SLOT_NOT_BOOKABLE` | 1 |
 | BR-03 | **Booking limit.** A Customer may hold at most 3 active future bookings at the same time. | 409 `BOOKING_LIMIT_REACHED` | 1 |
 | BR-04 | **No overlapping bookings.** A Customer cannot hold two active bookings whose time ranges overlap. | 409 `BOOKING_OVERLAP` | 1 |
 | BR-05 | **Cancellation window.** A Customer can cancel an active booking only until 2 hours before its start. | 409 `CANCELLATION_WINDOW_CLOSED` | 1 |
@@ -104,7 +104,7 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | BR-07 | **No overlapping slots per staff.** Two non-cancelled slots of the same Staff member cannot overlap in time. | 409 `SLOT_OVERLAP` | 1 |
 | BR-08 | **Server-side identity.** The acting user, their role, the slot owner (`staffId`) and the booking owner (`customerId`) are always taken from the server session, never from the request body or query. | ignored / 403 | 1 |
 | BR-09 | **Ownership.** A Customer can read and change only their own bookings; a Staff member can read and change only their own slots. Records of others are answered with 404 (no data, no existence leak). | 404 `NOT_FOUND` | 1 |
-| BR-10 | **Booking reference.** Every booking gets a unique, immutable reference `BK-YYYY-NNNNNN` (year of creation, 6-digit sequence). | — | 1 |
+| BR-10 | **Booking reference.** Every booking gets a unique, immutable reference `BK-YYYY-NNNNNN` (Asia/Bangkok year of creation, 6-digit sequence). | — | 1 |
 | BR-11 | **Freed slot.** When a booking is cancelled, its slot becomes bookable again (subject to BR-02). | — | 1 |
 | BR-12 | **Inactive accounts.** An inactive account cannot log in; an existing session of a deactivated user is rejected. | 401 `INVALID_CREDENTIALS` / 401 `UNAUTHENTICATED` | 1 |
 | BR-13 | **Only active bookings change.** A booking that is `CANCELLED`, `COMPLETED` or `NO_SHOW` cannot be cancelled or rescheduled. | 409 `BOOKING_NOT_ACTIVE` | 1 |
@@ -123,7 +123,7 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | NFR-02 | **Authorization at the backend.** Every protected operation checks role and ownership on the server; 100 % of the role/permission matrix cells are covered by an API test. | API tests (403/404 cases) | Sprint 1 |
 | NFR-03 | **Password safety.** Passwords are stored only as bcrypt hashes (cost ≥ 10); no response, log or seed file contains a plaintext password or hash. | Unit test + API response assertions + repository grep in release check | Sprint 1 |
 | NFR-04 | **Concurrency safety.** When two booking requests for the same slot run in parallel, exactly one succeeds and the other gets 409; the database never contains two active bookings for one slot. | API test with `Promise.all` + DB constraint check | Sprint 1 |
-| NFR-05 | **Session lifetime.** Session cookie is `HttpOnly`, `SameSite=Lax`, `Secure` in production, expires after 8 h of inactivity; logout destroys the server-side session immediately. | API tests (cookie flags, reuse after logout) | Sprint 1 |
+| NFR-05 | **Session lifetime.** Session cookie is `HttpOnly`, `SameSite=Lax`, `Secure` in production, expires after 8 h of inactivity; logout destroys the server-side session immediately. | API tests (cookie flags, reuse after logout) + unit test of the session options (UNIT-06) | Sprint 1 |
 | NFR-06 | **Safe errors.** Error responses use `{ error, message, fields? }`; no stack trace, SQL or internal path in any response, including 500. | API tests on forced errors | Sprint 1 |
 | NFR-07 | **Reproducible setup.** From a clean clone, the documented commands (install, migrate, seed, test, run) complete without manual edits; the seed is idempotent (running it twice gives the same data). | Clean-clone check recorded at release | Sprint 1 |
 | NFR-08 | **Responsive UI.** Every Sprint screen works at 320, 768 and 1280 px width without horizontal page scroll or clipped controls. | Playwright viewport tests + screenshots | Sprint 1 (S1 screens), each later sprint for its screens |
@@ -145,7 +145,7 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | D-06 | Decision | Other users' records return **404**, wrong role returns **403**. | 404 avoids revealing that a booking exists (BR-09); 403 is the correct answer for a role that never has access. |
 | A-01 | Assumption | Opening hours are 08:00–18:00 Asia/Bangkok, every day; holidays are not modelled in Sprint 1. | Holiday closures can be done by closing slots (FR-12, Sprint 2). |
 | A-02 | Assumption | Accounts are created by the seed (2 Staff, 3 Customers, 1 inactive Customer). | Self-registration excluded by the deliverable (§2 of the brief). |
-| A-03 | Assumption | Services are seeded in Sprint 1 (3 services) and managed by Staff from Sprint 2 (FR-17). | Keeps Sprint 1 small. |
+| A-03 | Assumption | Services are seeded in Sprint 1 (3 active services + 1 inactive (Thesis consultation, 60 min)) and managed by Staff from Sprint 2 (FR-17). | Keeps Sprint 1 small. |
 | Q-01 | Question | Can a Staff member book on behalf of a Customer (phone call)? | Resolved: **not in scope** for Sprint 1–3; Customers book themselves. Revisit after Sprint 3 if time allows. |
 | Q-02 | Question | Should a Customer see the Staff member's name before booking? | Resolved: **yes**, slot list shows staff name and service. |
 | Q-03 | Question | What happens to bookings when a Customer account is deactivated (FR-22)? | Resolved: future active bookings are cancelled with reason "account deactivated" (Sprint 3, BR-17 history). |
@@ -154,4 +154,5 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 
 | Version | Date | Author | Change |
 | :--- | :--- | :--- | :--- |
-| 1.0 | 2026-11-07 | Yanis Amrane (with AI assistance, see ai-use) | Baseline SRS for Deliverable 1, reviewed by Simeon Audouit in the contract PR. |
+| 1.0 | 2026-11-07 | Yanis Amrane (AI use is declared in docs/ai-use.md, added in Issue #8) | Baseline SRS for Deliverable 1, reviewed by Simeon Audouit in the contract PR. |
+| 1.1 | 2026-11-07 | Yanis Amrane | Pre-PR review fixes (BR-02 active service, BR-10 Bangkok year, A-03 services, NFR-05 verification); see PR #9. |

@@ -5,7 +5,7 @@
 | Linked requirements | BR-08, BR-09, NFR-01, NFR-02, NFR-06 |
 | Issue / owner / reviewer | Issue #3 (with F-01) — Yanis Amrane (author), Simeon Audouit (reviewer) |
 | Depends on | F-01 |
-| Contract version | 1.0 (2026-11-07) |
+| Contract version | 1.1 (2026-11-07) |
 
 ## 1. Behavior
 
@@ -33,7 +33,16 @@
 | `GET /api/slots/available`, `POST /api/bookings`, `GET /api/bookings/mine`, `GET /api/bookings/:reference`, `POST /api/bookings/:reference/cancel` | 401 | ✔ (own) | 403 |
 
 `server/tests/api/access.api.test.ts` holds this matrix as a table (`PROTECTED_ROUTES`). **Every PR that
-adds an endpoint adds its row to the table** (Issues #4–#7).
+adds an endpoint adds its row to the table** (Issues #4–#7). Issue #3 creates the table with
+`POST /api/auth/logout`, `GET /api/auth/me` and `GET /api/services`. API-07 role-restricted rows are added in
+Issue #4 (staff endpoints) and Issue #5 (customer endpoints); API-08: slot part in Issue #4, booking part in
+Issue #5.
+
+### 2.1 API delivered by F-02
+
+| Method and path | Request | Success | Errors |
+| :--- | :--- | :--- | :--- |
+| `GET /api/services` | — | `200 { "services": [ { "id": 1, "name": "Academic advising", "durationMin": 30 } ] }` (active services, ordered by name) | 401 |
 
 ## 3. UI
 

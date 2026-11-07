@@ -35,3 +35,4 @@ a sentence in the PR body.
 | Version | Date | File(s) | Author | Change and reason |
 | :--- | :--- | :--- | :--- | :--- |
 | 1.0 | 2026-11-07 | all | Yanis Amrane | Initial Sprint 1 contracts, STS and DoD, recorded before any implementation (Issue #1). |
+| 1.1 | 2026-11-07 | all | Yanis Amrane | Fixes from the pre-PR contract review (18 points, see PR #9) |

@@ -1,6 +1,6 @@
 # SlotBook — System-Level Software Design Specification (SDS)
 
-Version 1.0 (2026-11-07). Applies to the whole product; Sprint 1 feature contracts in
+Version 1.1 (2026-11-07). Applies to the whole product; Sprint 1 feature contracts in
 `docs/sprints/sprint-1/` give the detailed endpoints and screens.
 
 ---
@@ -44,7 +44,7 @@ The UI repeats some checks only to give early feedback.
 
 ```text
 slotbook/
-  server/            Express API — src/{app.ts, index.ts, routes/, middleware/, services/, rules/, utils/}
+  server/            Express API — src/{app.ts, index.ts, config/, routes/, middleware/, services/, rules/, utils/}
     prisma/          schema.prisma, migrations/, seed.ts
     tests/           unit/, api/, db/  (Vitest)
   client/            React SPA — src/{pages/, components/, api/, auth/, styles/}, tests/ (Vitest)
@@ -108,11 +108,13 @@ returns ISO-8601 UTC strings; the UI formats them in Asia/Bangkok (NFR-10).
   unique index, check constraints, the `booking_ref_seq` sequence and the `session` table.
 - Commands (root `package.json`): `npm run db:migrate` (`prisma migrate deploy`), `npm run db:migrate:dev`,
   `npm run db:seed`, `npm run db:reset` (dev only).
-- **Seed (`server/prisma/seed.ts`) is idempotent** (upsert by natural keys): 3 services (Academic
-  advising 30 min, Document request 15 min, Career counselling 45 min); 2 Staff, 3 Customers (one with
-  no booking) and 1 inactive Customer, all with synthetic `@slotbook.test` e-mails and the local
-  password from `SEED_PASSWORD`; slots for today + 7 days relative to the seed date (open, booked,
-  closed, one starting within the next hour); bookings in every Sprint 1 status. The seed refuses to
+- **Seed (`server/prisma/seed.ts`) is idempotent** (upsert by natural keys; two runs in a row give the
+  same counts): 3 active services (Academic advising 30 min, Document request 15 min, Career counselling
+  45 min) + 1 inactive (Thesis consultation, 60 min); 2 Staff, 3 Customers (one with no booking) and
+  1 inactive Customer, all with synthetic `@slotbook.test` e-mails and the local password from
+  `SEED_PASSWORD`; slots at fixed local times on today−2 .. today+7 relative to the seed date (open,
+  booked, closed, past), keyed by (`staffId`, `startAt`); bookings in every Sprint 1 status, keyed by
+  (`slotId`, `customerId`). The seed refuses to
   run when `NODE_ENV=production`.
 
 ## 3. UI Conventions
@@ -155,6 +157,8 @@ any page redirects to `/login`; a page of the other role redirects to the user's
 - **Success:** `200` (read/update), `201` (create), `204` (logout). Body is the resource or
   `{ <collection>: [...] }`.
 - **Errors:** always `{ "error": "<CODE>", "message": "<human text>", "fields"?: { "<field>": "<text>" } }`.
+- **Only exception:** `GET /api/health` answers `200 { "status": "ok", "database": "up" }` or
+  `503 { "status": "degraded", "database": "down" }` (probe format, F-00 §3).
 
 | Status | Codes |
 | :--- | :--- |
@@ -162,8 +166,9 @@ any page redirects to `/login`; a page of the other role redirects to the user's
 | 401 | `UNAUTHENTICATED`, `INVALID_CREDENTIALS` |
 | 403 | `FORBIDDEN` (authenticated but wrong role) |
 | 404 | `NOT_FOUND` (missing **or not owned** — BR-09) |
-| 409 | `SLOT_ALREADY_BOOKED`, `SLOT_NOT_BOOKABLE`, `BOOKING_LIMIT_REACHED`, `BOOKING_OVERLAP`, `SLOT_OVERLAP`, `CANCELLATION_WINDOW_CLOSED`, `BOOKING_NOT_ACTIVE` |
+| 409 | `SLOT_ALREADY_BOOKED`, `SLOT_NOT_BOOKABLE`, `BOOKING_LIMIT_REACHED`, `BOOKING_OVERLAP`, `SLOT_OVERLAP`, `CANCELLATION_WINDOW_CLOSED`, `BOOKING_NOT_ACTIVE`; `SLOT_HAS_BOOKING` (Sprint 2), `OUTCOME_TOO_EARLY` (Sprint 2), `BOOKING_SUSPENDED` (Sprint 3) |
 | 422 | `VALIDATION_ERROR` with `fields` |
+| 503 | `GET /api/health` only: `{ "status": "degraded", "database": "down" }` (the exception above) |
 | 500 | `INTERNAL_ERROR` — generic message, error logged server-side with a request id, no stack/SQL in the body (NFR-06) |
 
 ### 4.1 Endpoint Overview (Sprint 1)
@@ -210,12 +215,14 @@ is never the protection.**
   hash column is excluded from every Prisma `select` used by the API.
 - **Login:** `POST /api/auth/login` validates `{ email, password }`, looks up the active user by
   lower-cased e-mail and compares with `bcrypt.compare` (a dummy hash comparison is run when the user
-  does not exist, to keep timing similar). Any failure → 401 `INVALID_CREDENTIALS` with the same message
+  does not exist, to keep timing similar). Malformed input → 422 `VALIDATION_ERROR`; any credential failure
+  (unknown e-mail, wrong password, inactive) → 401 `INVALID_CREDENTIALS` with the same message
   ("Email or password is incorrect."). Success → `req.session.regenerate()` (prevents session fixation),
   stores `{ userId }` only, returns the user.
 - **Session:** `express-session` with `connect-pg-simple` (table `session`); cookie `sid`, `HttpOnly`,
   `SameSite=Lax`, `Secure` when `NODE_ENV=production`, `maxAge` 8 h, `rolling: true` (inactivity
-  expiry). Secret from `SESSION_SECRET`.
+  expiry). Secret from `SESSION_SECRET`. The options come from the pure function `sessionOptions(env)` in
+  `server/src/config/session.ts` (unit-tested, UNIT-06).
 - **Current user:** `requireAuth` loads the user by `session.userId` on every request; a missing or
   inactive user destroys the session and answers 401 `UNAUTHENTICATED` (BR-12). Role comes from the
   database row, not from the session or the client.
@@ -249,3 +256,4 @@ is never the protection.**
 | Version | Date | Author | Change |
 | :--- | :--- | :--- | :--- |
 | 1.0 | 2026-11-07 | Yanis Amrane | Baseline SDS for Deliverable 1, reviewed by Simeon Audouit. |
+| 1.1 | 2026-11-07 | Yanis Amrane | Pre-PR review fixes (seed, health exception, S2/S3 codes, login 422, session options); see PR #9. |

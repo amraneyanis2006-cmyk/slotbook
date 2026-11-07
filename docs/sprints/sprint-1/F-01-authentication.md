@@ -5,7 +5,7 @@
 | Linked requirements | FR-01, FR-02, FR-03, FR-04, BR-12, NFR-03, NFR-05 |
 | Issue / owner / reviewer | Issue #3 (with F-02) — Yanis Amrane (author), Simeon Audouit (reviewer) |
 | Depends on | F-00 |
-| Contract version | 1.0 (2026-11-07) |
+| Contract version | 1.1 (2026-11-07) |
 
 ## 1. Behavior and Workflow
 
@@ -25,6 +25,8 @@
 - Validation: `email` required, valid e-mail format, ≤ 254 chars; `password` required, 1–128 chars.
   Invalid shape → 422 `VALIDATION_ERROR` with `fields`.
 - No account lock-out in Sprint 1 (documented limitation).
+- Session cookie options (`HttpOnly`, `SameSite=Lax`, `Secure` in production, `maxAge` 8 h, `rolling`) come from the
+  pure function `sessionOptions(env)` in `server/src/config/session.ts` (UNIT-06).
 
 ## 3. API
 
@@ -53,7 +55,7 @@ No schema change (uses `User` and `session` from F-00).
 
 | AC | Criterion |
 | :--- | :--- |
-| AC-01 | Valid credentials of an active user → 200 with `{ user: { id, name, email, role } }` and an `HttpOnly`, `SameSite=Lax` session cookie; the body contains no `passwordHash`. |
+| AC-01 | Valid credentials of an active user → 200 with `{ user: { id, name, email, role } }` and an `HttpOnly`, `SameSite=Lax` session cookie (`Secure` in production, 8 h rolling expiry); the body contains no `passwordHash`. |
 | AC-02 | Wrong password, unknown e-mail and inactive account each → 401 `INVALID_CREDENTIALS` with the **same** message; no cookie that authenticates is issued. |
 | AC-03 | `GET /api/auth/me` with a valid session → 200 with the current user; without a session → 401 `UNAUTHENTICATED`. |
 | AC-04 | After `POST /api/auth/logout` (204), the old cookie gets 401 on `/api/auth/me` and on a protected endpoint. |

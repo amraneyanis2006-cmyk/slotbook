@@ -5,7 +5,7 @@
 | Linked requirements | NFR-07 (reproducible setup), NFR-10 (UTC storage), NFR-12 (deployable design), NFR-06 (safe errors — handler skeleton) |
 | Issue / owner / reviewer | Issue #2 — Yanis Amrane (author), Simeon Audouit (reviewer) |
 | Depends on | Contract PR (Issue #1) |
-| Contract version | 1.0 (2026-11-07) |
+| Contract version | 1.1 (2026-11-07) |
 
 ## 1. Behavior and Workflow
 
@@ -34,13 +34,15 @@ CREATE INDEX "IDX_session_expire" ON "session" ("expire");
 
 | Data | Content |
 | :--- | :--- |
-| Services | Academic advising (30), Document request (15), Career counselling (45) — all active; plus "Thesis consultation" (60) **inactive** (for BR-06 tests). |
+| Services | 3 active services + 1 inactive: Academic advising (30), Document request (15), Career counselling (45) — active; Thesis consultation (60) — **inactive** (for BR-06 tests). |
 | Staff | `staff.anan@slotbook.test` (Anan Wong), `staff.mali@slotbook.test` (Mali Srisuk). |
 | Customers | `cust.ploy@slotbook.test` (Ploy Chai), `cust.ken@slotbook.test` (Ken Tan), `cust.nina@slotbook.test` (Nina Park, **no bookings**), `cust.old@slotbook.test` (inactive). |
-| Slots | For today..today+7 (Asia/Bangkok, relative to seed time), for both staff: open slots, booked slots, one CLOSED slot, one slot starting < 60 min after seed time (if inside opening hours). Seed slots are keyed by (`staffId`, `startAt`) for idempotency. |
-| Bookings | Ploy: 1 BOOKED future, 1 CANCELLED; Ken: 1 BOOKED future, 1 COMPLETED past, 1 NO_SHOW past. References `BK-<year>-NNNNNN` from the sequence. |
+| Slots | For both staff, on Asia/Bangkok dates today−2..today+7 relative to the seed date, at **fixed local times** (09:00, 09:30, 10:00, 13:00, 14:00, …): open slots, booked slots, one CLOSED slot; past slots on today−1 and today−2 for Ken's COMPLETED and NO_SHOW bookings (inserted directly: BR-06 does not apply to seed data). Keyed by (`staffId`, `startAt`). |
+| Bookings | Ploy: 1 BOOKED future, 1 CANCELLED; Ken: 1 BOOKED future, 1 COMPLETED past (today−1), 1 NO_SHOW past (today−2). References from `formatReference` with `booking_ref_seq`. Keyed by (`slotId`, `customerId`). |
 
 All accounts use the password in `SEED_PASSWORD` (synthetic local value documented in the README).
+**Idempotent** means: running the seed twice in a row gives the same counts of users, services, slots and
+bookings (DB-02). Tests that need a slot starting within the next hour create it themselves.
 
 ## 3. API
 
@@ -64,8 +66,9 @@ No domain screen.
   (`prisma migrate reset --force --skip-generate` on `DATABASE_URL_TEST`, then seed) once per run;
   helpers `loginAs(agent, email)` and `freezeClock(iso)`.
 - Client: Vitest + jsdom + Testing Library.
-- E2E: Playwright (`baseURL http://localhost:5173`), `e2e/global-setup.ts` re-seeds the test database;
-  viewports 1280, 768, 320.
+- E2E: Playwright (`baseURL http://localhost:5173`), `e2e/global-setup.ts` re-seeds the test database and
+  creates the E2E-04/05/06 slot (Mali, today+10 at 15:00); viewports 1280, 768, 320.
+- E2E data never collides with the seed: the seed covers today−2..today+7, E2E-03 uses Mali on today+9 at 14:00.
 
 ## 6. Acceptance Criteria
 
