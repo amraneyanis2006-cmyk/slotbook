@@ -1,11 +1,29 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './auth/AuthProvider';
+import { RequireRole } from './auth/RequireRole';
+import AppShell from './components/AppShell';
+import LoginPage from './pages/LoginPage';
+
+// ponytail: placeholders until the feature Issues replace them (#4 My Slots, #5 Book, #6 My Bookings, #7 Schedule).
+const ComingSoon = ({ title, issue }: { title: string; issue: number }) => (
+  <><h1>{title}</h1><p className="muted">Coming in Issue #{issue}.</p></>
+);
 
 export default function App() {
   return (
-    <Routes>
-      {/* ponytail: placeholder until F-01 (Issue #3) adds the login form and role routes. */}
-      <Route path="/login" element={<main><h1>SlotBook</h1><p>Log in arrives with Issue #3.</p></main>} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<RequireRole role="CUSTOMER"><AppShell /></RequireRole>}>
+          <Route path="/book" element={<ComingSoon title="Book a Slot" issue={5} />} />
+          <Route path="/bookings" element={<ComingSoon title="My Bookings" issue={6} />} />
+        </Route>
+        <Route element={<RequireRole role="STAFF"><AppShell /></RequireRole>}>
+          <Route path="/staff/slots" element={<ComingSoon title="My Slots" issue={4} />} />
+          <Route path="/staff/schedule" element={<ComingSoon title="Schedule" issue={7} />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }
