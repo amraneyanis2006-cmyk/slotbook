@@ -38,7 +38,8 @@ All accounts use the password set in `SEED_PASSWORD` in your `.env` (the example
 | Customer (inactive) | `cust.old@slotbook.test` | Old Account (cannot log in) |
 
 The seed also creates 4 services (one inactive), slots at fixed times from 2 days ago to 7 days ahead
-(Asia/Bangkok) and bookings in every status.
+(Asia/Bangkok) and bookings in every status. Dates are relative to the day you seed: on a later day, run
+`npm run db:reset` for a clean data set instead of seeding on top of the old one.
 
 ## Tests
 

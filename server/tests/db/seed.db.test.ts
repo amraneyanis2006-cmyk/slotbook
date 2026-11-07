@@ -37,7 +37,14 @@ describe('seed (F-00)', () => {
       expect(Object.values(user)).not.toContain(process.env.SEED_PASSWORD);
     }
 
-    const statuses = (await prisma.booking.findMany({ select: { status: true } })).map((b) => b.status);
-    expect(statuses).toEqual(expect.arrayContaining(['BOOKED', 'BOOKED', 'CANCELLED', 'COMPLETED', 'NO_SHOW']));
+    const bookings = await prisma.booking.findMany({ select: { reference: true, status: true, customer: { select: { email: true } } } });
+    expect(bookings.map((b) => `${b.customer.email} ${b.status}`)).toEqual(expect.arrayContaining([
+      'cust.ploy@slotbook.test BOOKED',
+      'cust.ploy@slotbook.test CANCELLED',
+      'cust.ken@slotbook.test BOOKED',
+      'cust.ken@slotbook.test COMPLETED',
+      'cust.ken@slotbook.test NO_SHOW',
+    ]));
+    for (const b of bookings) expect(b.reference).toMatch(/^BK-\d{4}-\d{6}$/);
   }, 30_000); // two full seeds incl. bcrypt cost 12 take ~4-5 s, above Vitest's 5 s default
 });

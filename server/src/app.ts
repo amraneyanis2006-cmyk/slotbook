@@ -6,15 +6,19 @@ import { sessionOptions } from './config/session.js';
 import { AppError } from './errors.js';
 import { healthRouter } from './routes/health.js';
 
+// One session store (one pg pool) per process, shared by every app instance.
+const PgStore = pgSession(session);
+let store: InstanceType<typeof PgStore> | undefined;
+
 export function createApp() {
   const app = express();
-  const PgStore = pgSession(session);
+  store ??= new PgStore({ conString: process.env.DATABASE_URL, createTableIfMissing: false });
 
   app.disable('x-powered-by');
   app.use(express.json({ limit: '100kb' }));
   app.use(session({
     ...sessionOptions(process.env.NODE_ENV),
-    store: new PgStore({ conString: process.env.DATABASE_URL, createTableIfMissing: false }),
+    store,
   }));
 
   app.use('/api/health', healthRouter);
@@ -26,8 +30,8 @@ export function createApp() {
       res.status(err.status).json({ error: err.code, message: err.message, ...(err.fields && { fields: err.fields }) });
       return;
     }
-    if (err?.type === 'entity.parse.failed') {
-      res.status(400).json({ error: 'BAD_REQUEST', message: 'The request body is not valid JSON.' });
+    if (err?.type === 'entity.parse.failed' || err?.type === 'entity.too.large') {
+      res.status(400).json({ error: 'BAD_REQUEST', message: 'The request body is not valid JSON or is too large.' });
       return;
     }
     const requestId = randomUUID();

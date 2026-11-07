@@ -63,7 +63,7 @@ CREATE TABLE "Booking" (
 CREATE TABLE "session" (
     "sid" VARCHAR NOT NULL,
     "sess" JSONB NOT NULL,
-    "expire" TIMESTAMP(6) NOT NULL,
+    "expire" TIMESTAMPTZ(6) NOT NULL,
 
     CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
 );
