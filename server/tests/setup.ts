@@ -10,7 +10,8 @@ const serverDir = fileURLToPath(new URL('..', import.meta.url));
 export async function resetTestDb({ e2eSlot = false } = {}): Promise<void> {
   const url = process.env.DATABASE_URL_TEST;
   // Safety: never reset anything but a database whose name ends in _test and differs from DATABASE_URL.
-  if (!url || !new URL(url).pathname.endsWith('_test') || url === process.env.DATABASE_URL) {
+  const dbName = (() => { try { return new URL(url ?? '').pathname; } catch { return ''; } })();
+  if (!url || !dbName.endsWith('_test') || url === process.env.DATABASE_URL) {
     throw new Error('DATABASE_URL_TEST must name a separate *_test database.');
   }
   execSync('npx prisma migrate reset --force --skip-generate --skip-seed', {
