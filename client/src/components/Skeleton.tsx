@@ -2,7 +2,7 @@
 // `rows` sets how many blocks to draw; never leave the page blank while loading.
 export function Skeleton({ rows = 3, label = 'Loading' }: { rows?: number; label?: string }) {
   return (
-    <div className="skeleton" aria-busy="true" aria-label={label}>
+    <div className="skeleton" role="status" aria-busy="true" aria-label={label}>
       {Array.from({ length: rows }, (_, i) => <div key={i} className="skeleton-row" />)}
     </div>
   );

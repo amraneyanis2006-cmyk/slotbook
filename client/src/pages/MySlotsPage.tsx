@@ -18,13 +18,14 @@ const START_TIMES = Array.from({ length: 40 }, (_, i) => addMinutes('08:00', i *
 
 export default function MySlotsPage() {
   const [services, setServices] = useState<Service[]>([]);
+  const [servicesError, setServicesError] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [form, setForm] = useState({ serviceId: '', date: '', startTime: '' });
   const [fields, setFields] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
 
   const loadSlots = useCallback(async () => {
     setLoadError(null);
@@ -33,10 +34,17 @@ export default function MySlotsPage() {
     else setLoadError(res.message);
   }, []);
 
+  const loadServices = useCallback(async () => {
+    setServicesError(null);
+    const res = await http<{ services: Service[] }>('/services');
+    if (res.ok) setServices(res.data.services);
+    else setServicesError(res.message);
+  }, []);
+
   useEffect(() => {
-    http<{ services: Service[] }>('/services').then((res) => res.ok && setServices(res.data.services));
+    loadServices();
     loadSlots();
-  }, [loadSlots]);
+  }, [loadServices, loadSlots]);
 
   const service = services.find((s) => String(s.id) === form.serviceId);
 
@@ -51,12 +59,11 @@ export default function MySlotsPage() {
     });
     setSaving(false);
     if (res.ok) {
-      setToast('Slot published');
+      setToast({ id: Date.now(), message: 'Slot published' });
       setForm({ ...form, startTime: '' });
       loadSlots();
-    } else if (res.fields) {
-      setFields(res.fields);
     } else {
+      setFields(res.fields ?? {});
       setFormError(res.message);
     }
   }
@@ -64,6 +71,7 @@ export default function MySlotsPage() {
   const fieldProps = (name: keyof typeof form) => ({
     id: name,
     value: form[name],
+    required: true,
     'aria-invalid': !!fields[name],
     'aria-describedby': fields[name] ? `${name}-error` : undefined,
   });
@@ -72,14 +80,15 @@ export default function MySlotsPage() {
   return (
     <>
       <h1>My Slots</h1>
-      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+      {toast && <Toast key={toast.id} message={toast.message} onDone={() => setToast(null)} />}
 
       <section aria-labelledby="publish-title" className="panel">
         <h2 id="publish-title">Publish a slot</h2>
+        {servicesError && <Callout tone="error" onRetry={loadServices}>{servicesError}</Callout>}
         {formError && <Callout tone="error">{formError}</Callout>}
         <form onSubmit={onSubmit} noValidate className="slot-form">
           <div>
-            <label htmlFor="serviceId">Service</label>
+            <label htmlFor="serviceId" className="required">Service</label>
             <select {...fieldProps('serviceId')} onChange={(e) => setForm({ ...form, serviceId: e.target.value })}>
               <option value="">Choose a service</option>
               {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -87,12 +96,12 @@ export default function MySlotsPage() {
             {fieldError('serviceId')}
           </div>
           <div>
-            <label htmlFor="date">Date</label>
+            <label htmlFor="date" className="required">Date</label>
             <input type="date" min={todayBangkok()} {...fieldProps('date')} onChange={(e) => setForm({ ...form, date: e.target.value })} />
             {fieldError('date')}
           </div>
           <div>
-            <label htmlFor="startTime">Start time</label>
+            <label htmlFor="startTime" className="required">Start time</label>
             <select {...fieldProps('startTime')} onChange={(e) => setForm({ ...form, startTime: e.target.value })}>
               <option value="">Choose a time</option>
               {START_TIMES.map((t) => <option key={t} value={t}>{t}</option>)}

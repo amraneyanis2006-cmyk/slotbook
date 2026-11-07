@@ -1,7 +1,7 @@
 // Display and input helpers in Asia/Bangkok (UTC+7, no DST), per system-sds §3.2.
 const TZ = 'Asia/Bangkok';
 const part = (date: Date, options: Intl.DateTimeFormatOptions) =>
-  Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: TZ, ...options }).formatToParts(date).map((p) => [p.type, p.value]));
+  Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: TZ, ...options }).formatToParts(date).map((p) => [p.type, p.value]));
 
 /** "Mon 10 Nov 2026" */
 export const formatDay = (iso: string | Date) => {

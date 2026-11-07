@@ -11,7 +11,7 @@ staffSlotsRouter.use(requireAuth, requireRole('STAFF'));
 // Unknown keys (staffId, role, userId…) are stripped: the owner is always the session user (BR-08).
 const slotSchema = z.object({
   serviceId: z.number({ required_error: 'Choose an active service.', invalid_type_error: 'Choose an active service.' })
-    .int('Choose an active service.').positive('Choose an active service.'),
+    .int('Choose an active service.').positive('Choose an active service.').max(2_147_483_647, 'Choose an active service.'),
   date: z.string({ required_error: 'Choose a date.', invalid_type_error: 'Choose a date.' }),
   startTime: z.string({ required_error: 'Choose a start time.', invalid_type_error: 'Choose a start time.' }),
 });
