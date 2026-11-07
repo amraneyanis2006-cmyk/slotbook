@@ -9,7 +9,6 @@ import { authRouter } from './routes/auth.js';
 import { healthRouter } from './routes/health.js';
 import { servicesRouter } from './routes/services.js';
 import { testOnlyRouter } from './routes/testOnly.js';
-import './types.js';
 
 // One session store (one pg pool) per process, shared by every app instance.
 const PgStore = pgSession(session);

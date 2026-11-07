@@ -23,5 +23,5 @@ export async function http<T>(path: string, { method = 'GET', body }: { method?:
   const data = res.status === 204 ? undefined : await res.json().catch(() => undefined);
   if (res.ok) return { ok: true, data: data as T };
   if (res.status === 401 && !path.startsWith('/auth/')) onSessionEnded();
-  return { ok: false, status: res.status, ...FALLBACK, ...(data as ApiError | undefined) };
+  return { ok: false, status: res.status, ...FALLBACK, ...(typeof data === 'object' ? (data as ApiError) : {}) };
 }

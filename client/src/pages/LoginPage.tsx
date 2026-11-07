@@ -10,7 +10,8 @@ export default function LoginPage() {
   const [error, setError] = useState<{ message: string; fields?: Record<string, string> } | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (!loading && user) return <Navigate to={homeFor(user.role)} replace />;
+  if (loading) return <main className="page-loading" aria-busy="true">Loading…</main>;
+  if (user) return <Navigate to={homeFor(user.role)} replace />;
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();

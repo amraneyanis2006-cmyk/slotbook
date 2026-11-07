@@ -22,6 +22,7 @@ describe('POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01)',
       expect(cookie).toMatch(/^sid=/);
       expect(cookie).toMatch(/HttpOnly/);
       expect(cookie).toMatch(/SameSite=Lax/);
+      expect(cookie).toMatch(/Path=\//);
     }
   });
 
@@ -35,6 +36,24 @@ describe('POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01)',
     expect(unknown.status).toBe(401);
     expect(unknown.body).toEqual(BAD_LOGIN);
     expect((await agent.get('/api/auth/me')).status).toBe(401);
+  });
+
+  it('API-02: malformed login input → 422 VALIDATION_ERROR with fields (F-01 §2/§7 boundaries)', async () => {
+    const cases: [Record<string, unknown>, string][] = [
+      [{}, 'email'],
+      [{ email: '', password: 'x' }, 'email'],
+      [{ email: 'not-an-email', password: 'x' }, 'email'],
+      [{ email: `${'a'.repeat(245)}@slotbook.test`, password: 'x' }, 'email'],
+      [{ email: 'cust.ploy@slotbook.test', password: '' }, 'password'],
+      [{ email: 'cust.ploy@slotbook.test', password: 'p'.repeat(129) }, 'password'],
+    ];
+    for (const [body, field] of cases) {
+      const res = await request(app).post('/api/auth/login').send(body);
+      expect(res.status).toBe(422);
+      expect(res.body.error).toBe('VALIDATION_ERROR');
+      expect(res.body.fields).toHaveProperty(field);
+      expect(res.headers['set-cookie']).toBeUndefined();
+    }
   });
 
   it('API-03: an inactive account cannot log in; a session of a user deactivated later gets 401 UNAUTHENTICATED', async () => {

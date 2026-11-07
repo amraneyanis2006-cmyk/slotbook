@@ -9,7 +9,7 @@ type Auth = {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<ApiResult<{ user: User }>>;
-  logout: () => Promise<void>;
+  logout: () => Promise<ApiResult<undefined>>;
 };
 
 const AuthContext = createContext<Auth | null>(null);
@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setSessionEndedHandler(() => {
       setUser(null);
-      navigate('/login', { replace: true, state: { notice: 'Your session has ended. Please log in again.' } });
+      navigate('/login', { replace: true, state: { notice: 'Your session has ended.' } });
     });
   }, [navigate]);
 
@@ -42,10 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return res;
   };
 
+  /** Clears the user only when the server session is gone (204, or 401 = already ended). */
   const logout = async () => {
-    await http('/auth/logout', { method: 'POST' });
-    setUser(null);
-    navigate('/login', { replace: true });
+    const res = await http<undefined>('/auth/logout', { method: 'POST' });
+    if (res.ok || res.status === 401) {
+      setUser(null);
+      navigate('/login', { replace: true });
+    }
+    return res;
   };
 
   return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;

@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const PASSWORD = process.env.SEED_PASSWORD ?? '';
+const PASSWORD = process.env.SEED_PASSWORD;
+if (!PASSWORD) throw new Error('SEED_PASSWORD is not set (copy .env.example to .env).');
 
-async function logIn(page: Page, email: string, password = PASSWORD) {
+async function logIn(page: Page, email: string, password: string = PASSWORD!) {
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);
@@ -46,6 +47,7 @@ test('E2E-02: protected pages redirect anonymous users to /login and other roles
   await page.goto('/staff/slots');
   await expect(page).toHaveURL(/\/book$/);
   await page.getByRole('button', { name: 'Log out' }).click();
+  await expect(page).toHaveURL(/\/login$/);
 
   await logIn(page, 'staff.anan@slotbook.test');
   await expect(page).toHaveURL(/\/staff\/slots$/);
