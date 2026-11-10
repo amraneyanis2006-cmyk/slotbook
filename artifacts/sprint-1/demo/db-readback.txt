@@ -1,17 +1,17 @@
 # Command: DATABASE_URL=<DATABASE_URL_TEST> npm run demo:readback -- BK-2026-000007
 # Branch:  feature/7-schedule-e2e
-# Commit:  5d777c1 (test(F-06): demo evidence SHOT-01 (23 screenshots + INDEX.md) and npm run demo:readback)
-# Date:    2026-11-10 12:18:43 +0700
-# The booking of screenshots 05-08 (cancelled in 12), read from the E2E database right after the Playwright run.
+# Commit:  a3063a9 (fix(F-06): shot 14 scrolls to the publish form so the overlap error is visible)
+# Date:    2026-11-10 12:31:51 +0700
+# The booking of screenshots 04-08 and 15 (cancelled in 12), read from the E2E database right after the Playwright run.
 
 Database: slotbook_test
 {
   "id": 7,
   "reference": "BK-2026-000007",
   "status": "CANCELLED",
-  "note": "Question about credit transfer",
-  "createdAt": "2026-11-10T05:18:15.215Z",
-  "cancelledAt": "2026-11-10T05:18:20.392Z",
+  "note": "Demo: request for a transcript translation",
+  "createdAt": "2026-11-10T05:31:30.071Z",
+  "cancelledAt": "2026-11-10T05:31:39.350Z",
   "slotId": 20,
   "startAt": "2026-11-11T07:00:00.000Z",
   "endAt": "2026-11-11T07:30:00.000Z",
