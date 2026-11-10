@@ -72,11 +72,14 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
   // the run depend on the time of day. It is deleted after the shot so later specs see Ploy's usual bookings.
   const quarter = 15 * 60_000;
   const late = await insertBooking('staff.anan@slotbook.test', 'cust.ploy@slotbook.test', new Date(Math.ceil((Date.now() + 75 * 60_000) / quarter) * quarter));
-  await page.goto(`/bookings/${late}`);
-  await expect(page.getByText('Cancellation closes 2 hours before the start.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Cancel booking' })).toHaveCount(0);
-  await shot(page, '11-late-cancel-no-button');
-  await deleteBooking(late);
+  try {
+    await page.goto(`/bookings/${late}`);
+    await expect(page.getByText('Cancellation closes 2 hours before the start.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Cancel booking' })).toHaveCount(0);
+    await shot(page, '11-late-cancel-no-button');
+  } finally {
+    await deleteBooking(late);
+  }
 
   // BR-03: Nina holds 3 active future bookings (made through the API), then tries a 4th in the UI.
   const nina = await browser.newContext();

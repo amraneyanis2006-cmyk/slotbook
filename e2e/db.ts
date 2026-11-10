@@ -4,12 +4,12 @@ import { formatReference } from '../server/src/rules/bookingRules';
 // Direct access to the E2E (test) database for the one demo situation the API cannot create at any time of day:
 // a booking that starts in less than 2 hours (BR-02 needs ≥ 60 min, BR-06 opening hours). Rules are bypassed on
 // purpose; INDEX.md says so. @prisma/client lives in server/node_modules, so it is resolved from there.
-type Row = { id: number; reference: string };
+type Row = { id: number };
 type Client = {
   user: { findUniqueOrThrow(args: object): Promise<Row> };
   service: { findUniqueOrThrow(args: object): Promise<Row> };
   slot: { create(args: object): Promise<Row>; delete(args: object): Promise<Row> };
-  booking: { create(args: object): Promise<Row>; delete(args: object): Promise<Row & { slotId: number }> };
+  booking: { create(args: object): Promise<Row & { reference: string }>; delete(args: object): Promise<Row & { slotId: number }> };
   $queryRaw(query: TemplateStringsArray): Promise<{ seq: bigint }[]>;
   $disconnect(): Promise<void>;
 };
