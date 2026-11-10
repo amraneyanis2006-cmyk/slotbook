@@ -1,8 +1,8 @@
 # Sprint 1 traceability check
 
-Branch `release/sprint-1`, commit `b099dfe`, date 2026-11-10T07:48:45.504Z, command `node scripts/traceability-check.mjs`.
+Branch `release/sprint-1`, commit `2c7bb4e`, date 2026-11-10T08:22:10.513Z, command `node scripts/traceability-check.mjs`.
 
-A test counts as found when a `it(`/`test(` call in the file listed by `sts.md` has a name starting with `<ID>:`, and the file contains no `.skip`, `.only`, `.todo`, `.fixme`, `xit` or `xdescribe`. Whether the tests pass is recorded in `clean-clone-check.md` and in the "Result" column of `sts.md`.
+A test counts as found when an `it(`/`test(` call at the start of a line (comments ignored) in the file listed by `sts.md` has a name starting with `<ID>:`, and that file contains no `.skip`, `.only`, `.todo`, `.fixme`, `.skipIf`, `.runIf`, `xit`, `xdescribe`, `xtest` or runtime `.skip()`. An AC is covered when it is in the §5 table, every test listed for it there is found and names the AC on its own row, and every row naming the AC is listed for it in §5. Whether the tests pass is recorded in `clean-clone-check.md` and in the "Result" column of `sts.md`.
 
 ## Test IDs (45/45 found)
 
@@ -56,7 +56,7 @@ A test counts as found when a `it(`/`test(` call in the file listed by `sts.md` 
 
 ## Acceptance criteria (32/32 covered)
 
-| AC | Tests (sts.md §5) | Every listed test found and lists this AC | 
+| AC | Tests (sts.md §5) | Covered |
 | :--- | :--- | :--- |
 | AC-01 | API-01, UNIT-06 | yes |
 | AC-02 | API-02, API-03 | yes |
@@ -93,6 +93,6 @@ A test counts as found when a `it(`/`test(` call in the file listed by `sts.md` 
 
 ## Skipped or focused tests
 
-None: no test file under `server/tests`, `client/tests` or `e2e` contains `.skip`, `.only`, `.todo`, `.fixme`, `xit` or `xdescribe`.
+None: no test file under `server/tests`, `client/tests` or `e2e` contains a skip/only/todo/fixme/skipIf/runIf modifier, `xit`/`xdescribe`/`xtest` or a runtime `.skip()`.
 
 **Result:** no gap.
