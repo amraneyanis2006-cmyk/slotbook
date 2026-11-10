@@ -23,7 +23,7 @@ Asia/Bangkok). The booking read back from PostgreSQL is in [`../demo/db-readback
 | `14-slot-overlap.png` | Mali publishes 10:15 the same day | Staff (Mali) | F-03 / AC-13 (BR-07) | 409 `SLOT_OVERLAP` "You already have a slot at this time." |
 | `15-schedule-mali.png` | Mali's schedule for tomorrow | Staff (Mali) | F-06 / AC-28, AC-29 | Summary line; Ploy's 14:00 booking with reference, "Ploy Chai" and the note "Demo: request for a transcript translation" |
 | `16-schedule-anan.png` | Anan's schedule for the same day | Staff (Anan) | F-06 / AC-29 (BR-09) | Only Anan's slots; his seeded 09:00 booking by Ploy (note "Question about credit transfer") is there, the demo booking on Mali's slot (other reference and note) is absent |
-| `17-customer-redirected.png` | Ploy opens `/staff/slots` | Customer (Ploy) | F-02 / AC-10 | Redirected to her home `/book` |
+| `17-customer-redirected.png` | Ploy opens `/staff/slots` | Customer (Ploy) | F-02 / AC-10 | Header with "Ploy Chai" and the Customer badge, the loaded Book a Slot page, and a caption added by the spec (screenshots have no address bar): "Requested /staff/slots as Customer → redirected to /book", where the final path is read from the browser's `location.pathname` after the redirect |
 | `18-api-forbidden.png` | Ploy opens `/api/staff/slots` in the browser | Customer (Ploy) | F-02 / AC-07 | `403 { "error": "FORBIDDEN", "message": … }` |
 | `19-logout.png` | Log out | Customer (Ploy) | F-01 / AC-04 | Back on `/login` |
 | `20-api-unauthenticated.png` | Open `/api/auth/me` after logout | anonymous | F-01, F-02 / AC-04, AC-06 | `401 { "error": "UNAUTHENTICATED", "message": … }` |

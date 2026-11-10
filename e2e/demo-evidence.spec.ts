@@ -141,9 +141,23 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
   await shot(page, '12-cancellation-success');
 
   // Access control: UI redirect, API 403, logout, API 401 afterwards.
+  // Shot 17: screenshots have no address bar, so a caption shows the requested path and the path the browser ended
+  // on (read from location.pathname after the redirect). The header proves the user is the Customer Ploy.
   await page.goto('/staff/slots');
   await expect(page).toHaveURL(/\/book$/);
+  await expect(page.getByRole('banner')).toContainText('Ploy Chai');
+  await expect(page.getByRole('banner')).toContainText('Customer');
+  await loaded(page);
+  await page.evaluate(() => {
+    const caption = document.createElement('div');
+    caption.id = 'evidence-caption';
+    caption.textContent = `Requested /staff/slots as Customer → redirected to ${window.location.pathname}`;
+    caption.style.cssText = 'position:fixed;left:16px;bottom:16px;padding:8px 12px;border-radius:8px;background:#1f2933;color:#fff;font:600 15px system-ui,sans-serif';
+    document.body.append(caption);
+  });
+  await expect(page.locator('#evidence-caption')).toHaveText('Requested /staff/slots as Customer → redirected to /book');
   await shot(page, '17-customer-redirected');
+  await page.locator('#evidence-caption').evaluate((el) => el.remove());
   await page.goto('/api/staff/slots');
   await expect(page.getByText('"error":"FORBIDDEN"')).toBeVisible();
   await shot(page, '18-api-forbidden');
