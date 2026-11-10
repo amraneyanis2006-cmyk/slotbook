@@ -78,8 +78,11 @@ describe('BookSlotPage (F-04)', () => {
     releaseBooking(json(201, { booking: { reference: 'BK-2030-000015', status: 'BOOKED', note: 'Credit transfer', createdAt: '2030-02-05T01:00:00.000Z', cancelledAt: null, slot: FIRST } }));
     expect(await screen.findByText('Booked! Reference BK-2030-000015')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Go to My Bookings' })).toHaveAttribute('href', '/bookings');
-    await waitFor(() => expect(screen.queryByRole('button', { name: /^Book 09:30/ })).toBeNull());
+    expect(await screen.findByRole('button', { name: /^Book 14:00/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Book 09:30/ })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Close' }));
+    // The booked slot left the list, so focus goes to the list heading.
+    expect(screen.getByRole('heading', { name: /^Available slots/ })).toHaveFocus();
 
     // 409 → server message inside the dialog and the list is re-fetched.
     const listsBefore = listUrls.length;

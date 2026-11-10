@@ -33,6 +33,9 @@ test.describe.serial('Customer booking journey (F-04, F-05)', () => {
     await expect(dialog.getByRole('link', { name: 'Go to My Bookings' })).toBeVisible();
 
     await dialog.getByRole('button', { name: 'Close' }).click();
+    // The refreshed list is loaded (no skeleton) and no longer offers the booked slot.
+    await expect(page.getByRole('region', { name: /^Available slots/ }).locator('[aria-busy="true"]')).toHaveCount(0);
+    await expect(page.getByText('No available slots on this day. Try another date.')).toBeVisible();
     await expect(book).toHaveCount(0);
   });
 });

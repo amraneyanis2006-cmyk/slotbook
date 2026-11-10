@@ -27,16 +27,19 @@ export default function BookSlotPage() {
   const [booked, setBooked] = useState<Booking | null>(null);
   const latest = useRef(0);
   const successLink = useRef<HTMLAnchorElement>(null);
+  const confirmButton = useRef<HTMLButtonElement>(null);
+  const listHeading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     http<{ services: Service[] }>('/services').then((res) => { if (res.ok) setServices(res.data.services); });
   }, []);
 
-  const loadSlots = useCallback(async () => {
-    if (!date) return; // the date input is being edited
+  /** Loads the list; a refresh after a booking attempt keeps the current list on screen (no skeleton). */
+  const loadSlots = useCallback(async (refresh = false) => {
     const request = ++latest.current;
+    if (!date) return; // the date input is being edited
     setLoadError(null);
-    setSlots(null);
+    if (!refresh) setSlots(null);
     const query = new URLSearchParams({ date, ...(serviceId && { serviceId }) });
     const res = await http<{ slots: SlotPublicView[] }>(`/slots/available?${query}`);
     if (request !== latest.current) return; // a newer filter is loading
@@ -46,6 +49,9 @@ export default function BookSlotPage() {
 
   useEffect(() => { loadSlots(); }, [loadSlots]);
   useEffect(() => { if (booked) successLink.current?.focus(); }, [booked]); // the Confirm button is gone
+  useEffect(() => { if (bookError) confirmButton.current?.focus(); }, [bookError]); // it was disabled while busy
+  // After the dialog closes, focus returns to its Book button; if that slot left the list, to the list heading.
+  useEffect(() => { if (!selected && document.activeElement === document.body) listHeading.current?.focus(); }, [selected]);
 
   const open = (slot: SlotPublicView) => {
     setSelected(slot);
@@ -63,7 +69,7 @@ export default function BookSlotPage() {
     setBusy(false);
     if (res.ok) setBooked(res.data.booking);
     else setBookError(res.fields ? Object.values(res.fields).join(' ') : res.message);
-    if (res.ok || res.status === 409) loadSlots();
+    if (res.ok || res.status === 404 || res.status === 409) loadSlots(true);
   }
 
   return (
@@ -84,8 +90,8 @@ export default function BookSlotPage() {
       </div>
 
       <section aria-labelledby="available-title">
-        <h2 id="available-title">Available slots{date && ` · ${formatDay(`${date}T12:00:00+07:00`)}`}</h2>
-        {loadError ? <Callout tone="error" onRetry={loadSlots}>{loadError}</Callout>
+        <h2 id="available-title" ref={listHeading} tabIndex={-1}>Available slots{date && ` · ${formatDay(`${date}T12:00:00+07:00`)}`}</h2>
+        {loadError ? <Callout tone="error" onRetry={() => loadSlots()}>{loadError}</Callout>
           : slots === null ? <Skeleton label="Loading available slots" />
             : slots.length === 0 ? <EmptyState message="No available slots on this day. Try another date." />
               : (
@@ -125,7 +131,7 @@ export default function BookSlotPage() {
               <p id="note-count" className="hint">{note.length}/{NOTE_MAX}</p>
               {bookError && <Callout tone="error">{bookError}</Callout>}
               <div className="dialog-actions">
-                <button type="button" onClick={confirm} disabled={busy}>Confirm booking</button>
+                <button type="button" ref={confirmButton} onClick={confirm} disabled={busy}>Confirm booking</button>
                 <button type="button" className="secondary" onClick={close} disabled={busy}>Cancel</button>
               </div>
             </>

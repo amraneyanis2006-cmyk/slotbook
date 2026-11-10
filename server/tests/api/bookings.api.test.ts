@@ -1,7 +1,8 @@
+import express from 'express';
 import request, { type Agent } from 'supertest';
 import { PrismaClient } from '@prisma/client';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createApp } from '../../src/app.js';
+import { createApp, errorHandler } from '../../src/app.js';
 import { bkk, freezeClock, loginAs, makeBooking, makeSlot, removeSlotsBetween, unfreezeClock } from '../helpers.js';
 
 // Clock frozen on Tue 5 Feb 2030 08:00 Bangkok; this file owns the slots of 1–28 Feb 2030.
@@ -47,6 +48,8 @@ describe('GET /api/slots/available (F-04)', () => {
     const free = await slot('anan', '2030-02-05', '09:00'); // exactly now + 60 min
     const freeDoc = await slot('mali', '2030-02-05', '09:00', { service: 'document' });
     const later = await slot('mali', '2030-02-05', '16:00');
+    const freed = await slot('anan', '2030-02-05', '15:00'); // its only booking is CANCELLED: bookable again (BR-11)
+    await makeBooking(prisma, { slotId: freed.id, customerId: ids.ken, status: 'CANCELLED' });
     const booked = await slot('anan', '2030-02-05', '10:00');
     await makeBooking(prisma, { slotId: booked.id, customerId: ids.ken });
     await slot('mali', '2030-02-05', '11:00', { status: 'CLOSED' });
@@ -58,7 +61,7 @@ describe('GET /api/slots/available (F-04)', () => {
 
     const res = await available(agents.ploy, { date: '2030-02-05' });
     expect(res.status).toBe(200);
-    expect(res.body.slots.map((s: { id: number }) => s.id)).toEqual([free.id, freeDoc.id, later.id]);
+    expect(res.body.slots.map((s: { id: number }) => s.id)).toEqual([free.id, freeDoc.id, freed.id, later.id]);
     expect(res.body.slots[0]).toEqual({
       id: free.id, startAt: '2030-02-05T02:00:00.000Z', endAt: '2030-02-05T02:30:00.000Z',
       service: { id: ids.advising, name: 'Academic advising', durationMin: 30 },
@@ -89,7 +92,7 @@ describe('POST /api/bookings (F-04)', () => {
     expect(res.body.booking).toEqual({
       reference: expect.stringMatching(/^BK-2030-\d{6}$/), // Bangkok year of creation (BR-10)
       status: 'BOOKED', note: 'Question about credit transfer',
-      createdAt: expect.any(String), cancelledAt: null,
+      createdAt: '2030-02-05T01:00:00.000Z', cancelledAt: null, // server clock (frozen)
       slot: {
         id: target.id, startAt: '2030-02-06T03:00:00.000Z', endAt: '2030-02-06T03:30:00.000Z',
         service: { id: ids.advising, name: 'Academic advising', durationMin: 30 }, staff: { id: ids.anan, name: 'Anan Wong' },
@@ -135,6 +138,19 @@ describe('POST /api/bookings (F-04)', () => {
     expect(await bookedCount(target.id)).toBe(1);
   });
 
+  it('API-17: a race lost on the partial unique index (Prisma P2002) is answered 409 SLOT_ALREADY_BOOKED', async () => {
+    const target = await slot('mali', '2030-02-08', '11:00');
+    await makeBooking(prisma, { slotId: target.id, customerId: ids.ken });
+    const raced = await makeBooking(prisma, { slotId: target.id, customerId: ids.nina }).catch((err: unknown) => err);
+    const probe = express();
+    probe.get('/race', () => { throw raced; });
+    probe.use(errorHandler);
+
+    const res = await request(probe).get('/race');
+    expect(res.status).toBe(409);
+    expect(res.body).toEqual({ error: 'SLOT_ALREADY_BOOKED', message: 'This slot has already been booked.' });
+  });
+
   it('API-18: a slot starting in 30 min, a CLOSED slot and a slot of the inactive service → 409 SLOT_NOT_BOOKABLE; unknown slot → 404; nothing stored', async () => {
     const soon = await slot('mali', '2030-02-05', '08:30');
     const closed = await slot('anan', '2030-02-09', '10:00', { status: 'CLOSED' });
@@ -159,7 +175,7 @@ describe('POST /api/bookings (F-04)', () => {
   });
 
   it('API-19: Nina with 3 active future bookings → 409 BOOKING_LIMIT_REACHED; Ploy overlapping her own booking → 409 BOOKING_OVERLAP; nothing stored', async () => {
-    // Precondition: neither customer holds an active future booking from the earlier tests of this file.
+    // Precondition set here (whatever ran before): neither customer holds an active future booking.
     await prisma.booking.updateMany({ where: { customerId: { in: [ids.nina, ids.ploy] }, status: 'BOOKED', slot: { startAt: { gt: bkk('2030-02-05', '08:00') } } }, data: { status: 'CANCELLED' } });
 
     // Two active future bookings plus a cancelled one and a past one (not counted): the third is allowed.

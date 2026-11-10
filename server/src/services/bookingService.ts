@@ -63,7 +63,7 @@ export function book(customerId: number, slotId: number, note: string | null) {
 
     const [{ seq }] = await tx.$queryRaw<{ seq: bigint }[]>`SELECT nextval('booking_ref_seq') AS seq`;
     return tx.booking.create({
-      data: { slotId, customerId, note, reference: formatReference(Number(bangkokDate(at).slice(0, 4)), Number(seq)) },
+      data: { slotId, customerId, note, createdAt: at, reference: formatReference(Number(bangkokDate(at).slice(0, 4)), Number(seq)) },
       select: BOOKING_VIEW_SELECT,
     });
   });

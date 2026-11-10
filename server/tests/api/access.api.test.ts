@@ -98,6 +98,8 @@ describe('API-08 server-side identity (F-02, BR-08)', () => {
     expect(res.status).toBe(201);
     const row = await prisma.booking.findUniqueOrThrow({ where: { reference: res.body.booking.reference } });
     expect(row.customerId).toBe(ploy.id);
+    await prisma.booking.delete({ where: { id: row.id } }); // keep Ploy's real-clock bookings as seeded
+    await prisma.slot.delete({ where: { id: slot.id } });
   });
 });
 
