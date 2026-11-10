@@ -81,3 +81,8 @@ now and receive AC/tests in their own sprint contracts.
 - **Approved changes:** 1.1 (2026-11-07) — 18 fixes from the pre-PR contract review, decided by Yanis Amrane,
   reviewed in PR #9 (Issue #1); list in `sprints/sprint-1/README.md` version history and the PR body. Later
   changes are added here with date, reason, approver and the PR that made them.
+- **1.2 (2026-11-10), F-06 §2 summary:** `closed` counts CLOSED slots without a booking, so a slot is never
+  counted twice. Made in PR #15 (Issue #7), accepted by Yanis Amrane.
+- **1.3 (2026-11-10), Issue #8 decisions by Yanis Amrane:** SRS A-04; STS UNIT-04, UNIT-05, API-23, E2E-06 and §6
+  wording; SDS §3.2 empty-state example and Node/PostgreSQL versions. Made in the Issue #8 PR. No requirement,
+  AC or test ID was added or removed.

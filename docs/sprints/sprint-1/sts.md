@@ -1,6 +1,6 @@
 # Sprint 1 — Software Test Specification (STS)
 
-Version 1.1 (2026-11-07). Each test name in code **starts with its Test ID** (e.g.
+Version 1.2 (2026-11-10). Each test name in code **starts with its Test ID** (e.g.
 `it('API-15: books a bookable slot …')`). Test databases are reset and seeded before each run; time-based
 rules use `freezeClock()` (server) or slots created relative to the real clock (E2E). The "Result" column
 is filled from the real release run (Part F of the Deliverable 1 submission PDF); `—` until then.
@@ -16,8 +16,8 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | UNIT-01 | AC-12 | Unit | Clock 2026-11-10 08:00 Bangkok; inputs: past start, 09:10, 07:45, 17:45 + 30 min, inactive service, past **and** outside opening hours (2026-11-09 07:00), valid 09:30 | `validateSlot(input, service, now)` | Errors on `startTime`/`serviceId` for each invalid input with the specified messages; past + outside hours → only "The slot must start in the future." (F-03 §2 check order); valid input → `{ startAt, endAt }` with end = start + duration; 17:30 + 30 min (ends 18:00) valid | `server/tests/unit/slotRules.test.ts` | — |
 | UNIT-02 | AC-13 | Unit | Existing own slots 09:00–09:30 (OPEN), 10:00–10:30 (CANCELLED) | `overlaps(a, b)` / `findOverlap(new, existing)` | 09:15–09:45 overlaps; 09:30–10:00 does not (touching); 10:00–10:30 ignored because CANCELLED | `server/tests/unit/slotRules.test.ts` | — |
 | UNIT-03 | AC-17 | Unit | year 2026, seq 15 / seq 1234567 | `formatReference(year, seq)` | `BK-2026-000015`; seq > 999999 throws | `server/tests/unit/bookingRules.test.ts` | — |
-| UNIT-04 | AC-20, AC-21 | Unit | Clock fixed; slots at +60 min, +59 min, CLOSED, inactive service; customer with 2 / 3 active future bookings; overlapping and back-to-back bookings | `isBookable`, `checkCustomerLimits` | +60 bookable, +59, CLOSED and inactive service → `SLOT_NOT_BOOKABLE`; 3 active → `BOOKING_LIMIT_REACHED`; past/cancelled not counted; overlap → `BOOKING_OVERLAP`; back-to-back → null | `server/tests/unit/bookingRules.test.ts` | — |
-| UNIT-05 | AC-26 | Unit | Bookings BOOKED at +120 min, +119 min; CANCELLED; COMPLETED | `canCustomerCancel` | +120 → null; +119 → `CANCELLATION_WINDOW_CLOSED`; CANCELLED/COMPLETED → `BOOKING_NOT_ACTIVE` (checked first) | `server/tests/unit/bookingRules.test.ts` | — |
+| UNIT-04 | AC-20, AC-21 | Unit | Clock fixed; slots at +60 min, +59 min, CLOSED, inactive service; customer with 2 / 3 active future bookings; overlapping and back-to-back bookings | `isBookable`, `checkCustomerLimits` | +60 bookable, +59, CLOSED and inactive service → `SLOT_NOT_BOOKABLE`; 3 active → `BOOKING_LIMIT_REACHED`; past bookings are excluded by the service query (slot start > now) and the pure rule ignores bookings that are not BOOKED (CANCELLED, COMPLETED, NO_SHOW); overlap → `BOOKING_OVERLAP`; back-to-back → null | `server/tests/unit/bookingRules.test.ts` | — |
+| UNIT-05 | AC-26 | Unit | Bookings BOOKED at +120 min, +119 min; CANCELLED; COMPLETED; NO_SHOW | `canCustomerCancel` | +120 → null; +119 → `CANCELLATION_WINDOW_CLOSED`; CANCELLED/COMPLETED/NO_SHOW → `BOOKING_NOT_ACTIVE` (checked first) | `server/tests/unit/bookingRules.test.ts` | — |
 | UNIT-06 | AC-01 | Unit | — | `sessionOptions('production')`, `sessionOptions('development')` from `server/src/config/session.ts` | production: `cookie.secure` true, `cookie.httpOnly` true, `cookie.sameSite` `'lax'`, `cookie.maxAge` 8 h, `rolling` true; development: `cookie.secure` false | `server/tests/unit/sessionConfig.test.ts` | — |
 
 ## 2. API / Database Integration Tests — `server/tests/api/`, `server/tests/db/`
@@ -46,7 +46,7 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | API-20 | AC-23 | API | Ploy and Ken with bookings | `GET /api/bookings/mine` and `GET /api/bookings/:ref` as Ploy; log out, log in again, repeat | Only Ploy's bookings, correct split/order; same data after re-login | `server/tests/api/my-bookings.api.test.ts` | — |
 | API-21 | AC-24 | API | Ken's booking reference | Ploy `GET` and `POST …/cancel` on it | Both 404 `NOT_FOUND`, no booking fields in body; Ken's booking still BOOKED | `server/tests/api/my-bookings.api.test.ts` | — |
 | API-22 | AC-25 | API | Ploy's booking at +3 h | Cancel; then Nina lists available and books the slot | 200 CANCELLED + `cancelledAt`; slot listed again; Nina 201 | `server/tests/api/my-bookings.api.test.ts` | — |
-| API-23 | AC-26 | API | Ploy's booking at +90 min; a CANCELLED and a COMPLETED booking | Cancel each | 409 `CANCELLATION_WINDOW_CLOSED`, 409 `BOOKING_NOT_ACTIVE` ×2; rows unchanged | `server/tests/api/my-bookings.api.test.ts` | — |
+| API-23 | AC-26 | API | Ploy's booking at +90 min; a CANCELLED, a COMPLETED and a NO_SHOW booking | Cancel each | 409 `CANCELLATION_WINDOW_CLOSED`, 409 `BOOKING_NOT_ACTIVE` ×3; rows unchanged | `server/tests/api/my-bookings.api.test.ts` | — |
 | API-24 | AC-28 | API | Anan and Mali slots on a date, some booked | `GET /api/staff/schedule?date=` as Anan; as Ploy; bad date | Only Anan's slots with reference, customer, note and correct summary `{ total, booked, open, closed }` (total = booked + open + closed); Ploy 403; 422 | `server/tests/api/schedule.api.test.ts` | — |
 | API-25 | AC-31 | API | DB up | `GET /api/health` without session | 200 `{ status: "ok", database: "up" }` | `server/tests/api/health.api.test.ts` | — |
 | DB-01 | AC-19 | DB | Free slot | Insert two `BOOKED` bookings for the slot directly with Prisma | Second insert fails with unique violation `P2002` on `booking_one_active_per_slot`; a second `CANCELLED` row is allowed | `server/tests/db/constraints.db.test.ts` | — |
@@ -70,7 +70,7 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | E2E-03 | AC-15 | E2E | Staff Mali | Publish a slot on today+9 at 14:00 (outside the seed range); try an overlapping one | New slot listed; overlap message shown | `e2e/staff-slots.spec.ts` | — |
 | E2E-04 | AC-22, AC-17 | E2E | Free Mali slot on today+10 at 15:00 created by `e2e/global-setup.ts` (independent of E2E-03) | Ploy filters that date, books it with a note | Reference shown; slot gone from the list | `e2e/booking-journey.spec.ts` | — |
 | E2E-05 | AC-27, AC-23, AC-25 | E2E | Booking from E2E-04 | Ploy opens My Bookings, reloads, logs out/in, opens detail, cancels | Booking persisted across reload and re-login; after cancel badge Cancelled and slot bookable again on `/book` | `e2e/booking-journey.spec.ts` | — |
-| E2E-06 | AC-29 | E2E | Ploy books the global-setup Mali slot (today+10 15:00) | Mali opens Schedule for that day; Anan opens the same day | Mali sees reference + "Ploy Chai"; Anan does not | `e2e/schedule.spec.ts` | — |
+| E2E-06 | AC-29 | E2E | Ploy books the global-setup Mali slot (today+10 15:00). Depends on E2E-05, which cancels the E2E-04 booking on that slot: Playwright runs with one worker and `schedule.spec.ts` after `booking-journey.spec.ts` | Mali opens Schedule for that day; Anan opens the same day | Mali sees reference + "Ploy Chai"; Anan does not | `e2e/schedule.spec.ts` | — |
 | E2E-07 | AC-30 | E2E | Each S1 page per role | Load at 320×800, 768×1024, 1280×900 | `document.documentElement.scrollWidth <= clientWidth`; main buttons visible | `e2e/responsive-a11y.spec.ts` | — |
 | E2E-08 | AC-30 | E2E | Customer account | Log in and book using only Tab/Shift+Tab/Enter/Esc | Booking succeeds; focused elements have a visible outline | `e2e/responsive-a11y.spec.ts` | — |
 
@@ -105,7 +105,7 @@ For every implementation Issue (#2–#7) the tests of that Issue are committed f
 the implementation commit follows and the passing output is saved to
 `artifacts/sprint-1/tdd/issue-<n>-green.txt`. Each file starts with a header (branch, commit hash, date,
 command). The rule tests (UNIT-01/02/04/05, API-12, API-16..19, API-21..23) must appear failing in the red
-file of their Issue.
+file of their Issue. For E2E-07/08, which are cross-cutting, the red step only covers the screen added by the Issue.
 
 ## 7. Version History
 
@@ -113,3 +113,4 @@ file of their Issue.
 | :--- | :--- | :--- | :--- |
 | 1.0 | 2026-11-07 | Yanis Amrane | Initial STS for Sprint 1 (reviewed by Simeon in the contract PR). |
 | 1.1 | 2026-11-07 | Yanis Amrane | UNIT-06 added; UNIT-01/04, API-07/08/18/24, E2E-03/04/06 updated; full paths; TDD file naming; see PR #9. |
+| 1.2 | 2026-11-10 | Simeon Audouit | Decisions by Yanis Amrane for Issue #8: UNIT-04 states that the query excludes the past and the rule ignores non-BOOKED bookings; NO_SHOW added to UNIT-05 and API-23 (already tested); E2E-06 dependency on E2E-05 written down; §6 red step for E2E-07/08; "Result" column filled from the release run. |

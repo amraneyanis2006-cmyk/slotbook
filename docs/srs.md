@@ -146,6 +146,7 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | A-01 | Assumption | Opening hours are 08:00–18:00 Asia/Bangkok, every day; holidays are not modelled in Sprint 1. | Holiday closures can be done by closing slots (FR-12, Sprint 2). |
 | A-02 | Assumption | Accounts are created by the seed (2 Staff, 3 Customers, 1 inactive Customer). | Self-registration excluded by the deliverable (§2 of the brief). |
 | A-03 | Assumption | Services are seeded in Sprint 1 (3 active services + 1 inactive (Thesis consultation, 60 min)) and managed by Staff from Sprint 2 (FR-17). | Keeps Sprint 1 small. |
+| A-04 | Assumption | BR-04 only compares against future bookings; to be reviewed in Sprint 2 when F-11 allows services up to 120 min. | In Sprint 1 the longest service is 45 min, shorter than the 60 min minimum lead time (BR-02), so a past booking can never overlap a bookable slot. |
 | Q-01 | Question | Can a Staff member book on behalf of a Customer (phone call)? | Resolved: **not in scope** for Sprint 1–3; Customers book themselves. Revisit after Sprint 3 if time allows. |
 | Q-02 | Question | Should a Customer see the Staff member's name before booking? | Resolved: **yes**, slot list shows staff name and service. |
 | Q-03 | Question | What happens to bookings when a Customer account is deactivated (FR-22)? | Resolved: future active bookings are cancelled with reason "account deactivated" (Sprint 3, BR-17 history). |
@@ -156,3 +157,4 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | :--- | :--- | :--- | :--- |
 | 1.0 | 2026-11-07 | Yanis Amrane (AI use is declared in docs/ai-use.md, added in Issue #8) | Baseline SRS for Deliverable 1, reviewed by Simeon Audouit in the contract PR. |
 | 1.1 | 2026-11-07 | Yanis Amrane | Pre-PR review fixes (BR-02 active service, BR-10 Bangkok year, A-03 services, NFR-05 verification); see PR #9. |
+| 1.2 | 2026-11-10 | Simeon Audouit | A-04 added (BR-04 compares only against future bookings), decided by Yanis Amrane for Issue #8. |
