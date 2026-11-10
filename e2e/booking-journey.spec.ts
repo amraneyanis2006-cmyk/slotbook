@@ -1,21 +1,9 @@
-import { expect, test, type Page } from '@playwright/test';
-
-const PASSWORD = process.env.SEED_PASSWORD;
-if (!PASSWORD) throw new Error('SEED_PASSWORD is not set (copy .env.example to .env).');
+import { expect, test } from '@playwright/test';
+import { bangkokDatePlus, logIn } from './helpers';
 
 // The free Mali slot created by e2e/global-setup.ts: today+10 (Asia/Bangkok) at 15:00, Academic advising.
-const bangkokDatePlus = (days: number) =>
-  new Date(Date.now() + 7 * 3_600_000 + days * 86_400_000).toISOString().slice(0, 10);
 const SLOT_DATE = bangkokDatePlus(10);
 let reference = ''; // set by E2E-04, used by E2E-05
-
-async function logIn(page: Page, email: string) {
-  await page.goto('/login');
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(PASSWORD!);
-  await page.getByRole('button', { name: 'Log in' }).click();
-  await expect(page).toHaveURL(/\/book$/); // the Customer home: the session exists
-}
 
 test.describe.serial('Customer booking journey (F-04, F-05)', () => {
   test('E2E-04: Ploy filters the date and service, books the Mali slot with a note, sees the reference and the slot leaves the list', async ({ page }) => {
