@@ -1,0 +1,33 @@
+Branch: main
+Commit: 569f4f99c3356ac8d8e61fe44de796c484d53547
+Tag: v0.1.0-sprint1
+Date: 2026-11-10T09:23:27Z
+Command: npm run test:e2e
+Environment: Windows 11, Node v24.19.0, npm 12.2.0, PostgreSQL 18.4
+----
+npm notice run test:e2e
+npm notice run playwright test
+[WebServer] npm notice run npx
+[WebServer] npm notice run tsx src/index.ts
+[WebServer] npm notice run dev
+[WebServer] npm notice run vite
+
+Running 9 tests using 1 worker
+
+(node:22308) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 e2e\auth.spec.ts:13:1 › E2E-01: each role lands on its home with name and role in the header; logout and wrong password (3.9s)
+  ✓  2 e2e\auth.spec.ts:41:1 › E2E-02: protected pages redirect anonymous users to /login and other roles to their own home (2.2s)
+  ✓  3 e2e\booking-journey.spec.ts:9:3 › Customer booking journey (F-04, F-05) › E2E-04: Ploy filters the date and service, books the Mali slot with a note, sees the reference and the slot leaves the list (1.9s)
+  ✓  4 e2e\booking-journey.spec.ts:32:3 › Customer booking journey (F-04, F-05) › E2E-05: the booking survives a reload and a new login; Ploy opens the detail, cancels it, sees Cancelled and the slot is bookable again (3.7s)
+  ✓  5 e2e\demo-evidence.spec.ts:14:1 › SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, staff, access control, responsive) (16.7s)
+  ✓  6 e2e\schedule.spec.ts:7:1 › E2E-06: after Ploy books the Mali slot, Mali sees the reference and "Ploy Chai" on Schedule for that day; Anan does not (3.9s)
+  ✓  7 e2e\staff-slots.spec.ts:10:1 › E2E-03: Mali publishes a slot on My Slots and sees it listed; an overlapping slot shows the overlap message (1.8s)
+(node:7288) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  8 e2e\responsive-a11y.spec.ts:33:1 › E2E-07: /login, /book, /bookings, /staff/slots and /staff/schedule have no horizontal scroll or clipped control at 320, 768 and 1280 px (6.3s)
+  ✓  9 e2e\responsive-a11y.spec.ts:73:1 › E2E-08: Ken logs in and books a slot with Tab/Shift+Tab/Enter/Esc only, with a visible focus ring (1.5s)
+
+  9 passed (54.5s)
+----
+Exit code: 0
