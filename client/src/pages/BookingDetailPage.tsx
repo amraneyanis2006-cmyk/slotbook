@@ -33,7 +33,6 @@ export default function BookingDetailPage() {
   useEffect(() => { load(); }, [load]);
 
   async function cancel() {
-    if (busy) return;
     setBusy(true);
     setPageError(null);
     const res = await http<{ booking: BookingView }>(`${path}/cancel`, { method: 'POST', body: {} });
