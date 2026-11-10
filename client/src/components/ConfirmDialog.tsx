@@ -21,7 +21,8 @@ export function ConfirmDialog({ title, children, onCancel }: { title: string; ch
       const items = focusables();
       if (!items.length) return;
       const [first, last] = [items[0], items[items.length - 1]];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!ref.current?.contains(document.activeElement)) { event.preventDefault(); first.focus(); }
+      else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
     document.addEventListener('keydown', onKey);

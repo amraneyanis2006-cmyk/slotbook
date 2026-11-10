@@ -85,3 +85,13 @@ h2 { font-size: 1.15rem; margin: var(--space-4) 0 var(--space-2); }
 .dialog-backdrop { position: fixed; inset: 0; display: grid; place-items: center; padding: var(--space-3); background: rgba(15, 23, 42, 0.45); }
 .dialog { width: 100%; max-width: 480px; background: var(--color-surface); border-radius: var(--radius); padding: var(--space-3) var(--space-4) var(--space-4); }
 label.required::after { content: " *"; color: var(--color-danger); }
+
+/* Book a Slot: filters and slot cards */
+.filters { display: grid; gap: 0 var(--space-3); grid-template-columns: 1fr; }
+@media (min-width: 768px) { .filters { grid-template-columns: repeat(2, minmax(0, 260px)); } }
+.slot-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.slot-card { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); }
+.slot-card p { margin: 0; }
+.slot-card button { margin-top: var(--space-2); align-self: flex-start; }
+.slot-time { font-weight: 600; }
+.dialog-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-3); }

@@ -5,7 +5,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { createApp, errorHandler } from '../../src/app.js';
 import { requireRole } from '../../src/middleware/requireRole.js';
 import { addDays, bangkokDate } from '../../src/utils/time.js';
-import { loginAs } from '../helpers.js';
+import { loginAs, makeSlot } from '../helpers.js';
 
 type Role = 'CUSTOMER' | 'STAFF';
 
@@ -16,6 +16,8 @@ export const PROTECTED_ROUTES: { method: 'get' | 'post'; path: string; roles: Ro
   { method: 'get', path: '/api/services', roles: ['CUSTOMER', 'STAFF'] },
   { method: 'post', path: '/api/staff/slots', roles: ['STAFF'] },
   { method: 'get', path: '/api/staff/slots', roles: ['STAFF'] },
+  { method: 'get', path: '/api/slots/available', roles: ['CUSTOMER'] },
+  { method: 'post', path: '/api/bookings', roles: ['CUSTOMER'] },
 ];
 
 const ACCOUNT: Record<Role, string> = { CUSTOMER: 'cust.ploy@slotbook.test', STAFF: 'staff.anan@slotbook.test' };
@@ -79,7 +81,29 @@ describe('API-08 server-side identity (F-02, BR-08)', () => {
     expect(row.staffId).toBe(anan.id);
   });
 
-  // Booking part (customerId in the body is ignored) is added by Issue #5.
+  it('API-08: customerId in the body is ignored; the booking belongs to the session customer', async () => {
+    const mali = await prisma.user.findUniqueOrThrow({ where: { email: 'staff.mali@slotbook.test' } });
+    const ploy = await prisma.user.findUniqueOrThrow({ where: { email: 'cust.ploy@slotbook.test' } });
+    const ken = await prisma.user.findUniqueOrThrow({ where: { email: 'cust.ken@slotbook.test' } });
+    const service = await prisma.service.findUniqueOrThrow({ where: { name: 'Academic advising' } });
+    // today+12 at 10:00 Bangkok (real clock): outside the seed range and the E2E dates.
+    const slot = await makeSlot(prisma, { staffId: mali.id, serviceId: service.id, date: addDays(bangkokDate(new Date()), 12), time: '10:00' });
+    const agent = request.agent(app);
+    await loginAs(agent, 'cust.ploy@slotbook.test');
+
+    try {
+      const res = await agent.post('/api/bookings')
+        .query({ customerId: ken.id })
+        .send({ slotId: slot.id, customerId: ken.id, userId: ken.id, role: 'CUSTOMER' });
+
+      expect(res.status).toBe(201);
+      const row = await prisma.booking.findUniqueOrThrow({ where: { reference: res.body.booking.reference } });
+      expect(row.customerId).toBe(ploy.id);
+    } finally { // keep Ploy's real-clock bookings as seeded
+      await prisma.booking.deleteMany({ where: { slotId: slot.id } });
+      await prisma.slot.delete({ where: { id: slot.id } });
+    }
+  });
 });
 
 describe('API-09 safe errors (F-02, NFR-06)', () => {
