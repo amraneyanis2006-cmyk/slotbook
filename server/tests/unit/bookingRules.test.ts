@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BOOKING_LEAD_MIN, MAX_ACTIVE_BOOKINGS, checkCustomerLimits, formatReference, isBookable } from '../../src/rules/bookingRules.js';
+import { BOOKING_LEAD_MIN, CANCEL_WINDOW_MIN, MAX_ACTIVE_BOOKINGS, canCustomerCancel, checkCustomerLimits, formatReference, isBookable } from '../../src/rules/bookingRules.js';
 
 const NOW = new Date('2026-11-10T08:00:00+07:00');
 const plus = (min: number) => new Date(NOW.getTime() + min * 60_000);
@@ -44,5 +44,21 @@ describe('isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04)', () => {
     expect(checkCustomerLimits([booking('10:00', '10:30', 'CANCELLED')], target)).toBeNull();
     // BR-03 is checked before BR-04 (F-04 §1 step 4).
     expect(checkCustomerLimits([...two, booking('10:00', '10:30')], target)).toBe('BOOKING_LIMIT_REACHED');
+  });
+});
+
+describe('canCustomerCancel (F-05, BR-05, BR-13)', () => {
+  const slotIn = (min: number) => ({ startAt: plus(min) });
+
+  it('UNIT-05: +120 min → allowed; +119 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first', () => {
+    expect(CANCEL_WINDOW_MIN).toBe(120);
+    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(120), NOW)).toBeNull();
+    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(24 * 60), NOW)).toBeNull();
+    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(119), NOW)).toBe('CANCELLATION_WINDOW_CLOSED');
+    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(-30), NOW)).toBe('CANCELLATION_WINDOW_CLOSED');
+    for (const status of ['CANCELLED', 'COMPLETED', 'NO_SHOW'] as const) {
+      expect(canCustomerCancel({ status }, slotIn(24 * 60), NOW)).toBe('BOOKING_NOT_ACTIVE');
+      expect(canCustomerCancel({ status }, slotIn(30), NOW)).toBe('BOOKING_NOT_ACTIVE'); // BR-13 before BR-05
+    }
   });
 });
