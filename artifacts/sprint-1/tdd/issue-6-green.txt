@@ -1,6 +1,6 @@
 # Branch:  feature/6-my-bookings
-# Commit:  690907e (fix(F-05): pre-PR review fixes)
-# Date:    2026-11-10 12:06:29 +0700
+# Commit:  c01e4be (fix(F-05): drop the no-op busy guard; UI-04 covers a refused cancel (dialog closed, message on the page, heading focused))
+# Date:    2026-11-10 12:09:35 +0700
 # Command: (cd . && sh -c echo "== server"; (cd server && npx vitest run); echo "== client"; (cd client && npx vitest run); echo "== e2e"; npx playwright test e2e/booking-journey.spec.ts e2e/auth.spec.ts e2e/staff-slots.spec.ts --reporter=line)
 
 == server
@@ -8,7 +8,7 @@
  RUN  v3.2.7 C:/Users/simeo/projets/slotbook/server
 
 stderr | tests/api/access.api.test.ts > API-09 safe errors (F-02, NFR-06) > API-09: /api/__test__/throw → 500 INTERNAL_ERROR without stack trace, SQL or file path
-[87ca99f1-ec34-40ba-a72d-c7f9465ff964] Error: Boom in /srv/slotbook/server/src/secret.ts while running SELECT * FROM "User"
+[45c8e4f1-e622-47ab-80bb-fc719bad886b] Error: Boom in /srv/slotbook/server/src/secret.ts while running SELECT * FROM "User"
     at C:\Users\simeo\projets\slotbook\server\src\routes\testOnly.ts:8:9
     at Layer.handle [as handle_request] (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\layer.js:95:5)
     at next (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\route.js:149:13)
@@ -21,7 +21,7 @@ stderr | tests/api/access.api.test.ts > API-09 safe errors (F-02, NFR-06) > API-
     at router (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\index.js:47:12)
 
 stderr | tests/api/access.api.test.ts > API-09 safe errors (F-02, NFR-06) > API-09: /api/__test__/prisma-error → 500 INTERNAL_ERROR without stack trace, SQL or file path
-[f1154161-5c4c-4307-ada8-fee9e82d27ae] PrismaClientKnownRequestError: 
+[31ecc83e-4852-4e58-bf6b-04cbd2b5cf77] PrismaClientKnownRequestError: 
 Invalid `prisma.$queryRawUnsafe()` invocation:
 
 
@@ -39,31 +39,33 @@ Raw query failed. Code: `42P01`. Message: `la relation « TableThatDoesNotExist 
   }
 }
 
- ✓ tests/api/access.api.test.ts (22 tests) 2922ms
-   ✓ API-07 role restriction (F-02, NFR-02) > API-07: POST /api/staff/slots as CUSTOMER → 403 FORBIDDEN  404ms
-   ✓ API-08 server-side identity (F-02, BR-08) > API-08: staffId in the body is ignored; the slot belongs to the session staff member  367ms
-   ✓ API-08 server-side identity (F-02, BR-08) > API-08: customerId in the body is ignored; the booking belongs to the session customer  312ms
- ✓ tests/api/auth.api.test.ts (6 tests) 2560ms
-   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-01: valid credentials (also upper-case e-mail) return the user without secrets and an HttpOnly SameSite=Lax cookie  732ms
-   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-02: wrong password and unknown e-mail both return 401 INVALID_CREDENTIALS with the same message; no session follows  566ms
-   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-03: an inactive account cannot log in; a session of a user deactivated later gets 401 UNAUTHENTICATED  622ms
-   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-05: after logout (204) the saved cookie is rejected on /me and on a protected endpoint  309ms
- ✓ tests/api/my-bookings.api.test.ts (4 tests) 1968ms
-   ✓ GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-20: only the caller's bookings, split into upcoming (BOOKED, start ≥ now, ascending) and past (newest first); detail by reference; same data after a new login  660ms
- ✓ tests/api/bookings.api.test.ts (8 tests) 1751ms
- ✓ tests/api/slots.api.test.ts (4 tests) 1022ms
- ✓ tests/db/seed.db.test.ts (1 test) 815ms
-   ✓ seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password  801ms
- ✓ tests/api/health.api.test.ts (1 test) 128ms
- ✓ tests/db/constraints.db.test.ts (1 test) 144ms
- ✓ tests/unit/slotRules.test.ts (2 tests) 5ms
+ ✓ tests/api/access.api.test.ts (22 tests) 3005ms
+   ✓ API-07 role restriction (F-02, NFR-02) > API-07: POST /api/staff/slots as CUSTOMER → 403 FORBIDDEN  418ms
+   ✓ API-07 role restriction (F-02, NFR-02) > API-07: GET /api/staff/slots as CUSTOMER → 403 FORBIDDEN  364ms
+   ✓ API-07 role restriction (F-02, NFR-02) > API-07: GET /api/bookings/mine as STAFF → 403 FORBIDDEN  304ms
+   ✓ API-08 server-side identity (F-02, BR-08) > API-08: staffId in the body is ignored; the slot belongs to the session staff member  361ms
+   ✓ API-08 server-side identity (F-02, BR-08) > API-08: customerId in the body is ignored; the booking belongs to the session customer  305ms
+ ✓ tests/api/auth.api.test.ts (6 tests) 2675ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-01: valid credentials (also upper-case e-mail) return the user without secrets and an HttpOnly SameSite=Lax cookie  757ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-02: wrong password and unknown e-mail both return 401 INVALID_CREDENTIALS with the same message; no session follows  597ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-03: an inactive account cannot log in; a session of a user deactivated later gets 401 UNAUTHENTICATED  660ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-05: after logout (204) the saved cookie is rejected on /me and on a protected endpoint  320ms
+ ✓ tests/api/my-bookings.api.test.ts (4 tests) 2008ms
+   ✓ GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-20: only the caller's bookings, split into upcoming (BOOKED, start ≥ now, ascending) and past (newest first); detail by reference; same data after a new login  689ms
+ ✓ tests/api/bookings.api.test.ts (8 tests) 1781ms
+ ✓ tests/api/slots.api.test.ts (4 tests) 1045ms
+ ✓ tests/db/seed.db.test.ts (1 test) 834ms
+   ✓ seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password  817ms
+ ✓ tests/db/constraints.db.test.ts (1 test) 110ms
+ ✓ tests/api/health.api.test.ts (1 test) 115ms
+ ✓ tests/unit/slotRules.test.ts (2 tests) 4ms
  ✓ tests/unit/bookingRules.test.ts (3 tests) 4ms
  ✓ tests/unit/sessionConfig.test.ts (1 test) 3ms
 
  Test Files  11 passed (11)
       Tests  53 passed (53)
-   Start at  12:06:32
-   Duration  22.82s (transform 253ms, setup 0ms, collect 4.69s, tests 11.32s, environment 2ms, prepare 1.24s)
+   Start at  12:09:37
+   Duration  23.81s (transform 281ms, setup 0ms, collect 5.62s, tests 11.58s, environment 2ms, prepare 1.21s)
 
 == client
 
@@ -81,45 +83,45 @@ stderr | tests/BookSlotPage.test.tsx > BookSlotPage (F-04) > UI-03: dialog with 
 ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
 ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
 
- ✓ tests/MySlotsPage.test.tsx (1 test) 705ms
-   ✓ MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list  703ms
- ✓ tests/MyBookingsPage.test.tsx (2 tests) 686ms
-   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled  626ms
- ✓ tests/LoginPage.test.tsx (1 test) 1194ms
-   ✓ LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home  1192ms
- ✓ tests/BookSlotPage.test.tsx (2 tests) 1895ms
-   ✓ BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state  1818ms
+ ✓ tests/MySlotsPage.test.tsx (1 test) 725ms
+   ✓ MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list  724ms
+ ✓ tests/MyBookingsPage.test.tsx (3 tests) 811ms
+   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled  595ms
+ ✓ tests/LoginPage.test.tsx (1 test) 1205ms
+   ✓ LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home  1204ms
+ ✓ tests/BookSlotPage.test.tsx (2 tests) 1856ms
+   ✓ BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state  1780ms
 
  Test Files  4 passed (4)
-      Tests  6 passed (6)
-   Start at  12:06:58
-   Duration  4.63s (transform 287ms, setup 1.87s, collect 1.37s, tests 4.48s, environment 5.35s, prepare 778ms)
+      Tests  7 passed (7)
+   Start at  12:10:03
+   Duration  4.53s (transform 333ms, setup 1.81s, collect 1.35s, tests 4.60s, environment 5.11s, prepare 766ms)
 
 == e2e
-[WebServer] (node:19000) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:30108) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
 
 [WebServer] npm notice run npx
 
 [WebServer] npm notice run tsx src/index.ts
 
-[WebServer] (node:28316) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:19556) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
 
-[WebServer] (node:36692) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:132) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
 
 [WebServer] npm notice run dev
 
 [WebServer] npm notice run vite
 
-[WebServer] (node:31828) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:29500) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
 
 
 Running 5 tests using 1 worker
 
-(node:37632) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:35696) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
 
 
@@ -128,4 +130,4 @@ Running 5 tests using 1 worker
 [3/5] e2e\booking-journey.spec.ts:21:3 › Customer booking journey (F-04, F-05) › E2E-04: Ploy filters the date and service, books the Mali slot with a note, sees the reference and the slot leaves the list
 [4/5] e2e\booking-journey.spec.ts:44:3 › Customer booking journey (F-04, F-05) › E2E-05: the booking survives a reload and a new login; Ploy opens the detail, cancels it, sees Cancelled and the slot is bookable again
 [5/5] e2e\staff-slots.spec.ts:10:1 › E2E-03: Mali publishes a slot on My Slots and sees it listed; an overlapping slot shows the overlap message
-  5 passed (20.0s)
+  5 passed (19.6s)

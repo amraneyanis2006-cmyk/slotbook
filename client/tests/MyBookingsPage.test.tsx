@@ -87,6 +87,24 @@ describe('MyBookingsPage / BookingDetailPage (F-05)', () => {
     expect(screen.queryByText('Booked')).toBeNull();
   });
 
+  it('UI-04: a refused cancel (409) closes the dialog, shows the server message on the page, focuses the heading and reloads the status', async () => {
+    let loads = 0;
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      if (init?.method === 'POST') return Promise.resolve(json(409, { error: 'CANCELLATION_WINDOW_CLOSED', message: 'Cancellation closes 2 hours before the start.' }));
+      loads += 1;
+      return Promise.resolve(json(200, { booking: LATER }));
+    }));
+    const user = userEvent.setup();
+    renderAt(`/bookings/${LATER.reference}`);
+
+    await user.click(await screen.findByRole('button', { name: 'Cancel booking' }));
+    await user.click(screen.getByRole('button', { name: 'Yes, cancel booking' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Cancellation closes 2 hours before the start.');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('heading', { name: `Booking ${LATER.reference}` })).toHaveFocus();
+    expect(loads).toBe(2);
+  });
+
   it('UI-04: empty list, load error with Retry, and "Booking not found." for a foreign reference', async () => {
     let mineCalls = 0;
     vi.stubGlobal('fetch', vi.fn((url: string) => {
