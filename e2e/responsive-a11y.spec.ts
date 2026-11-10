@@ -3,6 +3,8 @@ import { bangkokDatePlus, logIn, PASSWORD } from './helpers';
 import { VIEWPORTS } from './viewports';
 
 // AC-30 (NFR-08, NFR-09): the five Sprint 1 screens at 320, 768 and 1280 px; keyboard-only login + booking.
+// The native date field takes keystrokes in the browser's UI language: force MM/DD/YYYY on any OS (E2E-08).
+test.use({ locale: 'en-US', launchOptions: { args: ['--lang=en-US'] } });
 const SCREENS: { email: string | null; path: string; ready: (page: Page) => Locator }[] = [
   { email: null, path: '/login', ready: (p) => p.getByRole('button', { name: 'Log in' }) },
   { email: 'cust.ploy@slotbook.test', path: '/book', ready: (p) => p.getByLabel('Service') },
@@ -68,45 +70,41 @@ async function expectVisibleFocus(page: Page) {
   expect(outline.width).toBeGreaterThan(0);
 }
 
-test.describe('keyboard only', () => {
-  test.use({ locale: 'en-US' }); // the native date field takes MM/DD/YYYY keystrokes
+test('E2E-08: Ken logs in and books a slot with Tab/Shift+Tab/Enter/Esc only, with a visible focus ring', async ({ page }) => {
+  const date = bangkokDatePlus(6); // seed slots; Anan 09:00 is the first of the day
+  await page.goto('/login');
+  await tabTo(page, page.getByLabel('Email'));
+  await page.keyboard.type('cust.ken@slotbook.test');
+  await tabTo(page, page.getByLabel('Password'));
+  await page.keyboard.type(PASSWORD);
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/book$/);
 
-  test('E2E-08: Ken logs in and books a slot with Tab/Shift+Tab/Enter/Esc only, with a visible focus ring', async ({ page }) => {
-    const date = bangkokDatePlus(6); // seed slots; Anan 09:00 is the first of the day
-    await page.goto('/login');
-    await tabTo(page, page.getByLabel('Email'));
-    await page.keyboard.type('cust.ken@slotbook.test');
-    await tabTo(page, page.getByLabel('Password'));
-    await page.keyboard.type(PASSWORD);
-    await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/\/book$/);
+  await tabTo(page, page.getByLabel('Date'));
+  const [year, month, day] = date.split('-');
+  await page.keyboard.type(`${month}${day}${year}`);
+  await expect(page.getByLabel('Date')).toHaveValue(date);
 
-    await tabTo(page, page.getByLabel('Date'));
-    const [year, month, day] = date.split('-');
-    await page.keyboard.type(`${month}${day}${year}`);
-    await expect(page.getByLabel('Date')).toHaveValue(date);
+  const book = page.getByRole('button', { name: /^Book 09:00 Academic advising with Anan Wong/ });
+  await expect(book).toBeVisible();
+  await tabTo(page, book);
+  await page.keyboard.press('Enter');
+  const dialog = page.getByRole('dialog', { name: 'Confirm booking' });
+  await expect(dialog).toBeVisible();
 
-    const book = page.getByRole('button', { name: /^Book 09:00 Academic advising with Anan Wong/ });
-    await expect(book).toBeVisible();
-    await tabTo(page, book);
-    await page.keyboard.press('Enter');
-    const dialog = page.getByRole('dialog', { name: 'Confirm booking' });
-    await expect(dialog).toBeVisible();
+  // Esc closes and returns focus to Book; Shift+Tab inside the dialog wraps to its last button.
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(book).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Note (optional)')).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
+  await expectVisibleFocus(page);
 
-    // Esc closes and returns focus to Book; Shift+Tab inside the dialog wraps to its last button.
-    await page.keyboard.press('Escape');
-    await expect(dialog).toHaveCount(0);
-    await expect(book).toBeFocused();
-    await page.keyboard.press('Enter');
-    await expect(page.getByLabel('Note (optional)')).toBeFocused();
-    await page.keyboard.press('Shift+Tab');
-    await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
-    await expectVisibleFocus(page);
-
-    await tabTo(page, dialog.getByRole('button', { name: 'Confirm booking' }));
-    await page.keyboard.press('Enter');
-    await expect(dialog.getByText(/^Booked! Reference BK-\d{4}-\d{6}$/)).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(dialog).toHaveCount(0);
-  });
+  await tabTo(page, dialog.getByRole('button', { name: 'Confirm booking' }));
+  await page.keyboard.press('Enter');
+  await expect(dialog.getByText(/^Booked! Reference BK-\d{4}-\d{6}$/)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
 });
