@@ -48,7 +48,8 @@ npm test                    # server (Vitest + Supertest, resets and seeds slotb
 npm run test:e2e            # Playwright; starts the API on the test database and the app itself
 ```
 
-Ports 3000 and 5173 must be free before `npm run test:e2e`.
+Ports 3000 and 5173 must be free before `npm run test:e2e`. The suite includes `e2e/demo-evidence.spec.ts`
+(`SHOT-01`), which rewrites the demo screenshots in `artifacts/sprint-1/screenshots/` (see its `INDEX.md`).
 
 ## Other commands
 
@@ -57,3 +58,4 @@ Ports 3000 and 5173 must be free before `npm run test:e2e`.
 | `npm run build` | Compile the server (`server/dist`) and build the client (`client/dist`) |
 | `npm run db:migrate:dev` | Create a new migration from `server/prisma/schema.prisma` (development) |
 | `npm run db:reset` | Drop, re-migrate and re-seed the development database |
+| `npm run demo:readback -- <reference>` | Print one booking joined with its slot, service, staff and customer, straight from PostgreSQL (`DATABASE_URL`) |
