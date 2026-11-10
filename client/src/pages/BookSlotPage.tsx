@@ -51,7 +51,11 @@ export default function BookSlotPage() {
   useEffect(() => { if (booked) successLink.current?.focus(); }, [booked]); // the Confirm button is gone
   useEffect(() => { if (bookError) confirmButton.current?.focus(); }, [bookError]); // it was disabled while busy
   // After the dialog closes, focus returns to its Book button; if that slot left the list, to the list heading.
-  useEffect(() => { if (!selected && document.activeElement === document.body) listHeading.current?.focus(); }, [selected]);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !selected && document.activeElement === document.body) listHeading.current?.focus();
+    wasOpen.current = !!selected;
+  }, [selected]);
 
   const open = (slot: SlotPublicView) => {
     setSelected(slot);

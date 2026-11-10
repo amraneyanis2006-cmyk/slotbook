@@ -91,15 +91,18 @@ describe('API-08 server-side identity (F-02, BR-08)', () => {
     const agent = request.agent(app);
     await loginAs(agent, 'cust.ploy@slotbook.test');
 
-    const res = await agent.post('/api/bookings')
-      .query({ customerId: ken.id })
-      .send({ slotId: slot.id, customerId: ken.id, userId: ken.id, role: 'CUSTOMER' });
+    try {
+      const res = await agent.post('/api/bookings')
+        .query({ customerId: ken.id })
+        .send({ slotId: slot.id, customerId: ken.id, userId: ken.id, role: 'CUSTOMER' });
 
-    expect(res.status).toBe(201);
-    const row = await prisma.booking.findUniqueOrThrow({ where: { reference: res.body.booking.reference } });
-    expect(row.customerId).toBe(ploy.id);
-    await prisma.booking.delete({ where: { id: row.id } }); // keep Ploy's real-clock bookings as seeded
-    await prisma.slot.delete({ where: { id: slot.id } });
+      expect(res.status).toBe(201);
+      const row = await prisma.booking.findUniqueOrThrow({ where: { reference: res.body.booking.reference } });
+      expect(row.customerId).toBe(ploy.id);
+    } finally { // keep Ploy's real-clock bookings as seeded
+      await prisma.booking.deleteMany({ where: { slotId: slot.id } });
+      await prisma.slot.delete({ where: { id: slot.id } });
+    }
   });
 });
 
