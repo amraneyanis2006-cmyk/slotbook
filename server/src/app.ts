@@ -11,6 +11,7 @@ import { bookingsRouter } from './routes/bookings.js';
 import { healthRouter } from './routes/health.js';
 import { servicesRouter } from './routes/services.js';
 import { slotsRouter } from './routes/slots.js';
+import { staffScheduleRouter } from './routes/staffSchedule.js';
 import { staffSlotsRouter } from './routes/staffSlots.js';
 import { testOnlyRouter } from './routes/testOnly.js';
 
@@ -33,6 +34,7 @@ export function createApp() {
   app.use('/api/auth', authRouter);
   app.use('/api/services', servicesRouter);
   app.use('/api/staff/slots', staffSlotsRouter);
+  app.use('/api/staff/schedule', staffScheduleRouter);
   app.use('/api/slots', slotsRouter);
   app.use('/api/bookings', bookingsRouter);
   if (process.env.NODE_ENV === 'test') app.use('/api/__test__', testOnlyRouter);

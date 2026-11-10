@@ -7,11 +7,7 @@ import BookSlotPage from './pages/BookSlotPage';
 import LoginPage from './pages/LoginPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import MySlotsPage from './pages/MySlotsPage';
-
-// Placeholder until Issue #7 replaces it (Schedule).
-const ComingSoon = ({ title, issue }: { title: string; issue: number }) => (
-  <><h1>{title}</h1><p className="muted">Coming in Issue #{issue}.</p></>
-);
+import SchedulePage from './pages/SchedulePage';
 
 export default function App() {
   return (
@@ -25,7 +21,7 @@ export default function App() {
         </Route>
         <Route element={<RequireRole role="STAFF"><AppShell /></RequireRole>}>
           <Route path="/staff/slots" element={<MySlotsPage />} />
-          <Route path="/staff/schedule" element={<ComingSoon title="Schedule" issue={7} />} />
+          <Route path="/staff/schedule" element={<SchedulePage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

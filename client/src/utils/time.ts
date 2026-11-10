@@ -21,6 +21,13 @@ export const formatTimeRange = (slot: { startAt: string; endAt: string }) => `${
 /** Today's Bangkok date as YYYY-MM-DD. */
 export const todayBangkok = () => new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
 
+/** `YYYY-MM-DD` shifted by whole days. */
+export const addDays = (date: string, days: number) => {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
 /** "HH:mm" + minutes → "HH:mm" (same day). */
 export const addMinutes = (time: string, minutes: number) => {
   const total = Number(time.slice(0, 2)) * 60 + Number(time.slice(3)) + minutes;

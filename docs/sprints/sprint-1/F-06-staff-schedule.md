@@ -5,7 +5,7 @@
 | Linked requirements | FR-11, BR-08, BR-09, NFR-08, NFR-09 |
 | Issue / owner / reviewer | Issue #7 — Simeon Audouit (author), Yanis Amrane (reviewer) |
 | Depends on | F-04 (bookings exist), F-03 |
-| Contract version | 1.1 (2026-11-07) |
+| Contract version | 1.2 (2026-11-10) |
 
 ## 1. Behavior and Workflow
 
@@ -26,7 +26,8 @@
 `SlotStaffView` from F-03; the booking summary also includes `note` for the schedule.
 
 Summary: `booked` = slots with a BOOKED, COMPLETED or NO_SHOW booking; `open` = OPEN slots without one;
-`closed` = CLOSED slots; `total` = `booked` + `open` + `closed`.
+`closed` = CLOSED slots without one; `total` = `booked` + `open` + `closed` (the three counts are disjoint, so
+`total` is the number of listed slots; a CLOSED slot with a finished booking counts as booked).
 
 ## 3. UI (`/staff/schedule`)
 
