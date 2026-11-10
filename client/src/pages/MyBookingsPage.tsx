@@ -6,7 +6,7 @@ import { Callout } from '../components/Callout';
 import { EmptyState } from '../components/EmptyState';
 import { Skeleton } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
-import { formatDay, formatTime } from '../utils/time';
+import { formatDay, formatTimeRange } from '../utils/time';
 
 type Mine = { upcoming: BookingView[]; past: BookingView[] };
 
@@ -24,7 +24,7 @@ function BookingTable({ id, title, bookings, none }: { id: string; title: string
               <tr key={b.reference}>
                 <td data-label="Reference">{b.reference}</td>
                 <td data-label="Date">{formatDay(b.slot.startAt)}</td>
-                <td data-label="Time">{formatTime(b.slot.startAt)}–{formatTime(b.slot.endAt)}</td>
+                <td data-label="Time">{formatTimeRange(b.slot)}</td>
                 <td data-label="Service">{b.slot.service.name}</td>
                 <td data-label="Staff">{b.slot.staff.name}</td>
                 <td data-label="Status"><StatusBadge status={b.status} /></td>
