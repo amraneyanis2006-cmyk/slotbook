@@ -12,8 +12,10 @@ book them. CPE 334 project, team EN-036 "Y Que Fue". Contracts and requirements 
 
 **1. Database role and databases (once).** `.env.example` expects a PostgreSQL role `slotbook` with password
 `slotbook` (a synthetic local password) that owns `slotbook` and `slotbook_test`. Create them as the PostgreSQL
-superuser; `psql` asks for that user's password (Windows/macOS installers set one; on Linux use
-`sudo -u postgres psql …` instead of `psql -U postgres -h localhost …`):
+superuser; `psql` asks for that user's password. Use `psql -U postgres -h localhost …` with the EDB installer
+(Windows/macOS), `sudo -u postgres psql …` on Linux, and `psql -d postgres …` as your own user with
+Homebrew/Postgres.app. In Git Bash, if the password prompt does not appear, prefix the command with
+`PGPASSWORD=<postgres password>` or use `winpty psql …`:
 
 ```bash
 psql -U postgres -h localhost -c "CREATE ROLE slotbook LOGIN CREATEDB PASSWORD 'slotbook';" -c "CREATE DATABASE slotbook OWNER slotbook;" -c "CREATE DATABASE slotbook_test OWNER slotbook;"
@@ -25,9 +27,9 @@ database name must end in `_test` (the test setup refuses anything else).
 **2. Install, migrate, seed, test, run** (from the repository root):
 
 ```bash
-cp .env.example .env               # synthetic local values; set your own SEED_PASSWORD and SESSION_SECRET if you like
+cp .env.example .env               # first: install:all needs it; synthetic local values (set your own SEED_PASSWORD/SESSION_SECRET if you like)
 npm run install:all                # root + server + client, then generates the Prisma client in server/
-npx playwright install chromium    # browser used by npm run test:e2e (once per machine)
+npx playwright install chromium    # browser for npm run test:e2e, once per machine (Linux: add --with-deps)
 npm run db:migrate                 # applies server/prisma/migrations to DATABASE_URL
 npm run db:seed                    # synthetic data; safe to run again (idempotent)
 npm test                           # server then client tests (uses slotbook_test only)
@@ -78,12 +80,14 @@ commit them only when you mean to replace the evidence, otherwise restore them w
 ## Known limitations
 
 - `npm audit` (2026-11-10) reports advisories that `npm audit fix` cannot fix without breaking upgrades
-  (`npm audit fix --force`), so they are not applied in Sprint 1: in `server/`, `vitest` and its `tinypool` and
-  `@vitest/mocker` (fix in vitest 5) and `zod` (fix in zod 4); in `client/`, `vitest`, `tinypool`, `@vitest/mocker`
-  and `react-router-dom`/`react-router` (fix in 7). `vitest` and its dependencies are development-only test
-  tools; `zod` and `react-router-dom` ship with the app, and upgrading them to the next major version is an open
-  decision for the team.
-  The root package has none.
+  (`npm audit fix --force`), so they are not applied in Sprint 1:
+  - `vitest` and `tinypool` (**critical**) and `@vitest/mocker` (moderate), in `server/` and `client/`, fixed in
+    vitest 5. They are development-only test tools and are not shipped with the app.
+  - `zod` (**high**, `server/`, fixed in zod 4): memory exhaustion when validating oversized constrained
+    collections. The app's schemas validate no array, set, record or map, and request bodies are limited to 100 kB.
+  - `react-router-dom` / `react-router` (moderate, `client/`, fixed in 7).
+  - The root package has none. Upgrading `zod` and `react-router-dom` to the next major version is an open
+    decision for the team.
 
 ## Other commands
 

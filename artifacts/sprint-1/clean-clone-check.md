@@ -6,7 +6,7 @@
 | Cloned | `https://github.com/amraneyanis2006-cmyk/slotbook.git`, branch `release/sprint-1`, commit `e5af45c` (the README fixes of this Issue) |
 | Machine | Windows 11, Git Bash; Node v24.19.0, npm 12.2.0, PostgreSQL 18.4 |
 | Databases | Throwaway `slotbook_release_check` (the `DATABASE_URL`) and `slotbook_release_check_test` (the `DATABASE_URL_TEST`; the test setup only accepts a name ending in `_test`). Both were created by the `slotbook` role and dropped after the check (`dropdb`, exit 0 for both). |
-| Procedure | `README.md` "Setup" and "Tests", in order, in a fresh temporary folder. `.env` came from `.env.example`, with only the two database names changed. `npm run dev` was not started: `npm run test:e2e` starts the API and the app itself. |
+| Procedure | `README.md` "Setup" and "Tests", in order, in a fresh temporary folder. Deviations from the README: step 1 (`psql -U postgres … CREATE ROLE …`) was not run, because the `slotbook` role already exists on this machine, so the role created the two throwaway databases instead of the README names; `.env` came from `.env.example` with only the two database names changed; `npm run dev` was not started, since `npm run test:e2e` starts the API and the app itself. The run used `release/sprint-1`, which differs from `sprint-1-staging` only by this Issue's docs and the `install:all` change. Later commits only changed Markdown, the traceability script and its output. |
 
 ## Commands, exit codes and summaries
 
@@ -31,7 +31,7 @@
 
 `counts.sql` = `SELECT (SELECT count(*) FROM "User") || ' users, ' || (SELECT count(*) FROM "Service") || ' services, ' || (SELECT count(*) FROM "Slot") || ' slots, ' || (SELECT count(*) FROM "Booking") || ' bookings';`
 
-**Result: the README setup works on a clean clone.** Every command of the README exited 0, and all suites
+**Result: the README setup works on a clean clone.** Every README command that was run exited 0, and all suites
 passed: server 56/56, client 7/7, Playwright 9/9. The two non-zero exits above came from the extra checks of
 this procedure, not from a README command.
 
@@ -45,7 +45,7 @@ They were found on this machine before the check (Issue #8 extras a to f), fixed
    - Cause: when `npm install --prefix server` runs the server's `postinstall` (`prisma generate`), Prisma writes the client to the root folder (seen on npm 12; the exact Prisma path logic was not investigated).
    - Fix: `install:all` now ends with the new `npm run db:generate`, which runs `prisma generate` inside `server/` (step 5).
 3. **`npx playwright install chromium` and `npm test` were missing** from the Setup block. Both are added.
-4. **Versions are unified** as "Node 20 or newer (tested with 20 and 24), PostgreSQL 16 or newer (tested with 16 and 18)", in the README, `system-sds.md` and the team's rule file.
+4. **Versions are unified** as "Node 20 or newer (tested with 20 and 24), PostgreSQL 16 or newer (tested with 16 and 18)", in the README and `system-sds.md` (and in the team's rule file, which is not committed).
 5. **`npm audit fix` (without `--force`)** was run in `server/` and `client/` and changed nothing: every remaining advisory needs a major upgrade (vitest 5, zod 4, react-router-dom 7). They are listed under "Known limitations" in the README, and the root package has none.
 6. **The README now explains** that npm 12 blocks install scripts (with the warning text and why the project still works), and that `npm run test:e2e` rewrites the committed screenshots.
 

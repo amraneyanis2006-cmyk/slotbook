@@ -12,13 +12,13 @@ Team EN-036 "Y Que Fue": Yanis Amrane (`amraneyanis2006-cmyk`) and Simeon Audoui
 
 | PR | Issue | Author | Reviewer and decision | Merged |
 | :--- | :--- | :--- | :--- | :--- |
-| #9 | #1 Sprint 1 engineering contracts | Yanis | Simeon: approved | 2026-11-07 |
+| #9 | #1 Product docs (SRS, features, traceability, SDS, plan) + Sprint 1 contracts | Yanis | Simeon: approved | 2026-11-07 |
 | #10 | #2 F-00 Platform foundation | Yanis | Simeon: approved | 2026-11-07 |
 | #11 | #3 F-01 + F-02 Authentication and access control | Yanis | Simeon: approved | 2026-11-07 |
 | #12 | #4 F-03 Staff publishes slots | Yanis | Simeon: approved | 2026-11-07 |
 | #13 | #5 F-04 Browse and book a slot | Simeon | Yanis: approved, review comment listing the checks | 2026-11-10 |
 | #14 | #6 F-05 My bookings and cancellation | Simeon | Yanis: approved, review comment listing the checks and a browser try | 2026-11-10 |
-| #15 | #7 F-06 Staff schedule + Sprint 1 E2E, responsive/a11y, screenshots | Simeon | Yanis: changes requested (screenshot 17), approved after the fix | 2026-11-10 |
+| #15 | #7 F-06 Staff schedule + Sprint 1 E2E, responsive/a11y, screenshots | Simeon | Yanis: changes requested (screenshot 17), approved again at 07:42Z after the new screenshot | 2026-11-10 |
 | Issue #8 PR | #8 Sprint 1 release | Simeon | Yanis | (open) |
 
 Every PR was reviewed by the student who did not write it, and only the author's teammate approved it. AI

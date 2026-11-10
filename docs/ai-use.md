@@ -21,8 +21,8 @@ For #1–#4 this table summarises Yanis's PR bodies (#9–#12); for #5–#8 it s
 | :--- | :--- | :--- |
 | #1 / #9 Contracts | Yanis | Drafted the SRS, features, traceability, SDS, the F-00..F-06 contracts, the STS and the DoD. Its review subagent found 5 blocking contradictions and 13 wording/traceability gaps; the team decided all 18 (contract v1.1). |
 | #2 / #10 F-00 Platform | Yanis | Wrote the failing tests, then the Prisma schema and migration (partial unique index, reference sequence), the idempotent seed, the health endpoint and the Express skeleton. Two self-review rounds (12 findings, fixed). |
-| #3 / #11 F-01 + F-02 | Yanis | Tests first, then login/logout/me, `requireAuth`/`requireRole`, the error handler, the access matrix test, the login page and the route guards. Two self-review rounds (10 findings, fixed). |
-| #4 / #12 F-03 Staff slots | Yanis | Tests first, then the slot rules, the locked create-slot transaction, the endpoints and My Slots. Two self-review rounds (11 findings, fixed). |
+| #3 / #11 F-01 + F-02 | Yanis | Tests first, then login/logout/me, `requireAuth`/`requireRole`, the error handler, the access matrix test, the login page and the route guards. Two self-review rounds (10 findings fixed; 2 UI nits left as known limitations). |
+| #4 / #12 F-03 Staff slots | Yanis | Tests first, then the slot rules, the locked create-slot transaction, the endpoints and My Slots. Two self-review rounds (findings fixed; 3 nits left, per the PR body). |
 | #5 / #13 F-04 Book a slot | Simeon | Tests first (red file saved), then the booking rules, the locked booking transaction in the binding rule order, the two endpoints and `/book`. Two self-review rounds, fixes applied. |
 | #6 / #14 F-05 My bookings | Simeon | Tests first, then the my-bookings and cancellation service (row lock, BR-13 then BR-05), the routes and the two pages. Two self-review rounds, fixes applied. |
 | #7 / #15 F-06 Schedule + E2E | Simeon | Tests first, then the schedule API and page, E2E-06..08, the 23 demo screenshots (SHOT-01) with `INDEX.md`, and the database read-back script. It also proposed the F-06 §2 summary change (v1.2), which Yanis accepted. |
@@ -40,7 +40,7 @@ An AI statement is not evidence (DoD). Before merging, the humans checked the fo
   - the F-06 v1.2 change.
   - These decisions are recorded in `docs/sprints/sprint-1/README.md`.
 - **Reviews on GitHub.** Each PR was approved by the other student, never by its author.
-  - **#13 and #14:** Yanis's review comments list what was checked:
+  - **#13 and #14:** Yanis posted review comments listing these checks. The #13 comment ends mid-sentence, and the #14 comment still contains an unfilled template placeholder for its remark:
     - the transaction and row-lock order in `book()` and `cancel()`;
     - the 60 min / 3 bookings / 2 h constants and their boundary tests;
     - the P2002 → 409 mapping and the API-17 race;
@@ -48,7 +48,7 @@ An AI statement is not evidence (DoD). Before merging, the humans checked the fo
     - 404 for another customer's booking;
     - the route order;
     - a manual try of `/bookings` and cancellation in the browser.
-  - **#15:** Yanis requested that screenshot 17 be redone, so that it shows the Customer and the final `/book` page, and approved after the fix.
-  - **#9–#12:** Simeon approved them. For the review comments, Claude Code collected file:line evidence from the merged code (role matrix, rule order, partial index, seed, health 503, login 401, `requireAuth`, logout, redirect, slot lock, UNIT-01, API-12). Simeon checks that evidence before posting the comments on the PRs.
+  - **#15:** Yanis requested that screenshot 17 be redone, so that it shows the Customer and the final `/book` page. The request still contains two unfilled template placeholders. Yanis approved twice: at 06:40Z, before the new screenshot was pushed, and again at 07:42Z, after it. Both approvals have an empty body.
+  - **#9–#12:** Simeon approved them on 2026-11-07 without a written review comment. On 2026-11-10 Claude Code collected file:line evidence from the merged code for written comments on these PRs; none had been posted when this file was written.
 - **Test runs.** Every test total in a PR body comes from a real run whose output is saved in `artifacts/sprint-1/tdd/` (red and green per Issue). The release totals come from the clean-clone run in `artifacts/sprint-1/clean-clone-check.md`.
 - **Local setup.** Simeon ran the README setup on a Windows machine (Node 24, npm 12, PostgreSQL 18) and created the database role by hand. That run found the setup gaps fixed in Issue #8.

@@ -1,6 +1,6 @@
 # SlotBook — System-Level Software Design Specification (SDS)
 
-Version 1.1 (2026-11-07). Applies to the whole product; Sprint 1 feature contracts in
+Version 1.2 (2026-11-10). Applies to the whole product; Sprint 1 feature contracts in
 `docs/sprints/sprint-1/` give the detailed endpoints and screens.
 
 ---
@@ -26,7 +26,7 @@ flowchart LR
 | Layer | Technology | Responsibility |
 | :--- | :--- | :--- |
 | UI | React 18 + Vite, TypeScript, React Router, plain CSS design tokens (`client/src/styles/theme.css`) | Screens, client-side form hints, loading/empty/error states, role navigation, route guards (**convenience only, never authorization**). |
-| API / application | Node.js 20 or newer (tested with 20 and 24), Express 4, TypeScript, `zod` for request validation, `express-session` + `connect-pg-simple`, `bcrypt` | Authentication, session, role and ownership checks, request validation, domain services that enforce every business rule inside database transactions, safe error mapping. |
+| API / application | Node.js 20 or newer, at least 20.12 (tested with 20 and 24), Express 4, TypeScript, `zod` for request validation, `express-session` + `connect-pg-simple`, `bcrypt` | Authentication, session, role and ownership checks, request validation, domain services that enforce every business rule inside database transactions, safe error mapping. |
 | Persistence | PostgreSQL 16 or newer (tested with 16 and 18), Prisma ORM + Prisma Migrate | Durable storage, foreign keys, unique constraints, the partial unique index for exclusive slots (BR-01), booking-reference sequence (BR-10), session table. |
 | Tests | Vitest + Supertest (server unit/API/DB), Vitest + Testing Library (client), Playwright (E2E, responsive, keyboard) | Automated verification mapped to AC IDs. |
 

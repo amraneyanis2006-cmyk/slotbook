@@ -30,7 +30,8 @@ Branch flow: `main` ← `sprint-1-staging` ← `feature/<issue>-<slug>`.
 ## Contract Version History
 
 Any change to a contract after its PR is merged is made **in the PR that needs it**, with a row here and
-a sentence in the PR body.
+a sentence in the PR body. The versions below number the contract set; each file also keeps its own version
+number in its header and history (for example, set 1.3 = SRS 1.2, STS 1.2, SDS 1.2).
 
 | Version | Date | File(s) | Author | Change and reason |
 | :--- | :--- | :--- | :--- | :--- |
