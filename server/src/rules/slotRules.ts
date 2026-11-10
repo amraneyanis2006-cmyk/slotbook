@@ -1,6 +1,6 @@
 // Pure slot rules (F-03 §2). Times are Asia/Bangkok local input; results are UTC instants.
 import type { SlotStatus } from '@prisma/client';
-import { bangkokToUtc } from '../utils/time.js';
+import { bangkokToUtc, isIsoDate } from '../utils/time.js';
 
 export type SlotInput = { serviceId: number; date: string; startTime: string };
 export type SlotService = { durationMin: number; isActive: boolean } | null;
@@ -16,8 +16,7 @@ const CLOSE_MIN = 18 * 60;
 export function validateSlot(input: SlotInput, service: SlotService, now: Date): TimeRange | { fields: Record<string, string> } {
   const fields: Record<string, string> = {};
   if (!service?.isActive) fields.serviceId = 'Choose an active service.';
-  const day = new Date(`${input.date}T00:00:00Z`); // round-trip rejects impossible dates such as 2030-02-30
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date) || Number.isNaN(day.getTime()) || !day.toISOString().startsWith(input.date)) fields.date = 'Enter a valid date (YYYY-MM-DD).';
+  if (!isIsoDate(input.date)) fields.date = 'Enter a valid date (YYYY-MM-DD).';
   const time = /^([01]\d|2[0-3]):(00|15|30|45)$/.exec(input.startTime);
   if (!time) fields.startTime = 'Choose a start time on a 15-minute step (HH:mm).';
   if (Object.keys(fields).length || !service || !time) return { fields };

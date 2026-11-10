@@ -5,9 +5,12 @@ import session from 'express-session';
 import pgSession from 'connect-pg-simple';
 import { sessionOptions } from './config/session.js';
 import { AppError } from './errors.js';
+import { BOOKING_RULE_MESSAGES } from './rules/bookingRules.js';
 import { authRouter } from './routes/auth.js';
+import { bookingsRouter } from './routes/bookings.js';
 import { healthRouter } from './routes/health.js';
 import { servicesRouter } from './routes/services.js';
+import { slotsRouter } from './routes/slots.js';
 import { staffSlotsRouter } from './routes/staffSlots.js';
 import { testOnlyRouter } from './routes/testOnly.js';
 
@@ -30,6 +33,8 @@ export function createApp() {
   app.use('/api/auth', authRouter);
   app.use('/api/services', servicesRouter);
   app.use('/api/staff/slots', staffSlotsRouter);
+  app.use('/api/slots', slotsRouter);
+  app.use('/api/bookings', bookingsRouter);
   if (process.env.NODE_ENV === 'test') app.use('/api/__test__', testOnlyRouter);
 
   app.use('/api', (_req, _res, next) => next(new AppError(404, 'NOT_FOUND', 'Not found.')));
@@ -49,10 +54,10 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     res.status(400).json({ error: 'BAD_REQUEST', message: 'The request body is not valid JSON or is too large.' });
     return;
   }
-  // Race on the partial unique index booking_one_active_per_slot (BR-01, NFR-04); first used by F-04.
+  // Race on the partial unique index booking_one_active_per_slot (BR-01, NFR-04): F-04 §1 step 4.8.
   if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002'
       && /slotId|booking_one_active_per_slot/.test(String(err.meta?.target))) {
-    res.status(409).json({ error: 'SLOT_ALREADY_BOOKED', message: 'This slot has already been booked.' });
+    res.status(409).json({ error: 'SLOT_ALREADY_BOOKED', message: BOOKING_RULE_MESSAGES.SLOT_ALREADY_BOOKED });
     return;
   }
   const requestId = randomUUID();
