@@ -1,0 +1,294 @@
+# Branch:  feature/6-my-bookings
+# Commit:  13b2763 (test(F-05): UNIT-05 API-07 API-20 API-21 API-22 API-23 UI-04 E2E-05 [red])
+# Date:    2026-11-10 11:49:21 +0700
+# Command: (cd . && sh -c echo "== server"; (cd server && npx vitest run); echo "== client"; (cd client && npx vitest run); echo "== e2e"; npx playwright test e2e/booking-journey.spec.ts --reporter=line)
+
+== server
+
+ RUN  v3.2.7 C:/Users/simeo/projets/slotbook/server
+
+ ❯ tests/api/my-bookings.api.test.ts (4 tests | 4 failed) 1147ms
+   × GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-20: only the caller's bookings, split into upcoming (BOOKED, start ≥ now, ascending) and past (newest first); detail by reference; same data after a new login 42ms
+     → expected 404 to be 200 // Object.is equality
+   × GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-21: reading or cancelling Ken's booking as Ploy → 404 NOT_FOUND without booking data; Ken's booking still BOOKED 14ms
+     → expected { error: 'NOT_FOUND', …(1) } to deeply equal { error: 'NOT_FOUND', …(1) }
+   × POST /api/bookings/:reference/cancel (F-05) > API-22: cancelling at +3 h (and exactly +120 min) → 200 CANCELLED with cancelledAt; the slot is available again and Nina books it 10ms
+     → expected 404 to be 200 // Object.is equality
+   × POST /api/bookings/:reference/cancel (F-05) > API-23: inside 2 h → 409 CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED (or a second cancel) → 409 BOOKING_NOT_ACTIVE; rows unchanged 25ms
+     → expected 404 to be 409 // Object.is equality
+ ✓ tests/api/auth.api.test.ts (6 tests) 2566ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-01: valid credentials (also upper-case e-mail) return the user without secrets and an HttpOnly SameSite=Lax cookie  705ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-02: wrong password and unknown e-mail both return 401 INVALID_CREDENTIALS with the same message; no session follows  597ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-03: an inactive account cannot log in; a session of a user deactivated later gets 401 UNAUTHENTICATED  638ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-05: after logout (204) the saved cookie is rejected on /me and on a protected endpoint  303ms
+stderr | tests/api/access.api.test.ts > API-09 safe errors (F-02, NFR-06) > API-09: /api/__test__/throw → 500 INTERNAL_ERROR without stack trace, SQL or file path
+[31bcd0f9-adb2-4977-aa40-7d1cb7cf7222] Error: Boom in /srv/slotbook/server/src/secret.ts while running SELECT * FROM "User"
+    at C:\Users\simeo\projets\slotbook\server\src\routes\testOnly.ts:8:9
+    at Layer.handle [as handle_request] (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\layer.js:95:5)
+    at C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\index.js:284:15
+    at router.process_params (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\index.js:346:12)
+    at next (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\index.js:280:10)
+    at router.handle (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\index.js:175:3)
+    at router (C:\Users\simeo\projets\slotbook\server\node_modules\express\lib\router\index.js:47:12)
+
+stderr | tests/api/access.api.test.ts > API-09 safe errors (F-02, NFR-06) > API-09: /api/__test__/prisma-error → 500 INTERNAL_ERROR without stack trace, SQL or file path
+[f18e32e8-5e57-4c9f-a938-07ba225e39f9] PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `la relation « TableThatDoesNotExist » n'existe pas`
+    at $n.handleRequestError (C:\Users\simeo\projets\slotbook\server\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\simeo\projets\slotbook\server\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\simeo\projets\slotbook\server\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at l (C:\Users\simeo\projets\slotbook\server\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at C:\Users\simeo\projets\slotbook\server\src\routes\testOnly.ts:13:5 {
+  code: 'P2010',
+  clientVersion: '5.22.0',
+  meta: {
+    code: '42P01',
+    message: "la relation « TableThatDoesNotExist » n'existe pas"
+  }
+}
+
+ ✓ tests/api/access.api.test.ts (22 tests) 3372ms
+   ✓ API-07 role restriction (F-02, NFR-02) > API-07: POST /api/staff/slots as CUSTOMER → 403 FORBIDDEN  569ms
+   ✓ API-07 role restriction (F-02, NFR-02) > API-07: GET /api/bookings/BK-2030-000001 as STAFF → 403 FORBIDDEN  342ms
+   ✓ API-08 server-side identity (F-02, BR-08) > API-08: staffId in the body is ignored; the slot belongs to the session staff member  501ms
+   ✓ API-08 server-side identity (F-02, BR-08) > API-08: customerId in the body is ignored; the booking belongs to the session customer  382ms
+ ✓ tests/api/bookings.api.test.ts (8 tests) 1811ms
+ ✓ tests/api/slots.api.test.ts (4 tests) 1008ms
+ ✓ tests/db/seed.db.test.ts (1 test) 888ms
+   ✓ seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password  867ms
+ ✓ tests/db/constraints.db.test.ts (1 test) 286ms
+ ✓ tests/api/health.api.test.ts (1 test) 125ms
+ ✓ tests/unit/slotRules.test.ts (2 tests) 5ms
+ ❯ tests/unit/bookingRules.test.ts (3 tests | 1 failed) 10ms
+   ✓ formatReference (F-04, BR-10) > UNIT-03: formats BK-YYYY-NNNNNN and throws when the sequence exceeds 999999 2ms
+   ✓ isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04) > UNIT-04: +60 min is bookable; +59 min, CLOSED/CANCELLED and inactive service are not; 3 active → limit; past/cancelled not counted; overlap vs back-to-back 1ms
+   × canCustomerCancel (F-05, BR-05, BR-13) > UNIT-05: +120 min → allowed; +119 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first 7ms
+     → expected undefined to be 120 // Object.is equality
+ ✓ tests/unit/sessionConfig.test.ts (1 test) 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/my-bookings.api.test.ts > GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-20: only the caller's bookings, split into upcoming (BOOKED, start ≥ now, ascending) and past (newest first); detail by reference; same data after a new login
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/my-bookings.api.test.ts:51:24
+     49| 
+     50|     const res = await agents.ploy.get('/api/bookings/mine');
+     51|     expect(res.status).toBe(200);
+       |                        ^
+     52|     const { upcoming, past } = res.body as { upcoming: View[]; past: V…
+     53|     expect(upcoming.map((b) => b.reference)).toEqual([sooner.booking.r…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/api/my-bookings.api.test.ts > GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-21: reading or cancelling Ken's booking as Ploy → 404 NOT_FOUND without booking data; Ken's booking still BOOKED
+AssertionError: expected { error: 'NOT_FOUND', …(1) } to deeply equal { error: 'NOT_FOUND', …(1) }
+
+- Expected
++ Received
+
+  {
+    "error": "NOT_FOUND",
+-   "message": "Booking not found.",
++   "message": "Not found.",
+  }
+
+ ❯ tests/api/my-bookings.api.test.ts:89:23
+     87|     const read = await agents.ploy.get(`/api/bookings/${booking.refere…
+     88|     expect(read.status).toBe(404);
+     89|     expect(read.body).toEqual(notFound);
+       |                       ^
+     90|     const cancelled = await cancel(agents.ploy, booking.reference);
+     91|     expect(cancelled.status).toBe(404);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/api/my-bookings.api.test.ts > POST /api/bookings/:reference/cancel (F-05) > API-22: cancelling at +3 h (and exactly +120 min) → 200 CANCELLED with cancelledAt; the slot is available again and Nina books it
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/my-bookings.api.test.ts:105:24
+    103| 
+    104|     const res = await cancel(agents.ploy, booking.reference);
+    105|     expect(res.status).toBe(200);
+       |                        ^
+    106|     expect(res.body.booking).toMatchObject({ reference: booking.refere…
+    107|     expect(await prisma.booking.findUniqueOrThrow({ where: { id: booki…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/api/my-bookings.api.test.ts > POST /api/bookings/:reference/cancel (F-05) > API-23: inside 2 h → 409 CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED (or a second cancel) → 409 BOOKING_NOT_ACTIVE; rows unchanged
+AssertionError: expected 404 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 404
+
+ ❯ tests/api/my-bookings.api.test.ts:128:26
+    126|     for (const { booking } of inside) {
+    127|       const res = await cancel(agents.ploy, booking.reference);
+    128|       expect(res.status).toBe(409);
+       |                          ^
+    129|       expect(res.body).toEqual({ error: 'CANCELLATION_WINDOW_CLOSED', …
+    130|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/unit/bookingRules.test.ts > canCustomerCancel (F-05, BR-05, BR-13) > UNIT-05: +120 min → allowed; +119 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first
+AssertionError: expected undefined to be 120 // Object.is equality
+
+- Expected: 
+120
+
++ Received: 
+undefined
+
+ ❯ tests/unit/bookingRules.test.ts:54:31
+     52| 
+     53|   it('UNIT-05: +120 min → allowed; +119 min → CANCELLATION_WINDOW_CLOS…
+     54|     expect(CANCEL_WINDOW_MIN).toBe(120);
+       |                               ^
+     55|     expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(120), NOW)).…
+     56|     expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(24 * 60), NO…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  2 failed | 9 passed (11)
+      Tests  5 failed | 48 passed (53)
+   Start at  11:49:23
+   Duration  24.63s (transform 315ms, setup 0ms, collect 5.52s, tests 11.22s, environment 2ms, prepare 1.42s)
+
+== client
+
+ RUN  v3.2.7 C:/Users/simeo/projets/slotbook/client
+
+stderr | tests/LoginPage.test.tsx > LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | tests/BookSlotPage.test.tsx > BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ tests/MySlotsPage.test.tsx (1 test) 929ms
+   ✓ MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list  926ms
+ ✓ tests/LoginPage.test.tsx (1 test) 1419ms
+   ✓ LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home  1415ms
+ ✓ tests/BookSlotPage.test.tsx (2 tests) 2235ms
+   ✓ BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state  2139ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/MyBookingsPage.test.tsx [ tests/MyBookingsPage.test.tsx ]
+Error: Failed to resolve import "../src/pages/BookingDetailPage" from "tests/MyBookingsPage.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: C:/Users/simeo/projets/slotbook/client/tests/MyBookingsPage.test.tsx:5:30
+  4  |  import { MemoryRouter, Route, Routes } from "react-router-dom";
+  5  |  import { afterEach, describe, expect, it, vi } from "vitest";
+  6  |  import BookingDetailPage from "../src/pages/BookingDetailPage";
+     |                                 ^
+  7  |  import MyBookingsPage from "../src/pages/MyBookingsPage";
+  8  |  const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+ ❯ TransformPluginContext._formatLog node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42846:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42843:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40820:23
+ ❯ node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40939:37
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40866:7
+ ❯ EnvironmentPluginContainer.transform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42641:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:36053:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  4 passed (4)
+   Start at  11:49:51
+   Duration  6.13s (transform 486ms, setup 2.05s, collect 2.63s, tests 4.58s, environment 6.77s, prepare 1.04s)
+
+== e2e
+[WebServer] (node:33032) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] npm notice run npx
+
+[WebServer] npm notice run tsx src/index.ts
+
+[WebServer] (node:33936) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:7112) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] npm notice run dev
+
+[WebServer] npm notice run vite
+
+[WebServer] (node:37072) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+
+Running 2 tests using 1 worker
+
+(node:21060) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/2] e2e\booking-journey.spec.ts:20:3 › Customer booking journey (F-04, F-05) › E2E-04: Ploy filters the date and service, books the Mali slot with a note, sees the reference and the slot leaves the list
+[2/2] e2e\booking-journey.spec.ts:44:3 › Customer booking journey (F-04, F-05) › E2E-05: the booking survives a reload and a new login; Ploy opens the detail, cancels it, sees Cancelled and the slot is bookable again
+  1) e2e\booking-journey.spec.ts:44:3 › Customer booking journey (F-04, F-05) › E2E-05: the booking survives a reload and a new login; Ploy opens the detail, cancels it, sees Cancelled and the slot is bookable again 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('region', { name: 'Upcoming' }).getByRole('row', { name: /BK-2026-000006/ })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Upcoming' }).getByRole('row', { name: /BK-2026-000006/ })
+
+
+      46 |     await page.getByRole('banner').getByRole('link', { name: 'My Bookings' }).click();
+      47 |     const upcoming = page.getByRole('region', { name: 'Upcoming' });
+    > 48 |     await expect(upcoming.getByRole('row', { name: new RegExp(reference) })).toBeVisible();
+         |                                                                              ^
+      49 |
+      50 |     await page.reload();
+      51 |     await expect(upcoming.getByRole('row', { name: new RegExp(reference) })).toBeVisible();
+        at C:\Users\simeo\projets\slotbook\e2e\booking-journey.spec.ts:48:78
+
+    Error Context: test-results\booking-journey-Customer-b-3831a--the-slot-is-bookable-again\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\booking-journey-Customer-b-3831a--the-slot-is-bookable-again\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\booking-journey-Customer-b-3831a--the-slot-is-bookable-again\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    e2e\booking-journey.spec.ts:44:3 › Customer booking journey (F-04, F-05) › E2E-05: the booking survives a reload and a new login; Ploy opens the detail, cancels it, sees Cancelled and the slot is bookable again 
+  1 passed (23.0s)
