@@ -12,7 +12,8 @@
     "db:migrate": "npm run prisma --prefix server -- migrate deploy",
     "db:migrate:dev": "npm run prisma --prefix server -- migrate dev",
     "db:seed": "npm run prisma --prefix server -- db seed",
-    "db:reset": "npm run prisma --prefix server -- migrate reset"
+    "db:reset": "npm run prisma --prefix server -- migrate reset",
+    "demo:readback": "node --env-file=.env server/node_modules/tsx/dist/cli.mjs scripts/db-readback.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",
