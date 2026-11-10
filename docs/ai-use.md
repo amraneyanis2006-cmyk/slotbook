@@ -32,23 +32,38 @@ For #1–#4 this table summarises Yanis's PR bodies (#9–#12); for #5–#8 it s
 
 ## What the humans verified
 
-An AI statement is not evidence (DoD). Before merging, the humans checked the following:
+An AI statement is not evidence (DoD). The humans checked the following. Times are UTC, read from the GitHub API on
+2026-11-10 (`submittedAt`, `createdAt` and `lastEditedAt`; earlier versions are in GitHub's edit history). They
+show which written records were posted or completed after the merge.
 
 - **Contracts.** Yanis decided every contract point raised by the AI or its review subagent:
   - the 18 points of v1.1 (PR #9);
   - the questions from Issues #5–#7 (SRS A-04, the STS UNIT-04/05, API-23, E2E-06 and §6 wording, the SDS §3.2 example);
   - the F-06 v1.2 change.
   - These decisions are recorded in `docs/sprints/sprint-1/README.md`.
-- **Reviews on GitHub.** Each PR was approved by the other student, never by its author.
-  - **#13 and #14:** Yanis posted review comments listing these checks. The #13 comment ends mid-sentence, and the #14 comment still contains an unfilled template placeholder for its remark:
-    - the transaction and row-lock order in `book()` and `cancel()`;
-    - the 60 min / 3 bookings / 2 h constants and their boundary tests;
-    - the P2002 → 409 mapping and the API-17 race;
-    - `customerId` ignored;
-    - 404 for another customer's booking;
-    - the route order;
-    - a manual try of `/bookings` and cancellation in the browser.
-  - **#15:** Yanis requested that screenshot 17 be redone, so that it shows the Customer and the final `/book` page. The request still contains two unfilled template placeholders. Yanis approved twice: at 06:40Z, before the new screenshot was pushed, and again at 07:42Z, after it. Both approvals have an empty body.
-  - **#9–#12:** Simeon approved them on 2026-11-07 without a written review comment. On 2026-11-10 Claude Code collected file:line evidence from the merged code for written comments on these PRs; none had been posted when this file was written.
+- **Reviews on GitHub.** Each PR was approved by the other student, never by its author. Every approval review
+  (#9–#15) has an empty body; the written checks are in separate comments or reviews.
+  - **#9–#12 (Simeon):**
+    - **Approvals:** on 2026-11-07 at 09:43Z, 09:46Z, 09:49Z and 09:50Z, before each merge (09:47Z, 09:47Z, 09:49Z, 09:51Z), all with an empty body.
+    - **Written checks:** posted three days after the merge, on 2026-11-10, as "Comment" reviews: #9 at 08:48:40Z, #10 at 08:49:13Z, #11 at 08:49:35Z, #12 at 08:49:57Z.
+    - **What they state:**
+      - #9: the role table, rule order and 60 min / 3 bookings / 2 h values are consistent.
+      - #10: the partial unique index; seed run twice with the same data; the README followed, with missing steps fixed in Issue #8.
+      - #11: the same error for wrong password, unknown e-mail and inactive account; old cookie rejected after logout; a Customer is refused the staff page.
+      - #12: row lock before the overlap check; 17:30 accepted and 17:45 refused; the overlap error seen in the browser.
+    - **AI help:** Claude Code had collected file:line evidence for these checks earlier the same day.
+  - **#13 (Yanis):**
+    - **Approval:** at 06:31:50Z, empty body. Merged at 06:36:45Z.
+    - **Review comment:** created at 06:31:38Z and ended mid-sentence. Completed after the merge (edited at 08:29:52Z and 08:35:54Z).
+    - **What it states now:** one transaction, the slot locked first, the rules in the contract order; the parallel double-booking test; the customer id taken from the login.
+  - **#14 (Yanis):**
+    - **Approval:** at 06:34:47Z, empty body. Merged at 06:38:59Z.
+    - **Review comment:** created at 06:34:38Z with an unfilled template placeholder for its remark. Rewritten after the merge (edited at 08:36:20Z).
+    - **What it states now:** the 2-hour cancel check is done on the server; the same "not found" for a missing booking and another customer's booking; a browser try showing the Cancel button only when allowed.
+  - **#15 (Yanis):**
+    - **Changes requested:** at 06:35:59Z, on commit `4f2cce6`, asking for screenshot 17 to be redone. That first text contained two unfilled template placeholders. Its main points were usable: the screenshot must show the Customer Ploy in the header and the final `/book` page, and match `INDEX.md`.
+    - **First approval:** at 06:40:16Z, still on `4f2cce6`, before the new screenshot was pushed (`f25e583`, 06:42:35Z).
+    - **Second approval:** at 07:42:25Z on `f25e583`. Both approvals have an empty body. Merged at 07:43:44Z.
+    - **After the merge:** the change request was rewritten (edited at 08:24:19Z and 08:36:42Z). It now says the first screenshot 17 did not clearly show the customer or the final page and is fixed, that the schedule shows only the staff member's own slots, and that the pages fit on small screens.
 - **Test runs.** Every test total in a PR body comes from a real run whose output is saved in `artifacts/sprint-1/tdd/` (red and green per Issue). The release totals come from the clean-clone run in `artifacts/sprint-1/clean-clone-check.md`.
 - **Local setup.** Simeon ran the README setup on a Windows machine (Node 24, npm 12, PostgreSQL 18) and created the database role by hand. That run found the setup gaps fixed in Issue #8.

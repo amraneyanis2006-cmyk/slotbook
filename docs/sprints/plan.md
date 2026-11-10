@@ -2,8 +2,8 @@
 
 | Sprint | Dates | Checkpoint | Goal |
 | :--- | :--- | :--- | :--- |
-| 1 | 3 Nov – 8 Nov 2026 | Deliverable 1, 8 Nov 23:59 | Small working domain slice: authentication, two roles, staff publishes slots, customer books / views / cancels, staff sees the day — persisted and access-controlled. |
-| 2 | 9 Nov – 29 Nov 2026 | Deliverable 2, 29 Nov | Core expansion: slot maintenance, reschedule, attendance, history, services, search; Docker + CI/CD + GCP (Lab 5). |
+| 1 | 3 Nov – 15 Nov 2026 | Deliverable 1, 15 Nov 23:59 | Small working domain slice: authentication, two roles, staff publishes slots, customer books / views / cancels, staff sees the day — persisted and access-controlled. |
+| 2 | 16 Nov – 29 Nov 2026 | Deliverable 2, 29 Nov | Core expansion: slot maintenance, reschedule, attendance, history, services, search; Docker + CI/CD + GCP (Lab 5). |
 | 3 | 30 Nov – 13 Dec 2026 | Progress 29 Nov, complete 13 Dec | Remaining features (templates, dashboard, notifications, accounts, no-show policy) and product hardening. |
 
 ## Sprint 1 — Working booking slice
