@@ -5,22 +5,21 @@ import { Callout } from '../components/Callout';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
 import { Skeleton } from '../components/Skeleton';
-import { formatDay, formatTime, todayBangkok } from '../utils/time';
+import type { SlotView } from '../api/bookings';
+import { formatDay, formatTime, formatTimeRange, todayBangkok } from '../utils/time';
 
-type Service = { id: number; name: string; durationMin: number };
-type SlotPublicView = { id: number; startAt: string; endAt: string; service: Service; staff: { id: number; name: string } };
+type Service = SlotView['service'];
 type Booking = { reference: string };
 
 const NOTE_MAX = 300;
-const timeRange = (slot: SlotPublicView) => `${formatTime(slot.startAt)}–${formatTime(slot.endAt)}`;
 
 export default function BookSlotPage() {
   const [date, setDate] = useState(todayBangkok());
   const [serviceId, setServiceId] = useState('');
   const [services, setServices] = useState<Service[]>([]);
-  const [slots, setSlots] = useState<SlotPublicView[] | null>(null);
+  const [slots, setSlots] = useState<SlotView[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<SlotPublicView | null>(null);
+  const [selected, setSelected] = useState<SlotView | null>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [bookError, setBookError] = useState<string | null>(null);
@@ -41,7 +40,7 @@ export default function BookSlotPage() {
     setLoadError(null);
     if (!refresh) setSlots(null);
     const query = new URLSearchParams({ date, ...(serviceId && { serviceId }) });
-    const res = await http<{ slots: SlotPublicView[] }>(`/slots/available?${query}`);
+    const res = await http<{ slots: SlotView[] }>(`/slots/available?${query}`);
     if (request !== latest.current) return; // a newer filter is loading
     if (res.ok) setSlots(res.data.slots);
     else setLoadError(res.message);
@@ -57,7 +56,7 @@ export default function BookSlotPage() {
     wasOpen.current = !!selected;
   }, [selected]);
 
-  const open = (slot: SlotPublicView) => {
+  const open = (slot: SlotView) => {
     setSelected(slot);
     setNote('');
     setBookError(null);
@@ -102,7 +101,7 @@ export default function BookSlotPage() {
                 <ul className="slot-list">
                   {slots.map((slot) => (
                     <li key={slot.id} className="slot-card">
-                      <p className="slot-time">{timeRange(slot)}</p>
+                      <p className="slot-time">{formatTimeRange(slot)}</p>
                       <p>{slot.service.name}</p>
                       <p className="muted">{slot.staff.name}</p>
                       <button type="button" aria-label={`Book ${formatTime(slot.startAt)} ${slot.service.name} with ${slot.staff.name}`} onClick={() => open(slot)}>
@@ -117,7 +116,7 @@ export default function BookSlotPage() {
       {selected && (
         <ConfirmDialog title="Confirm booking" onCancel={close}>
           <p>
-            {formatDay(selected.startAt)}, {timeRange(selected)}<br />
+            {formatDay(selected.startAt)}, {formatTimeRange(selected)}<br />
             {selected.service.name} with {selected.staff.name}
           </p>
           {booked ? (

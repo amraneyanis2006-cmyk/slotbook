@@ -72,10 +72,11 @@ describe('GET /api/bookings/mine, GET /api/bookings/:reference (F-05)', () => {
     // A lower-case reference in the URL is normalised to upper case (F-05 §7).
     expect((await agents.ploy.get(`/api/bookings/${sooner.booking.reference.toLowerCase()}`)).body).toEqual({ booking: upcoming[0] });
 
+    const first = request.agent(app);
+    await loginAs(first, 'cust.ploy@slotbook.test');
+    expect((await first.post('/api/auth/logout')).status).toBe(204);
     const relogged = request.agent(app);
-    expect((await agents.ploy.post('/api/auth/logout')).status).toBe(204);
     await loginAs(relogged, 'cust.ploy@slotbook.test');
-    agents.ploy = relogged;
     expect((await relogged.get('/api/bookings/mine')).body).toEqual(res.body);
     expect((await relogged.get(`/api/bookings/${sooner.booking.reference}`)).body).toEqual({ booking: upcoming[0] });
   });
@@ -91,7 +92,10 @@ describe('GET /api/bookings/mine, GET /api/bookings/:reference (F-05)', () => {
     expect(cancelled.status).toBe(404);
     expect(cancelled.body).toEqual(notFound);
     // An unknown reference gets exactly the same answer (no existence leak, BR-09).
-    expect((await agents.ploy.get('/api/bookings/BK-2030-999999')).body).toEqual(notFound);
+    for (const unknown of [await agents.ploy.get('/api/bookings/BK-2030-999999'), await cancel(agents.ploy, 'BK-2030-999999')]) {
+      expect(unknown.status).toBe(404);
+      expect(unknown.body).toEqual(notFound);
+    }
 
     expect(await prisma.booking.findUniqueOrThrow({ where: { id: booking.id } })).toMatchObject({ status: 'BOOKED', cancelledAt: null, cancelledById: null });
   });
@@ -111,14 +115,15 @@ describe('POST /api/bookings/:reference/cancel (F-05)', () => {
     expect((await agents.nina.post('/api/bookings').send({ slotId: slot.id })).status).toBe(201);
 
     const boundary = await bookingAt('ploy', '2030-03-04', '10:00', 'BOOKED', 'mali'); // exactly 120 min before the start
-    expect((await cancel(agents.ploy, boundary.booking.reference)).status).toBe(200);
+    expect((await cancel(agents.ploy, boundary.booking.reference.toLowerCase())).status).toBe(200); // lower-case URL too
   });
 
-  it('API-23: inside 2 h → 409 CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED (or a second cancel) → 409 BOOKING_NOT_ACTIVE; rows unchanged', async () => {
+  it('API-23: inside 2 h → 409 CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW (or a second cancel) → 409 BOOKING_NOT_ACTIVE; rows unchanged', async () => {
     const inside = [await bookingAt('ploy', '2030-03-04', '09:30'), await bookingAt('ploy', '2030-03-04', '09:59', 'BOOKED', 'mali')]; // +90, +119 min
     const inactive = [
       await bookingAt('ploy', '2030-03-14', '09:00', 'CANCELLED'),
       await bookingAt('ploy', '2030-03-01', '10:00', 'COMPLETED'),
+      await bookingAt('ploy', '2030-03-02', '10:00', 'NO_SHOW'),
       await bookingAt('ploy', '2030-03-04', '09:00', 'CANCELLED', 'mali'), // inside 2 h too: BR-13 is checked first
     ];
     const before = await prisma.booking.findMany({ where: { id: { in: [...inside, ...inactive].map((b) => b.booking.id) } }, orderBy: { id: 'asc' } });
@@ -137,6 +142,8 @@ describe('POST /api/bookings/:reference/cancel (F-05)', () => {
 
     const twice = await bookingAt('ploy', '2030-03-20', '09:00');
     expect((await cancel(agents.ploy, twice.booking.reference)).status).toBe(200);
-    expect((await cancel(agents.ploy, twice.booking.reference)).body.error).toBe('BOOKING_NOT_ACTIVE');
+    const second = await cancel(agents.ploy, twice.booking.reference);
+    expect(second.status).toBe(409);
+    expect(second.body).toEqual({ error: 'BOOKING_NOT_ACTIVE', message: 'This booking is no longer active.' });
   });
 });

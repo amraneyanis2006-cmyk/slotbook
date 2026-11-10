@@ -15,6 +15,9 @@ export const formatTime = (iso: string | Date) => {
   return `${p.hour}:${p.minute}`;
 };
 
+/** "09:30–10:00" */
+export const formatTimeRange = (slot: { startAt: string; endAt: string }) => `${formatTime(slot.startAt)}–${formatTime(slot.endAt)}`;
+
 /** Today's Bangkok date as YYYY-MM-DD. */
 export const todayBangkok = () => new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
 
