@@ -18,6 +18,9 @@ export const PROTECTED_ROUTES: { method: 'get' | 'post'; path: string; roles: Ro
   { method: 'get', path: '/api/staff/slots', roles: ['STAFF'] },
   { method: 'get', path: '/api/slots/available', roles: ['CUSTOMER'] },
   { method: 'post', path: '/api/bookings', roles: ['CUSTOMER'] },
+  { method: 'get', path: '/api/bookings/mine', roles: ['CUSTOMER'] },
+  { method: 'get', path: '/api/bookings/BK-2030-000001', roles: ['CUSTOMER'] },
+  { method: 'post', path: '/api/bookings/BK-2030-000001/cancel', roles: ['CUSTOMER'] },
 ];
 
 const ACCOUNT: Record<Role, string> = { CUSTOMER: 'cust.ploy@slotbook.test', STAFF: 'staff.anan@slotbook.test' };
