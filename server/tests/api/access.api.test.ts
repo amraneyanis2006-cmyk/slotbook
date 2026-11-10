@@ -16,6 +16,7 @@ export const PROTECTED_ROUTES: { method: 'get' | 'post'; path: string; roles: Ro
   { method: 'get', path: '/api/services', roles: ['CUSTOMER', 'STAFF'] },
   { method: 'post', path: '/api/staff/slots', roles: ['STAFF'] },
   { method: 'get', path: '/api/staff/slots', roles: ['STAFF'] },
+  { method: 'get', path: '/api/staff/schedule', roles: ['STAFF'] },
   { method: 'get', path: '/api/slots/available', roles: ['CUSTOMER'] },
   { method: 'post', path: '/api/bookings', roles: ['CUSTOMER'] },
   { method: 'get', path: '/api/bookings/mine', roles: ['CUSTOMER'] },

@@ -36,3 +36,4 @@ a sentence in the PR body.
 | :--- | :--- | :--- | :--- | :--- |
 | 1.0 | 2026-11-07 | all | Yanis Amrane | Initial Sprint 1 contracts, STS and DoD, recorded before any implementation (Issue #1). |
 | 1.1 | 2026-11-07 | all | Yanis Amrane | Fixes from the pre-PR contract review (18 points, see PR #9) |
+| 1.2 | 2026-11-10 | F-06-staff-schedule.md | Simeon Audouit | §2 summary: `closed` counts CLOSED slots **without** a booking, so the counts are disjoint and `total` = number of listed slots. Before, a CLOSED slot with a COMPLETED/NO_SHOW booking was counted twice (booked and closed). Issue #7. |
