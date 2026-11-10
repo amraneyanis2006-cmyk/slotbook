@@ -110,7 +110,10 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
   await expect(published).toHaveCount(0, { timeout: 8_000 }); // the toast of shot 13 must not appear in shot 14
   await staffPage.getByLabel('Start time').selectOption('10:15');
   await staffPage.getByRole('button', { name: 'Publish slot' }).click();
-  await expect(staffPage.getByRole('alert')).toHaveText('You already have a slot at this time.');
+  const overlapError = staffPage.getByRole('alert');
+  await expect(overlapError).toHaveText('You already have a slot at this time.');
+  await staffPage.getByRole('heading', { name: 'Publish a slot' }).scrollIntoViewIfNeeded(); // the form and its error
+  await expect(overlapError).toBeInViewport();
   await shot(staffPage, '14-slot-overlap');
 
   await staffPage.goto('/staff/schedule');
