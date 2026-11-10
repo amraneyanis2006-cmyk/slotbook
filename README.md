@@ -5,23 +5,44 @@ book them. CPE 334 project, team EN-036 "Y Que Fue". Contracts and requirements 
 
 ## Prerequisites
 
-- Node.js 20.12 or newer (npm 10+)
-- PostgreSQL 16 running locally
+- Node 20 or newer (tested with 20 and 24); at least 20.12, as in `engines` of `package.json`. npm 10 or newer.
+- PostgreSQL 16 or newer (tested with 16 and 18), running locally.
 
 ## Setup
 
+**1. Database role and databases (once).** `.env.example` expects a PostgreSQL role `slotbook` with password
+`slotbook` (a synthetic local password) that owns `slotbook` and `slotbook_test`. Create them as the PostgreSQL
+superuser; `psql` asks for that user's password (Windows/macOS installers set one; on Linux use
+`sudo -u postgres psql …` instead of `psql -U postgres -h localhost …`):
+
 ```bash
-createdb slotbook
-createdb slotbook_test
-cp .env.example .env        # then edit DATABASE_URL / DATABASE_URL_TEST for your local PostgreSQL user
-npm run install:all         # root + server + client (also generates the Prisma client)
-npm run db:migrate          # applies server/prisma/migrations
-npm run db:seed             # synthetic data; safe to run again (idempotent)
-npm run dev                 # API on http://localhost:3000, app on http://localhost:5173
+psql -U postgres -h localhost -c "CREATE ROLE slotbook LOGIN CREATEDB PASSWORD 'slotbook';" -c "CREATE DATABASE slotbook OWNER slotbook;" -c "CREATE DATABASE slotbook_test OWNER slotbook;"
+```
+
+If you use another role or password, put it in `DATABASE_URL` and `DATABASE_URL_TEST` of your `.env`. The test
+database name must end in `_test` (the test setup refuses anything else).
+
+**2. Install, migrate, seed, test, run** (from the repository root):
+
+```bash
+cp .env.example .env               # synthetic local values; set your own SEED_PASSWORD and SESSION_SECRET if you like
+npm run install:all                # root + server + client, then generates the Prisma client in server/
+npx playwright install chromium    # browser used by npm run test:e2e (once per machine)
+npm run db:migrate                 # applies server/prisma/migrations to DATABASE_URL
+npm run db:seed                    # synthetic data; safe to run again (idempotent)
+npm test                           # server then client tests (uses slotbook_test only)
+npm run dev                        # API on http://localhost:3000, app on http://localhost:5173
 ```
 
 `.env` is git-ignored; only `.env.example` (synthetic values) is committed. The seed refuses to run when
 `NODE_ENV=production`.
+
+**npm 12 or newer** blocks dependency install scripts that are not listed in `allowScripts` and prints
+`npm warn install-scripts … had install scripts blocked` for `prisma`, `@prisma/client`, `@prisma/engines`,
+`bcrypt` and `esbuild`; the install still exits 0. The project works without those scripts: `install:all` runs
+`npm run db:generate` itself (Prisma client in `server/node_modules/.prisma`), Prisma downloads its engines on
+first use, and bcrypt and esbuild use their prebuilt binaries. To run the scripts anyway, use
+`npm install-scripts approve <package>` in `server/` or `client/`. With npm 10 or 11 there is no warning.
 
 ## Seeded accounts
 
@@ -48,13 +69,27 @@ npm test                    # server (Vitest + Supertest, resets and seeds slotb
 npm run test:e2e            # Playwright; starts the API on the test database and the app itself
 ```
 
-Ports 3000 and 5173 must be free before `npm run test:e2e`. The suite includes `e2e/demo-evidence.spec.ts`
-(`SHOT-01`), which rewrites the demo screenshots in `artifacts/sprint-1/screenshots/` (see its `INDEX.md`).
+Ports 3000 and 5173 must be free before `npm run test:e2e` (stop `npm run dev` first). The suite includes
+`e2e/demo-evidence.spec.ts` (`SHOT-01`), so **every `npm run test:e2e` rewrites the committed demo screenshots** in
+`artifacts/sprint-1/screenshots/` (see its `INDEX.md`). Their dates and references change from run to run:
+commit them only when you mean to replace the evidence, otherwise restore them with
+`git checkout -- artifacts/sprint-1/screenshots`.
+
+## Known limitations
+
+- `npm audit` (2026-11-10) reports advisories that `npm audit fix` cannot fix without breaking upgrades
+  (`npm audit fix --force`), so they are not applied in Sprint 1: in `server/`, `vitest` and its `tinypool` and
+  `@vitest/mocker` (fix in vitest 5) and `zod` (fix in zod 4); in `client/`, `vitest`, `tinypool`, `@vitest/mocker`
+  and `react-router-dom`/`react-router` (fix in 7). `vitest` and its dependencies are development-only test
+  tools; `zod` and `react-router-dom` ship with the app, and upgrading them to the next major version is an open
+  decision for the team.
+  The root package has none.
 
 ## Other commands
 
 | Command | Purpose |
 | :--- | :--- |
+| `npm run db:generate` | Regenerate the Prisma client in `server/` (after a change to `schema.prisma`) |
 | `npm run build` | Compile the server (`server/dist`) and build the client (`client/dist`) |
 | `npm run db:migrate:dev` | Create a new migration from `server/prisma/schema.prisma` (development) |
 | `npm run db:reset` | Drop, re-migrate and re-seed the development database |

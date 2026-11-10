@@ -4,7 +4,8 @@
   "type": "module",
   "engines": { "node": ">=20.12" },
   "scripts": {
-    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client && npm run db:generate",
+    "db:generate": "npm run prisma --prefix server -- generate",
     "dev": "concurrently -n api,web \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "build": "npm run build --prefix server && npm run build --prefix client",
     "test": "npm test --prefix server && npm test --prefix client",
