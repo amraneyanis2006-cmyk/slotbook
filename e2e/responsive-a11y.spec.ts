@@ -53,21 +53,21 @@ test('E2E-07: /login, /book, /bookings, /staff/slots and /staff/schedule have no
 async function tabTo(page: Page, target: Locator) {
   for (let i = 0; i < 40; i += 1) {
     await page.keyboard.press('Tab');
-    if (await target.evaluate((el) => el === document.activeElement)) {
-      await expectVisibleFocus(page);
-      return;
-    }
+    await expectVisibleFocus(page);
+    if (await target.evaluate((el) => el === document.activeElement)) return;
   }
   throw new Error('Could not reach the element with Tab');
 }
 
 async function expectVisibleFocus(page: Page) {
   const outline = await page.evaluate(() => {
-    const style = getComputedStyle(document.activeElement as Element);
-    return { style: style.outlineStyle, width: parseFloat(style.outlineWidth) };
+    const el = document.activeElement as Element;
+    const style = getComputedStyle(el);
+    return { tag: el.outerHTML.slice(0, 60), style: style.outlineStyle, width: parseFloat(style.outlineWidth), color: style.outlineColor };
   });
-  expect(outline.style).not.toBe('none');
-  expect(outline.width).toBeGreaterThan(0);
+  expect(outline.style, outline.tag).not.toBe('none');
+  expect(outline.width, outline.tag).toBeGreaterThan(0);
+  expect(outline.color, outline.tag).not.toMatch(/rgba\(.*, 0\)$|transparent/);
 }
 
 test('E2E-08: Ken logs in and books a slot with Tab/Shift+Tab/Enter/Esc only, with a visible focus ring', async ({ page }) => {

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { insertBooking, insertSlot } from './db';
+import { deleteBooking, insertBooking } from './db';
 import { apiBook, apiLogIn, bangkokDatePlus, logIn } from './helpers';
 import { VIEWPORTS } from './viewports';
 
@@ -9,6 +9,7 @@ const DIR = 'artifacts/sprint-1/screenshots';
 const TOMORROW = bangkokDatePlus(1);
 const shot = (page: Page, name: string, fullPage = false) => page.screenshot({ path: `${DIR}/${name}.png`, fullPage });
 const loaded = (page: Page) => expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
+const NOTE = 'Demo: request for a transcript translation'; // distinct from the seeded notes
 
 test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, staff, access control, responsive)', async ({ page, browser }) => {
   test.setTimeout(180_000);
@@ -27,7 +28,7 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
 
   await page.getByRole('button', { name: /^Book 14:00 Academic advising with Mali Srisuk/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Confirm booking' });
-  await dialog.getByLabel('Note (optional)').fill('Question about credit transfer');
+  await dialog.getByLabel('Note (optional)').fill(NOTE);
   await shot(page, '04-booking-dialog');
 
   await dialog.getByRole('button', { name: 'Confirm booking' }).click();
@@ -43,15 +44,21 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
   await shot(page, '06-my-bookings-after-reload');
 
   await page.getByRole('link', { name: `View ${reference}` }).click();
-  await expect(page.getByText('Question about credit transfer')).toBeVisible();
+  await expect(page.getByText(NOTE)).toBeVisible();
   await shot(page, '07-booking-detail');
 
   await page.goto(`/api/bookings/${reference}`);
   await expect(page.getByText(`"reference":"${reference}"`)).toBeVisible();
   await shot(page, '08-booking-api-json');
 
-  // BR-04: a Mali slot at 09:00 tomorrow overlaps Ploy's seeded Anan 09:00–09:30 booking.
-  await insertSlot('staff.mali@slotbook.test', new Date(`${TOMORROW}T09:00:00+07:00`));
+  // BR-04: Mali publishes 09:00 tomorrow (through the API), which overlaps Ploy's seeded Anan 09:00–09:30 booking.
+  const mali = await browser.newContext();
+  const maliPage = await mali.newPage();
+  await apiLogIn(maliPage, 'staff.mali@slotbook.test');
+  const advising = (await (await maliPage.request.get('/api/services')).json()).services
+    .find((s: { name: string }) => s.name === 'Academic advising').id;
+  expect((await maliPage.request.post('/api/staff/slots', { data: { serviceId: advising, date: TOMORROW, startTime: '09:00' } })).status()).toBe(201);
+  await mali.close();
   await page.goto('/book');
   await page.getByLabel('Date').fill(TOMORROW);
   await page.getByRole('button', { name: /^Book 09:00 Academic advising with Mali Srisuk/ }).click();
@@ -60,13 +67,16 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
   await shot(page, '10-overlap-rejected');
   await page.keyboard.press('Escape');
 
-  // BR-05: a booking starting in 90 minutes offers no Cancel button. It is inserted directly because through the API
-  // such a slot exists only during opening hours (BR-06), which would make the run depend on the time of day.
-  const late = await insertBooking('staff.anan@slotbook.test', 'cust.ploy@slotbook.test', new Date(Math.ceil(Date.now() / 60_000) * 60_000 + 90 * 60_000));
+  // BR-05: a booking starting in 75–90 minutes (next 15-minute step) offers no Cancel button. It is inserted directly,
+  // bypassing the slot rules: through the API such a booking exists only during opening hours (BR-06), which would make
+  // the run depend on the time of day. It is deleted after the shot so later specs see Ploy's usual bookings.
+  const quarter = 15 * 60_000;
+  const late = await insertBooking('staff.anan@slotbook.test', 'cust.ploy@slotbook.test', new Date(Math.ceil((Date.now() + 75 * 60_000) / quarter) * quarter));
   await page.goto(`/bookings/${late}`);
   await expect(page.getByText('Cancellation closes 2 hours before the start.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Cancel booking' })).toHaveCount(0);
   await shot(page, '11-late-cancel-no-button');
+  await deleteBooking(late);
 
   // BR-03: Nina holds 3 active future bookings (made through the API), then tries a 4th in the UI.
   const nina = await browser.newContext();
@@ -91,8 +101,13 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
   await staffPage.getByLabel('Date').fill(bangkokDatePlus(8));
   await staffPage.getByLabel('Start time').selectOption('10:00');
   await staffPage.getByRole('button', { name: 'Publish slot' }).click();
-  await expect(staffPage.getByRole('status').filter({ hasText: 'Slot published' })).toBeVisible();
+  const published = staffPage.getByRole('status').filter({ hasText: 'Slot published' });
+  await expect(published).toBeVisible();
+  const newRow = staffPage.getByRole('row', { name: /10:00–10:30/ });
+  await expect(newRow).toContainText('Open');
+  await newRow.scrollIntoViewIfNeeded();
   await shot(staffPage, '13-my-slots-new-slot');
+  await expect(published).toHaveCount(0, { timeout: 8_000 }); // the toast of shot 13 must not appear in shot 14
   await staffPage.getByLabel('Start time').selectOption('10:15');
   await staffPage.getByRole('button', { name: 'Publish slot' }).click();
   await expect(staffPage.getByRole('alert')).toHaveText('You already have a slot at this time.');

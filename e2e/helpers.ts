@@ -3,6 +3,14 @@ import { expect, type Page } from '@playwright/test';
 export const PASSWORD = process.env.SEED_PASSWORD ?? '';
 if (!PASSWORD) throw new Error('SEED_PASSWORD is not set (copy .env.example to .env).');
 
+// All specs share one database reset by global-setup.ts, in an order Playwright decides. Active future bookings
+// per customer (limit 3, BR-03) at any time, by spec:
+//   Ploy: seed today+1 Anan 09:00; booking-journey books and cancels the global today+10 15:00 slot; SHOT-01 books
+//         (then cancels) tomorrow Mali 14:00 and inserts (then deletes) one late booking; E2E-06 books today+10 15:00
+//         again, after E2E-05 freed it → at most 3.
+//   Ken:  seed today+3 Anan 10:00; E2E-08 books today+6 Anan 09:00 → 2.
+//   Nina: SHOT-01 books today+4 Anan 09:00, today+4 Mali 14:00, today+5 Anan 13:00 → 3 (then the 4th is refused).
+
 /** Asia/Bangkok date `YYYY-MM-DD`, `days` from today (E2E data is relative to the real clock). */
 export const bangkokDatePlus = (days: number) =>
   new Date(Date.now() + 7 * 3_600_000 + days * 86_400_000).toISOString().slice(0, 10);

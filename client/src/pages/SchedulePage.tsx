@@ -25,9 +25,9 @@ export default function SchedulePage() {
 
   const load = useCallback(async () => {
     const request = ++latest.current;
-    if (!date) return; // the date input is being edited
     setError(null);
     setSchedule(null);
+    if (!date) return; // the date input is being edited
     const res = await http<Schedule>(`/staff/schedule?date=${date}`);
     if (request !== latest.current) return; // another day is loading
     if (res.ok) setSchedule(res.data);
@@ -49,7 +49,8 @@ export default function SchedulePage() {
 
       <section aria-labelledby="schedule-title">
         <h2 id="schedule-title">{date ? formatDay(`${date}T12:00:00+07:00`) : 'Choose a date'}</h2>
-        {error ? <Callout tone="error" onRetry={load}>{error}</Callout>
+        {!date ? <p className="muted">Choose a date to see its slots.</p>
+          : error ? <Callout tone="error" onRetry={load}>{error}</Callout>
           : schedule === null ? <Skeleton label="Loading the schedule" />
             : schedule.slots.length === 0
               ? <EmptyState message="No slots on this day."><Link to="/staff/slots">My Slots</Link></EmptyState>

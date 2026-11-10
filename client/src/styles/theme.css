@@ -21,6 +21,8 @@
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; font-family: var(--font); color: var(--color-text); background: var(--color-bg); line-height: 1.5; }
 :focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+/* Form fields always show the ring when focused (a tabbed date input only matches :focus-within: its segments have the focus). */
+input:focus, input:focus-within, select:focus, textarea:focus { outline: var(--focus-ring); outline-offset: 2px; }
 main { max-width: 960px; margin: 0 auto; padding: var(--space-4) var(--space-3); }
 
 h1 { font-size: 1.5rem; margin: 0 0 var(--space-3); }
