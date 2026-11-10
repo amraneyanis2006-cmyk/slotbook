@@ -41,6 +41,7 @@ describe('BookSlotPage (F-04)', () => {
 
     // Defaults: today (Bangkok), all services; loading skeleton first.
     expect(document.querySelector('[aria-busy="true"]')).not.toBeNull();
+    expect(document.body).toHaveFocus(); // loading the page does not move focus
     expect(screen.getByLabelText('Date')).toHaveValue(todayBangkok());
     expect(screen.getByLabelText('Service')).toHaveValue('');
     expect(screen.getByRole('option', { name: 'All services' })).toBeInTheDocument();
