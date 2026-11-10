@@ -1,0 +1,92 @@
+// SlotBook data model — system-sds.md §2. Raw SQL in migration 0001_init adds what Prisma cannot express.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  STAFF
+}
+
+enum SlotStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum BookingStatus {
+  BOOKED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  name              String
+  passwordHash      String
+  role              Role
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
+  slots             Slot[]    @relation("StaffSlots")
+  bookings          Booking[] @relation("CustomerBookings")
+  cancelledBookings Booking[] @relation("CancelledBy")
+}
+
+model Service {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  durationMin Int
+  isActive    Boolean @default(true)
+  slots       Slot[]
+}
+
+model Slot {
+  id        Int        @id @default(autoincrement())
+  staffId   Int
+  staff     User       @relation("StaffSlots", fields: [staffId], references: [id])
+  serviceId Int
+  service   Service    @relation(fields: [serviceId], references: [id])
+  startAt   DateTime   @db.Timestamptz(3)
+  endAt     DateTime   @db.Timestamptz(3)
+  status    SlotStatus @default(OPEN)
+  createdAt DateTime   @default(now()) @db.Timestamptz(3)
+  bookings  Booking[]
+
+  @@index([staffId, startAt])
+  @@index([status, startAt])
+}
+
+model Booking {
+  id            Int           @id @default(autoincrement())
+  reference     String        @unique
+  slotId        Int
+  slot          Slot          @relation(fields: [slotId], references: [id])
+  customerId    Int
+  customer      User          @relation("CustomerBookings", fields: [customerId], references: [id])
+  status        BookingStatus @default(BOOKED)
+  note          String?       @db.VarChar(300)
+  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
+  cancelledAt   DateTime?     @db.Timestamptz(3)
+  cancelledById Int?
+  cancelledBy   User?         @relation("CancelledBy", fields: [cancelledById], references: [id])
+
+  @@index([customerId, status])
+}
+
+// Table used by connect-pg-simple (express-session store).
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json
+  expire DateTime @db.Timestamptz(6)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("session")
+}

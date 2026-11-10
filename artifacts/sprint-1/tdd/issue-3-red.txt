@@ -1,0 +1,243 @@
+# Branch:  feature/3-auth-access
+# Commit:  3bfb877 (test(F-01,F-02): UNIT-06 API-01 API-02 API-03 API-04 API-05 API-06 API-07 API-09 UI-01 E2E-01 E2E-02 [red])
+# Date:    2026-11-07 16:03:03 +0700
+# Command: (cd . && sh -c echo "== server"; (cd server && npx vitest run); echo "== client"; (cd client && npx vitest run); echo "== e2e"; npx playwright test e2e/auth.spec.ts --reporter=line)
+
+== server
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server
+
+ ❯ tests/api/auth.api.test.ts (5 tests | 5 failed) 335ms
+   × POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-01: valid credentials (also upper-case e-mail) return the user without secrets and an HttpOnly SameSite=Lax cookie 233ms
+     → expected 404 to be 200 // Object.is equality
+   × POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-02: wrong password and unknown e-mail both return 401 INVALID_CREDENTIALS with the same message; no session follows 39ms
+     → expected 404 to be 401 // Object.is equality
+   × POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-03: an inactive account cannot log in; a session of a user deactivated later gets 401 UNAUTHENTICATED 19ms
+     → expected 404 to be 401 // Object.is equality
+   × POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-04: /me returns the current Staff user; anonymous gets 401 UNAUTHENTICATED 27ms
+     → expected 404 to be 200 // Object.is equality
+   × POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-05: after logout (204) the saved cookie is rejected on /me and on a protected endpoint 9ms
+     → Cannot read properties of undefined (reading '0')
+ ✓ tests/db/seed.db.test.ts (1 test) 5242ms
+   ✓ seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password  5229ms
+ ✓ tests/unit/sessionConfig.test.ts (1 test) 22ms
+ ✓ tests/api/health.api.test.ts (1 test) 297ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/access.api.test.ts [ tests/api/access.api.test.ts ]
+Error: Cannot find module '../../src/middleware/requireRole.js' imported from '/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/tests/api/access.api.test.ts'
+ ❯ tests/api/access.api.test.ts:5:1
+      3| import { describe, expect, it } from 'vitest';
+      4| import { createApp, errorHandler } from '../../src/app.js';
+      5| import { requireRole } from '../../src/middleware/requireRole.js';
+       | ^
+      6| import { loginAs } from '../helpers.js';
+      7| 
+
+Caused by: Error: Failed to load url ../../src/middleware/requireRole.js (resolved id: ../../src/middleware/requireRole.js) in /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/tests/api/access.api.test.ts. Does the file exist?
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/auth.api.test.ts > POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-01: valid credentials (also upper-case e-mail) return the user without secrets and an HttpOnly SameSite=Lax cookie
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/auth.api.test.ts:18:26
+     16|       const res = await request(app).post('/api/auth/login').send({ em…
+     17| 
+     18|       expect(res.status).toBe(200);
+       |                          ^
+     19|       expect(res.body).toEqual({ user: { id: expect.any(Number), name:…
+     20|       expect(JSON.stringify(res.body)).not.toMatch(/passwordHash|isAct…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/api/auth.api.test.ts > POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-02: wrong password and unknown e-mail both return 401 INVALID_CREDENTIALS with the same message; no session follows
+AssertionError: expected 404 to be 401 // Object.is equality
+
+- Expected
++ Received
+
+- 401
++ 404
+
+ ❯ tests/api/auth.api.test.ts:33:26
+     31|     const unknown = await agent.post('/api/auth/login').send({ email: …
+     32| 
+     33|     expect(wrong.status).toBe(401);
+       |                          ^
+     34|     expect(wrong.body).toEqual(BAD_LOGIN);
+     35|     expect(unknown.status).toBe(401);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/api/auth.api.test.ts > POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-03: an inactive account cannot log in; a session of a user deactivated later gets 401 UNAUTHENTICATED
+AssertionError: expected 404 to be 401 // Object.is equality
+
+- Expected
++ Received
+
+- 401
++ 404
+
+ ❯ tests/api/auth.api.test.ts:42:29
+     40|   it('API-03: an inactive account cannot log in; a session of a user d…
+     41|     const inactive = await request(app).post('/api/auth/login').send({…
+     42|     expect(inactive.status).toBe(401);
+       |                             ^
+     43|     expect(inactive.body).toEqual(BAD_LOGIN);
+     44| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/api/auth.api.test.ts > POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-04: /me returns the current Staff user; anonymous gets 401 UNAUTHENTICATED
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/auth.api.test.ts:63:23
+     61|     await loginAs(agent, 'staff.anan@slotbook.test');
+     62|     const me = await agent.get('/api/auth/me');
+     63|     expect(me.status).toBe(200);
+       |                       ^
+     64|     expect(me.body).toEqual({ user: { id: expect.any(Number), name: 'A…
+     65| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/api/auth.api.test.ts > POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-05: after logout (204) the saved cookie is rejected on /me and on a protected endpoint
+TypeError: Cannot read properties of undefined (reading '0')
+ ❯ tests/api/auth.api.test.ts:73:46
+     71|   it('API-05: after logout (204) the saved cookie is rejected on /me a…
+     72|     const login = await request(app).post('/api/auth/login').send({ em…
+     73|     const cookie = login.headers['set-cookie']![0].split(';')[0];
+       |                                              ^
+     74|     expect((await request(app).get('/api/services').set('Cookie', cook…
+     75| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  2 failed | 3 passed (5)
+      Tests  5 failed | 3 passed (8)
+   Start at  16:03:07
+   Duration  24.24s (transform 508ms, setup 0ms, collect 2.11s, tests 5.90s, environment 6ms, prepare 1.74s)
+
+== client
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/client
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/LoginPage.test.tsx [ tests/LoginPage.test.tsx ]
+Error: Failed to resolve import "../src/auth/AuthProvider" from "tests/LoginPage.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/client/tests/LoginPage.test.tsx:5:29
+  4  |  import { MemoryRouter, Route, Routes } from "react-router-dom";
+  5  |  import { afterEach, describe, expect, it, vi } from "vitest";
+  6  |  import { AuthProvider } from "../src/auth/AuthProvider";
+     |                                ^
+  7  |  import LoginPage from "../src/pages/LoginPage";
+  8  |  const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+ ❯ TransformPluginContext._formatLog node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42846:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42843:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40820:23
+ ❯ node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40939:37
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40866:7
+ ❯ EnvironmentPluginContainer.transform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42641:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:36053:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  16:03:36
+   Duration  5.34s (transform 152ms, setup 675ms, collect 0ms, tests 0ms, environment 2.30s, prepare 698ms)
+
+== e2e
+
+Running 2 tests using 1 worker
+
+[1/2] e2e/auth.spec.ts:12:1 › E2E-01: each role lands on its home with name and role in the header; logout and wrong password
+  1) e2e/auth.spec.ts:12:1 › E2E-01: each role lands on its home with name and role in the header; logout and wrong password 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('Email')
+
+
+       5 | async function logIn(page: Page, email: string, password = PASSWORD) {
+       6 |   await page.goto('/login');
+    >  7 |   await page.getByLabel('Email').fill(email);
+         |                                  ^
+       8 |   await page.getByLabel('Password').fill(password);
+       9 |   await page.getByRole('button', { name: 'Log in' }).click();
+      10 | }
+        at logIn (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/e2e/auth.spec.ts:7:34)
+        at /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/e2e/auth.spec.ts:13:3
+
+    Error Context: test-results/auth-E2E-01-each-role-land-5491f-r-logout-and-wrong-password/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/auth-E2E-01-each-role-land-5491f-r-logout-and-wrong-password/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/auth-E2E-01-each-role-land-5491f-r-logout-and-wrong-password/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[2/2] e2e/auth.spec.ts:37:1 › E2E-02: protected pages redirect anonymous users to /login and other roles to their own home
+  2) e2e/auth.spec.ts:37:1 › E2E-02: protected pages redirect anonymous users to /login and other roles to their own home 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('Email')
+
+
+       5 | async function logIn(page: Page, email: string, password = PASSWORD) {
+       6 |   await page.goto('/login');
+    >  7 |   await page.getByLabel('Email').fill(email);
+         |                                  ^
+       8 |   await page.getByLabel('Password').fill(password);
+       9 |   await page.getByRole('button', { name: 'Log in' }).click();
+      10 | }
+        at logIn (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/e2e/auth.spec.ts:7:34)
+        at /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/e2e/auth.spec.ts:41:3
+
+    Error Context: test-results/auth-E2E-02-protected-page-9fcb3-her-roles-to-their-own-home/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/auth-E2E-02-protected-page-9fcb3-her-roles-to-their-own-home/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/auth-E2E-02-protected-page-9fcb3-her-roles-to-their-own-home/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  2 failed
+    e2e/auth.spec.ts:12:1 › E2E-01: each role lands on its home with name and role in the header; logout and wrong password 
+    e2e/auth.spec.ts:37:1 › E2E-02: protected pages redirect anonymous users to /login and other roles to their own home 
+
+# Exit code: 1

@@ -1,0 +1,20 @@
+# Branch:  feature/2-platform-foundation
+# Commit:  2fe19c6 (fix(F-00): test-DB guard reports its own message for a malformed DATABASE_URL_TEST)
+# Date:    2026-11-07 16:00:52 +0700
+# Command: (cd server && npx vitest run)
+
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server
+
+ ✓ tests/db/seed.db.test.ts (1 test) 6072ms
+   ✓ seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password  6051ms
+ ✓ tests/api/health.api.test.ts (1 test) 353ms
+   ✓ GET /api/health (F-00) > API-25: returns 200 { status: "ok", database: "up" } without a session  348ms
+
+ Test Files  2 passed (2)
+      Tests  2 passed (2)
+   Start at  16:00:56
+   Duration  21.19s (transform 468ms, setup 0ms, collect 1.32s, tests 6.42s, environment 2ms, prepare 828ms)
+
+
+# Exit code: 0

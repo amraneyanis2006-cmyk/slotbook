@@ -1,0 +1,45 @@
+# Branch:  feature/2-platform-foundation
+# Commit:  988ab1d (test(F-00): API-25, DB-02 [red])
+# Date:    2026-11-07 15:52:20 +0700
+# Command: (cd server && npx vitest run)
+
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server
+
+No test files found, exiting with code 1
+
+include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: Cannot find module '../prisma/seed.js' imported from '/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/tests/setup.ts'
+ ❯ ViteNodeRunner._fetchModule node_modules/vite-node/dist/client.mjs:247:19
+ ❯ ViteNodeRunner.directRequest node_modules/vite-node/dist/client.mjs:268:44
+ ❯ ViteNodeRunner.cachedRequest node_modules/vite-node/dist/client.mjs:189:11
+ ❯ ViteNodeRunner.dependencyRequest node_modules/vite-node/dist/client.mjs:239:10
+ ❯ tests/setup.ts:6:31
+      4| import { PrismaClient } from '@prisma/client';
+      5| import { seed } from '../prisma/seed.js';
+      6| import { addDays, bangkokDate, bangkokToUtc } from '../src/utils/time.…
+       |                               ^
+      7| 
+      8| const serverDir = fileURLToPath(new URL('..', import.meta.url));
+ ❯ ViteNodeRunner.runModule node_modules/vite-node/dist/client.mjs:397:4
+ ❯ ViteNodeRunner.directRequest node_modules/vite-node/dist/client.mjs:375:3
+ ❯ ViteNodeRunner.cachedRequest node_modules/vite-node/dist/client.mjs:189:11
+ ❯ ViteNodeRunner.executeFile node_modules/vite-node/dist/client.mjs:162:10
+ ❯ loadGlobalSetupFile node_modules/vitest/dist/chunks/cli-api.DVe0nWUx.js:5808:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+Caused by: Error: Failed to load url ../prisma/seed.js (resolved id: ../prisma/seed.js) in /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/tests/setup.ts. Does the file exist?
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_LOAD_URL' }
+
+
+
+
+# Exit code: 1

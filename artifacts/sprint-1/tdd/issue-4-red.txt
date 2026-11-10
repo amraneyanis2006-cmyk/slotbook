@@ -1,0 +1,320 @@
+# Branch:  feature/4-staff-slots
+# Commit:  116f418 (test(F-03): UNIT-01 UNIT-02 API-08 API-10 API-11 API-12 API-13 UI-02 E2E-03 [red])
+# Date:    2026-11-07 16:25:35 +0700
+# Command: (cd . && sh -c echo "== server"; (cd server && npx vitest run); echo "== client"; (cd client && npx vitest run); echo "== e2e"; npx playwright test e2e/staff-slots.spec.ts --reporter=line)
+
+== server
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server
+
+ ❯ tests/api/slots.api.test.ts (4 tests | 4 failed) 3280ms
+   × POST /api/staff/slots, GET /api/staff/slots (F-03) > API-10: a valid slot is created for the session staff member, OPEN, end = start + duration, and listed 81ms
+     → expected 404 to be 201 // Object.is equality
+   × POST /api/staff/slots, GET /api/staff/slots (F-03) > API-11: past, off-step, out-of-hours, inactive-service and incomplete slots → 422 VALIDATION_ERROR with the field; nothing stored 49ms
+     → {"serviceId":1,"date":"2030-01-06","startTime":"09:00"}: expected 404 to be 422 // Object.is equality
+   × POST /api/staff/slots, GET /api/staff/slots (F-03) > API-12: own overlap → 409 SLOT_OVERLAP; same time for another staff and touching slots are accepted; parallel overlap → one 201, one 409 18ms
+     → expected 404 to be 201 // Object.is equality
+   × POST /api/staff/slots, GET /api/staff/slots (F-03) > API-13: lists only the caller's upcoming non-cancelled slots, ordered, with booking reference and customer name 107ms
+     → expected 404 to be 200 // Object.is equality
+ ✓ tests/api/auth.api.test.ts (6 tests) 11168ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-01: valid credentials (also upper-case e-mail) return the user without secrets and an HttpOnly SameSite=Lax cookie  2908ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-02: wrong password and unknown e-mail both return 401 INVALID_CREDENTIALS with the same message; no session follows  2588ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-03: an inactive account cannot log in; a session of a user deactivated later gets 401 UNAUTHENTICATED  2787ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-04: /me returns the current Staff user; anonymous gets 401 UNAUTHENTICATED  1367ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-05: after logout (204) the saved cookie is rejected on /me and on a protected endpoint  1422ms
+ ✓ tests/db/seed.db.test.ts (1 test) 4422ms
+   ✓ seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password  4410ms
+ ✓ tests/api/health.api.test.ts (1 test) 233ms
+stderr | tests/api/access.api.test.ts > API-09 safe errors (F-02, NFR-06) > API-09: /api/__test__/throw → 500 INTERNAL_ERROR without stack trace, SQL or file path
+[08334bff-1d51-452d-810a-e354d6b7d6e4] Error: Boom in /srv/slotbook/server/src/secret.ts while running SELECT * FROM "User"
+    at /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/src/routes/testOnly.ts:8:9
+    at Layer.handle [as handle_request] (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/express/lib/router/layer.js:95:5)
+    at /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/express/lib/router/index.js:284:15
+    at router.process_params (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/express/lib/router/index.js:280:10)
+    at router.handle (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/express/lib/router/index.js:175:3)
+    at router (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/express/lib/router/index.js:47:12)
+
+stderr | tests/api/access.api.test.ts > API-09 safe errors (F-02, NFR-06) > API-09: /api/__test__/prisma-error → 500 INTERNAL_ERROR without stack trace, SQL or file path
+[14b539bb-e086-47f3-804c-ca61f556e5af] PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "TableThatDoesNotExist" does not exist`
+    at $n.handleRequestError (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/@prisma/client/runtime/library.js:121:7315)
+    at $n.handleAndLogRequestError (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at l (/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/src/routes/testOnly.ts:13:5 {
+  code: 'P2010',
+  clientVersion: '5.22.0',
+  meta: {
+    code: '42P01',
+    message: 'relation "TableThatDoesNotExist" does not exist'
+  }
+}
+
+ ❯ tests/api/access.api.test.ts (11 tests | 5 failed) 4579ms
+   ✓ API-06 authentication required (F-02, NFR-01) > API-06: POST /api/auth/logout without a session → 401 UNAUTHENTICATED { error, message } 129ms
+   ✓ API-06 authentication required (F-02, NFR-01) > API-06: GET /api/auth/me without a session → 401 UNAUTHENTICATED { error, message } 20ms
+   ✓ API-06 authentication required (F-02, NFR-01) > API-06: GET /api/services without a session → 401 UNAUTHENTICATED { error, message } 10ms
+   × API-06 authentication required (F-02, NFR-01) > API-06: POST /api/staff/slots without a session → 401 UNAUTHENTICATED { error, message } 41ms
+     → expected 404 to be 401 // Object.is equality
+   × API-06 authentication required (F-02, NFR-01) > API-06: GET /api/staff/slots without a session → 401 UNAUTHENTICATED { error, message } 12ms
+     → expected 404 to be 401 // Object.is equality
+   ✓ API-07 role restriction (F-02, NFR-02) > API-07: requireRole answers another role with 403 FORBIDDEN and only { error, message } 14ms
+   × API-07 role restriction (F-02, NFR-02) > API-07: POST /api/staff/slots as CUSTOMER → 403 FORBIDDEN 1485ms
+     → expected 404 to be 403 // Object.is equality
+   × API-07 role restriction (F-02, NFR-02) > API-07: GET /api/staff/slots as CUSTOMER → 403 FORBIDDEN 1395ms
+     → expected 404 to be 403 // Object.is equality
+   × API-08 server-side identity (F-02, BR-08) > API-08: staffId in the body is ignored; the slot belongs to the session staff member 1402ms
+     → expected 404 to be 201 // Object.is equality
+   ✓ API-09 safe errors (F-02, NFR-06) > API-09: /api/__test__/throw → 500 INTERNAL_ERROR without stack trace, SQL or file path 19ms
+   ✓ API-09 safe errors (F-02, NFR-06) > API-09: /api/__test__/prisma-error → 500 INTERNAL_ERROR without stack trace, SQL or file path 38ms
+ ✓ tests/unit/sessionConfig.test.ts (1 test) 16ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/slotRules.test.ts [ tests/unit/slotRules.test.ts ]
+Error: Cannot find module '../../src/rules/slotRules.js' imported from '/Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/tests/unit/slotRules.test.ts'
+ ❯ tests/unit/slotRules.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { findOverlap, overlaps, validateSlot } from '../../src/rules/s…
+       | ^
+      3| 
+      4| const NOW = new Date('2026-11-10T08:00:00+07:00');
+
+Caused by: Error: Failed to load url ../../src/rules/slotRules.js (resolved id: ../../src/rules/slotRules.js) in /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server/tests/unit/slotRules.test.ts. Does the file exist?
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/access.api.test.ts > API-06 authentication required (F-02, NFR-01) > API-06: POST /api/staff/slots without a session → 401 UNAUTHENTICATED { error, message }
+ FAIL  tests/api/access.api.test.ts > API-06 authentication required (F-02, NFR-01) > API-06: GET /api/staff/slots without a session → 401 UNAUTHENTICATED { error, message }
+AssertionError: expected 404 to be 401 // Object.is equality
+
+- Expected
++ Received
+
+- 401
++ 404
+
+ ❯ tests/api/access.api.test.ts:28:26
+     26|     it(`API-06: ${route.method.toUpperCase()} ${route.path} without a …
+     27|       const res = await request(app)[route.method](route.path);
+     28|       expect(res.status).toBe(401);
+       |                          ^
+     29|       expect(res.body.error).toBe('UNAUTHENTICATED');
+     30|       expect(Object.keys(res.body).sort()).toEqual(['error', 'message'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  tests/api/access.api.test.ts > API-07 role restriction (F-02, NFR-02) > API-07: POST /api/staff/slots as CUSTOMER → 403 FORBIDDEN
+ FAIL  tests/api/access.api.test.ts > API-07 role restriction (F-02, NFR-02) > API-07: GET /api/staff/slots as CUSTOMER → 403 FORBIDDEN
+AssertionError: expected 404 to be 403 // Object.is equality
+
+- Expected
++ Received
+
+- 403
++ 404
+
+ ❯ tests/api/access.api.test.ts:53:26
+     51|       await loginAs(agent, ACCOUNT[other]);
+     52|       const res = await agent[route.method](route.path);
+     53|       expect(res.status).toBe(403);
+       |                          ^
+     54|       expect(Object.keys(res.body).sort()).toEqual(['error', 'message'…
+     55|       expect(res.body.error).toBe('FORBIDDEN');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  tests/api/access.api.test.ts > API-08 server-side identity (F-02, BR-08) > API-08: staffId in the body is ignored; the slot belongs to the session staff member
+AssertionError: expected 404 to be 201 // Object.is equality
+
+- Expected
++ Received
+
+- 201
++ 404
+
+ ❯ tests/api/access.api.test.ts:77:24
+     75|       .send({ serviceId: service.id, date, startTime: '09:00', staffId…
+     76| 
+     77|     expect(res.status).toBe(201);
+       |                        ^
+     78|     const row = await prisma.slot.findUniqueOrThrow({ where: { id: res…
+     79|     expect(row.staffId).toBe(anan.id);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  tests/api/slots.api.test.ts > POST /api/staff/slots, GET /api/staff/slots (F-03) > API-10: a valid slot is created for the session staff member, OPEN, end = start + duration, and listed
+AssertionError: expected 404 to be 201 // Object.is equality
+
+- Expected
++ Received
+
+- 201
++ 404
+
+ ❯ tests/api/slots.api.test.ts:40:24
+     38|     const res = await post(anan, '2030-01-08', '09:30');
+     39| 
+     40|     expect(res.status).toBe(201);
+       |                        ^
+     41|     expect(res.body.slot).toEqual({
+     42|       id: expect.any(Number),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  tests/api/slots.api.test.ts > POST /api/staff/slots, GET /api/staff/slots (F-03) > API-11: past, off-step, out-of-hours, inactive-service and incomplete slots → 422 VALIDATION_ERROR with the field; nothing stored
+AssertionError: {"serviceId":1,"date":"2030-01-06","startTime":"09:00"}: expected 404 to be 422 // Object.is equality
+
+- Expected
++ Received
+
+- 422
++ 404
+
+ ❯ tests/api/slots.api.test.ts:71:48
+     69|     for (const [body, field] of cases) {
+     70|       const res = await anan.post('/api/staff/slots').send(body);
+     71|       expect(res.status, JSON.stringify(body)).toBe(422);
+       |                                                ^
+     72|       expect(res.body.error).toBe('VALIDATION_ERROR');
+     73|       expect(res.body.fields, JSON.stringify(body)).toHaveProperty(fie…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  tests/api/slots.api.test.ts > POST /api/staff/slots, GET /api/staff/slots (F-03) > API-12: own overlap → 409 SLOT_OVERLAP; same time for another staff and touching slots are accepted; parallel overlap → one 201, one 409
+AssertionError: expected 404 to be 201 // Object.is equality
+
+- Expected
++ Received
+
+- 201
++ 404
+
+ ❯ tests/api/slots.api.test.ts:79:62
+     77| 
+     78|   it('API-12: own overlap → 409 SLOT_OVERLAP; same time for another st…
+     79|     expect((await post(anan, '2030-01-10', '09:00')).status).toBe(201);
+       |                                                              ^
+     80| 
+     81|     const overlap = await post(anan, '2030-01-10', '09:15');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  tests/api/slots.api.test.ts > POST /api/staff/slots, GET /api/staff/slots (F-03) > API-13: lists only the caller's upcoming non-cancelled slots, ordered, with booking reference and customer name
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/slots.api.test.ts:104:24
+    102| 
+    103|     const res = await anan.get('/api/staff/slots');
+    104|     expect(res.status).toBe(200);
+       |                        ^
+    105|     const slots: { id: number; startAt: string; booking: unknown }[] =…
+    106|     const listed = slots.map((s) => s.id);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+
+ Test Files  3 failed | 4 passed (7)
+      Tests  9 failed | 15 passed (24)
+   Start at  16:25:39
+   Duration  48.33s (transform 624ms, setup 0ms, collect 9.10s, tests 23.70s, environment 6ms, prepare 2.18s)
+
+== client
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/client
+
+stderr | tests/LoginPage.test.tsx > LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ tests/LoginPage.test.tsx (1 test) 1326ms
+   ✓ LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home  1322ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/MySlotsPage.test.tsx [ tests/MySlotsPage.test.tsx ]
+Error: Failed to resolve import "../src/pages/MySlotsPage" from "tests/MySlotsPage.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/client/tests/MySlotsPage.test.tsx:4:24
+  3  |  import userEvent from "@testing-library/user-event";
+  4  |  import { afterEach, describe, expect, it, vi } from "vitest";
+  5  |  import MySlotsPage from "../src/pages/MySlotsPage";
+     |                           ^
+  6  |  const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  7  |  const SLOT = {
+ ❯ TransformPluginContext._formatLog node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42846:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42843:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40820:23
+ ❯ node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40939:37
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40866:7
+ ❯ EnvironmentPluginContainer.transform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42641:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:36053:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 passed (1)
+   Start at  16:26:32
+   Duration  7.72s (transform 335ms, setup 2.06s, collect 651ms, tests 1.33s, environment 5.07s, prepare 1.26s)
+
+== e2e
+
+Running 1 test using 1 worker
+
+[1/1] e2e/staff-slots.spec.ts:10:1 › E2E-03: Mali publishes a slot on My Slots and sees it listed; an overlapping slot shows the overlap message
+  1) e2e/staff-slots.spec.ts:10:1 › E2E-03: Mali publishes a slot on My Slots and sees it listed; an overlapping slot shows the overlap message 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('table')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('table')
+
+
+      16 |
+      17 |   const rows = page.getByRole('row', { name: /14:00–14:30/ });
+    > 18 |   await expect(page.getByRole('table')).toBeVisible();
+         |                                         ^
+      19 |   const before = await rows.count();
+      20 |
+      21 |   await page.getByLabel('Service').selectOption({ label: 'Academic advising' });
+        at /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/e2e/staff-slots.spec.ts:18:41
+
+    Error Context: test-results/staff-slots-E2E-03-Mali-pu-8657d-t-shows-the-overlap-message/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/staff-slots-E2E-03-Mali-pu-8657d-t-shows-the-overlap-message/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/staff-slots-E2E-03-Mali-pu-8657d-t-shows-the-overlap-message/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    e2e/staff-slots.spec.ts:10:1 › E2E-03: Mali publishes a slot on My Slots and sees it listed; an overlapping slot shows the overlap message 
+
+# Exit code: 1

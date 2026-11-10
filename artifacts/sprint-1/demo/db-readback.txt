@@ -1,0 +1,27 @@
+# Command: DATABASE_URL=<DATABASE_URL_TEST> npm run demo:readback -- BK-2026-000007
+# Branch:  feature/7-schedule-e2e
+# Commit:  308d169 (fix(F-06): shot-11 booking is deleted in finally; precise row types in e2e/db.ts)
+# Date:    2026-11-10 12:34:24 +0700
+# The booking of screenshots 04-08 and 15 (cancelled in 12), read from the E2E database right after the Playwright run.
+
+Database: slotbook_test
+{
+  "id": 7,
+  "reference": "BK-2026-000007",
+  "status": "CANCELLED",
+  "note": "Demo: request for a transcript translation",
+  "createdAt": "2026-11-10T05:34:02.837Z",
+  "cancelledAt": "2026-11-10T05:34:12.205Z",
+  "slotId": 20,
+  "startAt": "2026-11-11T07:00:00.000Z",
+  "endAt": "2026-11-11T07:30:00.000Z",
+  "slotStatus": "OPEN",
+  "service": "Academic advising",
+  "durationMin": 30,
+  "staffId": 2,
+  "staff": "Mali Srisuk",
+  "staffEmail": "staff.mali@slotbook.test",
+  "customerId": 3,
+  "customer": "Ploy Chai",
+  "customerEmail": "cust.ploy@slotbook.test"
+}

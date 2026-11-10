@@ -1,0 +1,112 @@
+/* SlotBook design tokens: calm neutrals, one accent colour, visible focus. */
+:root {
+  --color-bg: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-text: #1f2933;
+  --color-muted: #52606d;
+  --color-border: #d9dee4;
+  --color-accent: #1f6feb;
+  --color-accent-contrast: #ffffff;
+  --color-danger: #b42318;
+  --color-success: #067647;
+  --radius: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --focus-ring: 3px solid #f5a524;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); color: var(--color-text); background: var(--color-bg); line-height: 1.5; }
+:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+/* Form fields always show the ring when focused (a tabbed date input only matches :focus-within: its segments have the focus). */
+input:focus, input:focus-within, select:focus, textarea:focus { outline: var(--focus-ring); outline-offset: 2px; }
+main { max-width: 960px; margin: 0 auto; padding: var(--space-4) var(--space-3); }
+
+h1 { font-size: 1.5rem; margin: 0 0 var(--space-3); }
+.muted { color: var(--color-muted); }
+
+/* Header */
+.app-header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); padding: var(--space-2) var(--space-3); background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+.brand { font-weight: 700; color: var(--color-accent); }
+.app-header nav { display: flex; flex-wrap: wrap; gap: var(--space-3); flex: 1; }
+.app-header nav a { color: var(--color-text); text-decoration: none; padding: var(--space-1) 0; border-bottom: 2px solid transparent; }
+.app-header nav a[aria-current="page"] { border-bottom-color: var(--color-accent); font-weight: 600; }
+.user { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.badge { font-size: 0.8rem; padding: 2px var(--space-2); border-radius: 999px; background: #e8effd; color: var(--color-accent); }
+
+/* Forms and buttons */
+label { display: block; font-weight: 600; margin: var(--space-3) 0 var(--space-1); }
+input, select, textarea { width: 100%; max-width: 100%; font: inherit; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); }
+input[aria-invalid="true"] { border-color: var(--color-danger); }
+button { font: inherit; padding: var(--space-2) var(--space-3); border-radius: var(--radius); border: 1px solid var(--color-accent); background: var(--color-accent); color: var(--color-accent-contrast); cursor: pointer; }
+button.secondary { background: transparent; color: var(--color-accent); }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+form button[type="submit"] { margin-top: var(--space-4); }
+.field-error { color: var(--color-danger); margin: var(--space-1) 0 0; }
+.callout { padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: #eef4ff; border: 1px solid #c7d7fb; }
+.callout.error { background: #fdecea; border-color: #f5c2bd; color: var(--color-danger); }
+
+.login { max-width: 420px; }
+.page-loading { padding: var(--space-4); }
+
+/* Sections, panels, hints */
+h2 { font-size: 1.15rem; margin: var(--space-4) 0 var(--space-2); }
+.panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0 var(--space-3) var(--space-3); }
+.hint { color: var(--color-muted); margin: var(--space-1) 0 0; }
+.slot-form { display: grid; gap: 0 var(--space-3); grid-template-columns: 1fr; align-items: start; }
+.slot-form button { justify-self: start; }
+@media (min-width: 768px) { .slot-form { grid-template-columns: repeat(3, 1fr); } .slot-form button { grid-column: 1 / -1; } }
+
+/* Callout retry, empty state, skeleton, toast */
+.callout { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; margin: var(--space-2) 0; }
+.empty { padding: var(--space-4) var(--space-3); text-align: center; color: var(--color-muted); border: 1px dashed var(--color-border); border-radius: var(--radius); }
+.skeleton-row { height: 44px; margin-bottom: var(--space-2); border-radius: var(--radius); background: linear-gradient(90deg, #eceff3, #f6f7f9, #eceff3); }
+.toast { position: fixed; right: var(--space-3); bottom: var(--space-3); left: var(--space-3); max-width: 360px; margin-left: auto; padding: var(--space-2) var(--space-3); border-radius: var(--radius); background: var(--color-success); color: #fff; }
+
+/* Status badges */
+.status-open { background: #e6f4ea; color: var(--color-success); }
+.status-booked { background: #e8effd; color: var(--color-accent); }
+.status-closed, .status-cancelled, .status-no_show { background: #f1f2f4; color: var(--color-muted); }
+.status-completed { background: #e6f4ea; color: var(--color-success); }
+
+/* Table on ≥ 768 px, stacked cards below */
+.responsive-table { width: 100%; border-collapse: collapse; background: var(--color-surface); }
+.responsive-table th, .responsive-table td { text-align: left; padding: var(--space-2); border-bottom: 1px solid var(--color-border); }
+@media (max-width: 767px) {
+  .responsive-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display: block; }
+  .responsive-table tr { border: 1px solid var(--color-border); border-radius: var(--radius); margin-bottom: var(--space-2); padding: var(--space-2); }
+  .responsive-table td { border: 0; padding: 2px 0; }
+  .responsive-table td::before { content: attr(data-label) ": "; font-weight: 600; }
+}
+
+/* Dialog */
+.dialog-backdrop { position: fixed; inset: 0; display: grid; place-items: center; padding: var(--space-3); background: rgba(15, 23, 42, 0.45); }
+.dialog { width: 100%; max-width: 480px; background: var(--color-surface); border-radius: var(--radius); padding: var(--space-3) var(--space-4) var(--space-4); }
+label.required::after { content: " *"; color: var(--color-danger); }
+
+/* Book a Slot: filters and slot cards */
+.filters { display: grid; gap: 0 var(--space-3); grid-template-columns: 1fr; }
+@media (min-width: 768px) { .filters { grid-template-columns: repeat(2, minmax(0, 260px)); } }
+.slot-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.slot-card { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); }
+.slot-card p { margin: 0; }
+.slot-card button { margin-top: var(--space-2); align-self: flex-start; }
+.slot-time { font-weight: 600; }
+.dialog-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-3); }
+
+/* Booking detail */
+.detail dl { display: grid; grid-template-columns: 1fr; gap: 0 var(--space-3); margin: var(--space-3) 0; }
+.detail dt { font-weight: 600; margin-top: var(--space-2); }
+.detail dd { margin: 0; overflow-wrap: anywhere; }
+@media (min-width: 768px) { .detail dl { grid-template-columns: max-content 1fr; } .detail dt { margin-top: 0; } .detail dt, .detail dd { padding: var(--space-1) 0; } }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Schedule: day picker and summary */
+.day-picker { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2) var(--space-3); }
+.day-picker > div { flex: 1 1 160px; max-width: 260px; }
+.day-picker label { margin-top: 0; }
+.summary { font-weight: 600; margin: 0 0 var(--space-2); }
