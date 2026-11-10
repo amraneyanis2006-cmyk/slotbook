@@ -1,6 +1,6 @@
 # SlotBook — System-Level Software Design Specification (SDS)
 
-Version 1.1 (2026-11-07). Applies to the whole product; Sprint 1 feature contracts in
+Version 1.2 (2026-11-10). Applies to the whole product; Sprint 1 feature contracts in
 `docs/sprints/sprint-1/` give the detailed endpoints and screens.
 
 ---
@@ -12,13 +12,13 @@ flowchart LR
   subgraph Browser
     UI["React SPA (Vite, TypeScript)<br/>pages, forms, route guards"]
   end
-  subgraph Server["Node.js 20 — Express API (TypeScript)"]
+  subgraph Server["Node.js 20+ — Express API (TypeScript)"]
     R["Routes /api/*<br/>(HTTP + input validation)"]
     M["Middleware<br/>session, requireAuth, requireRole, error handler"]
     S["Domain services<br/>slotService, bookingService<br/>(business rules BR-01..BR-13)"]
     P["Prisma Client"]
   end
-  DB[("PostgreSQL 16<br/>users, services, slots, bookings, session<br/>constraints + partial unique index")]
+  DB[("PostgreSQL 16+<br/>users, services, slots, bookings, session<br/>constraints + partial unique index")]
   UI -- "HTTPS JSON, session cookie" --> R
   R --> M --> S --> P --> DB
 ```
@@ -26,8 +26,8 @@ flowchart LR
 | Layer | Technology | Responsibility |
 | :--- | :--- | :--- |
 | UI | React 18 + Vite, TypeScript, React Router, plain CSS design tokens (`client/src/styles/theme.css`) | Screens, client-side form hints, loading/empty/error states, role navigation, route guards (**convenience only, never authorization**). |
-| API / application | Node.js 20, Express 4, TypeScript, `zod` for request validation, `express-session` + `connect-pg-simple`, `bcrypt` | Authentication, session, role and ownership checks, request validation, domain services that enforce every business rule inside database transactions, safe error mapping. |
-| Persistence | PostgreSQL 16, Prisma ORM + Prisma Migrate | Durable storage, foreign keys, unique constraints, the partial unique index for exclusive slots (BR-01), booking-reference sequence (BR-10), session table. |
+| API / application | Node.js 20 or newer, at least 20.12 (tested with 20 and 24), Express 4, TypeScript, `zod` for request validation, `express-session` + `connect-pg-simple`, `bcrypt` | Authentication, session, role and ownership checks, request validation, domain services that enforce every business rule inside database transactions, safe error mapping. |
+| Persistence | PostgreSQL 16 or newer (tested with 16 and 18), Prisma ORM + Prisma Migrate | Durable storage, foreign keys, unique constraints, the partial unique index for exclusive slots (BR-01), booking-reference sequence (BR-10), session table. |
 | Tests | Vitest + Supertest (server unit/API/DB), Vitest + Testing Library (client), Playwright (E2E, responsive, keyboard) | Automated verification mapped to AC IDs. |
 
 **Communication.** The SPA calls the API with `fetch` on the same origin (`/api/...`); in development
@@ -140,7 +140,7 @@ any page redirects to `/login`; a page of the other role redirects to the user's
   field (`aria-describedby`, `role="alert"` summary); submit button disabled while saving; values kept
   after an error.
 - **Loading:** skeleton blocks with `aria-busy="true"`; never a blank page.
-- **Empty:** short sentence + next action (e.g. "No slots on this day. Try another date.").
+- **Empty:** short sentence + next action (e.g. "No available slots on this day. Try another date.", the F-04 text).
 - **Error:** callout with the server `message` and a **Retry** button; 401 from any call → redirect to
   `/login` with "Your session has ended."
 - **Confirmations:** accessible dialog (focus trap, Esc closes, focus returns) for Book and Cancel.
@@ -257,3 +257,4 @@ is never the protection.**
 | :--- | :--- | :--- | :--- |
 | 1.0 | 2026-11-07 | Yanis Amrane | Baseline SDS for Deliverable 1, reviewed by Simeon Audouit. |
 | 1.1 | 2026-11-07 | Yanis Amrane | Pre-PR review fixes (seed, health exception, S2/S3 codes, login 422, session options); see PR #9. |
+| 1.2 | 2026-11-10 | Simeon Audouit | Decisions by Yanis Amrane for Issue #8: §3.2 empty-state example now matches the F-04 text; versions unified to "Node 20 or newer (tested with 20 and 24), PostgreSQL 16 or newer (tested with 16 and 18)". |
