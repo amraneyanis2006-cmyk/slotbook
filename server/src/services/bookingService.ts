@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../db.js';
 import { AppError } from '../errors.js';
-import { BOOKING_LEAD_MIN, BOOKING_RULE_MESSAGES, checkCustomerLimits, formatReference, isBookable } from '../rules/bookingRules.js';
+import { BOOKING_LEAD_MIN, BOOKING_RULE_MESSAGES, canCustomerCancel, checkCustomerLimits, formatReference, isBookable } from '../rules/bookingRules.js';
 import { now } from '../utils/clock.js';
 import { addDays, bangkokDate, bangkokToUtc } from '../utils/time.js';
 
@@ -19,6 +19,8 @@ export const BOOKING_VIEW_SELECT = {
 } satisfies Prisma.BookingSelect;
 
 const reject = (code: keyof typeof BOOKING_RULE_MESSAGES) => new AppError(409, code, BOOKING_RULE_MESSAGES[code]);
+// Missing and not owned are answered the same way (BR-09).
+const bookingNotFound = () => new AppError(404, 'NOT_FOUND', 'Booking not found.');
 
 /** Bookable slots of one Bangkok day (F-04 §3), ordered by start then id. */
 export function listAvailable(date: string, serviceId?: number) {
@@ -64,6 +66,43 @@ export function book(customerId: number, slotId: number, note: string | null) {
     const [{ seq }] = await tx.$queryRaw<{ seq: bigint }[]>`SELECT nextval('booking_ref_seq') AS seq`;
     return tx.booking.create({
       data: { slotId, customerId, note, createdAt: at, reference: formatReference(Number(bangkokDate(at).slice(0, 4)), Number(seq)) },
+      select: BOOKING_VIEW_SELECT,
+    });
+  });
+}
+
+/** The caller's bookings (F-05 §1): upcoming = BOOKED with start ≥ now (ascending), past = the rest (newest start first). */
+export async function listMine(customerId: number) {
+  const at = now();
+  const bookings = await prisma.booking.findMany({
+    where: { customerId },
+    orderBy: [{ slot: { startAt: 'asc' } }, { id: 'asc' }],
+    select: BOOKING_VIEW_SELECT,
+  });
+  const isUpcoming = (b: (typeof bookings)[number]) => b.status === 'BOOKED' && b.slot.startAt >= at;
+  return { upcoming: bookings.filter(isUpcoming), past: bookings.filter((b) => !isUpcoming(b)).reverse() };
+}
+
+/** One of the caller's bookings by reference (case-insensitive in the URL); 404 when missing or not owned. */
+export async function getMine(customerId: number, reference: string) {
+  const booking = await prisma.booking.findFirst({ where: { reference: reference.toUpperCase(), customerId }, select: BOOKING_VIEW_SELECT });
+  if (!booking) throw bookingNotFound();
+  return booking;
+}
+
+/** Cancels the caller's booking in one transaction with its row locked (F-05 §1 step 4): BR-09, BR-13, BR-05. */
+export function cancel(customerId: number, reference: string) {
+  return prisma.$transaction(async (tx) => {
+    const [locked] = await tx.$queryRaw<{ id: number }[]>`
+      SELECT id FROM "Booking" WHERE reference = ${reference.toUpperCase()} AND "customerId" = ${customerId} FOR UPDATE`;
+    if (!locked) throw bookingNotFound();
+    const at = now();
+    const booking = await tx.booking.findUniqueOrThrow({ where: { id: locked.id }, select: { status: true, slot: { select: { startAt: true } } } });
+    const refusal = canCustomerCancel(booking, booking.slot, at);
+    if (refusal) throw reject(refusal);
+    return tx.booking.update({
+      where: { id: locked.id },
+      data: { status: 'CANCELLED', cancelledAt: at, cancelledById: customerId },
       select: BOOKING_VIEW_SELECT,
     });
   });

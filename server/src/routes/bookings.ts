@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { requireRole } from '../middleware/requireRole.js';
-import { book } from '../services/bookingService.js';
+import { book, cancel, getMine, listMine } from '../services/bookingService.js';
 import { parse } from '../utils/validate.js';
 
 export const bookingsRouter = Router();
@@ -21,6 +21,31 @@ bookingsRouter.post('/', async (req, res, next) => {
   try {
     const { slotId, note } = parse(bookingSchema, req.body);
     res.status(201).json({ booking: await book(req.user!.id, slotId, note || null) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Declared before /:reference so "mine" is never read as a reference.
+bookingsRouter.get('/mine', async (req, res, next) => {
+  try {
+    res.json(await listMine(req.user!.id));
+  } catch (err) {
+    next(err);
+  }
+});
+
+bookingsRouter.get('/:reference', async (req, res, next) => {
+  try {
+    res.json({ booking: await getMine(req.user!.id, req.params.reference) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+bookingsRouter.post('/:reference/cancel', async (req, res, next) => {
+  try {
+    res.json({ booking: await cancel(req.user!.id, req.params.reference) });
   } catch (err) {
     next(err);
   }

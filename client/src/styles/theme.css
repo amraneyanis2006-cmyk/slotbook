@@ -95,3 +95,10 @@ label.required::after { content: " *"; color: var(--color-danger); }
 .slot-card button { margin-top: var(--space-2); align-self: flex-start; }
 .slot-time { font-weight: 600; }
 .dialog-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-3); }
+
+/* Booking detail */
+.detail dl { display: grid; grid-template-columns: 1fr; gap: 0 var(--space-3); margin: var(--space-3) 0; }
+.detail dt { font-weight: 600; margin-top: var(--space-2); }
+.detail dd { margin: 0; overflow-wrap: anywhere; }
+@media (min-width: 768px) { .detail dl { grid-template-columns: max-content 1fr; } .detail dt { margin-top: 0; } .detail dt, .detail dd { padding: var(--space-1) 0; } }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
