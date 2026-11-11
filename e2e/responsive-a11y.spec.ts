@@ -73,6 +73,8 @@ async function expectVisibleFocus(page: Page) {
 test('E2E-08: Ken logs in and books a slot with Tab/Shift+Tab/Enter/Esc only, with a visible focus ring', async ({ page }) => {
   const date = bangkokDatePlus(6); // seed slots; Anan 09:00 is the first of the day
   await page.goto('/login');
+  // The page shows "Loading…" (nothing focusable) until /api/auth/me answers; tabbing earlier leaves focus on <body>.
+  await expect(page.getByLabel('Email')).toBeVisible();
   await tabTo(page, page.getByLabel('Email'));
   await page.keyboard.type('cust.ken@slotbook.test');
   await tabTo(page, page.getByLabel('Password'));
