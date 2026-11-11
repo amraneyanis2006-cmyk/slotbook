@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { seed } from '../../prisma/seed.js';
 
 const prisma = new PrismaClient();
@@ -47,4 +47,28 @@ describe('seed (F-00)', () => {
     ]));
     for (const b of bookings) expect(b.reference).toMatch(/^BK-\d{4}-\d{6}$/);
   }, 30_000); // two full seeds incl. bcrypt cost 12 take ~4-5 s, above Vitest's 5 s default
+});
+
+describe('seed in production (F-00, NFR-12)', () => {
+  afterEach(() => vi.unstubAllEnvs());
+  // Any use of this client means the seed tried to touch the database.
+  const untouchable = new Proxy({}, { get: (_t, key) => { throw new Error(`seed touched prisma.${String(key)}`); } }) as PrismaClient;
+
+  it('DB-03: with NODE_ENV=production the seed writes nothing unless SEED_DEMO_DATA=true and SEED_PASSWORD is set', async () => {
+    const password = process.env.SEED_PASSWORD!;
+    vi.stubEnv('NODE_ENV', 'production');
+    const log = vi.spyOn(console, 'log');
+
+    for (const flag of [undefined, '', 'false', '1']) {
+      vi.stubEnv('SEED_DEMO_DATA', flag);
+      await expect(seed(untouchable), String(flag)).resolves.toBe('skipped');
+    }
+    vi.stubEnv('SEED_DEMO_DATA', 'true');
+    vi.stubEnv('SEED_PASSWORD', '');
+    await expect(seed(untouchable)).rejects.toThrow('SEED_PASSWORD is not set');
+
+    vi.stubEnv('SEED_PASSWORD', password);
+    await expect(seed(prisma)).resolves.toBe('seeded');
+    expect(JSON.stringify(log.mock.calls)).not.toContain(password);
+  }, 30_000);
 });
