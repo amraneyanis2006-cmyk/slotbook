@@ -13,7 +13,7 @@
  ❯ tests/unit/sessionConfig.test.ts (2 tests | 1 failed) 3143ms
    ✓ sessionOptions (F-01) > UNIT-06: production cookie is Secure, HttpOnly, SameSite=Lax, 8 h rolling; development is not Secure 9ms
    × server startup (F-00, NFR-12) > UNIT-07: in production the server refuses to start (exit 1, clear message) when SESSION_SECRET is missing or shorter than 32 characters 3128ms
-     → expected '/Users/yanisamrane/Documents/KMUTT_co…' to match /Refusing to start: SESSION_SECRET/
+     → expected '<repo>…' to match /Refusing to start: SESSION_SECRET/
  ❯ tests/api/health.api.test.ts (2 tests | 1 failed) 323ms
    ✓ GET /api/health (F-00) > API-25: returns 200 { status: "ok", database: "up" } without a session 269ms
    × GET /api/ready (F-00, NFR-12) > API-26: 200 { status: "ready", database: "connected" } without a session; 503 { status: "not_ready" } when the database is unreachable 48ms
@@ -80,7 +80,7 @@ Caused by: Error: Refusing to seed: NODE_ENV=production.
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
 
  FAIL  tests/unit/sessionConfig.test.ts > server startup (F-00, NFR-12) > UNIT-07: in production the server refuses to start (exit 1, clear message) when SESSION_SECRET is missing or shorter than 32 characters
-AssertionError: expected '/Users/yanisamrane/Documents/KMUTT_co…' to match /Refusing to start: SESSION_SECRET/
+AssertionError: expected '<repo>…' to match /Refusing to start: SESSION_SECRET/
 
 - Expected: 
 /Refusing to start: SESSION_SECRET/
