@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Prisma } from '@prisma/client';
 import express, { type ErrorRequestHandler } from 'express';
 import session from 'express-session';
@@ -8,7 +10,7 @@ import { AppError } from './errors.js';
 import { BOOKING_RULE_MESSAGES } from './rules/bookingRules.js';
 import { authRouter } from './routes/auth.js';
 import { bookingsRouter } from './routes/bookings.js';
-import { healthRouter } from './routes/health.js';
+import { healthRouter, readyRouter } from './routes/health.js';
 import { servicesRouter } from './routes/services.js';
 import { slotsRouter } from './routes/slots.js';
 import { staffScheduleRouter } from './routes/staffSchedule.js';
@@ -23,7 +25,10 @@ export function createApp() {
   const app = express();
   store ??= new PgStore({ conString: process.env.DATABASE_URL, createTableIfMissing: false });
 
+  const production = process.env.NODE_ENV === 'production';
   app.disable('x-powered-by');
+  // Cloud Run terminates TLS one hop in front of us; needed for req.secure, hence the Secure cookie.
+  if (production) app.set('trust proxy', 1);
   app.use(express.json({ limit: '100kb' }));
   app.use(session({
     ...sessionOptions(process.env.NODE_ENV),
@@ -31,6 +36,7 @@ export function createApp() {
   }));
 
   app.use('/api/health', healthRouter);
+  app.use('/api/ready', readyRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/services', servicesRouter);
   app.use('/api/staff/slots', staffSlotsRouter);
@@ -40,6 +46,13 @@ export function createApp() {
   if (process.env.NODE_ENV === 'test') app.use('/api/__test__', testOnlyRouter);
 
   app.use('/api', (_req, _res, next) => next(new AppError(404, 'NOT_FOUND', 'Not found.')));
+
+  // One container in production: the API also serves the built SPA (index.html for client-side routes).
+  if (production) {
+    const clientDist = path.resolve(process.env.CLIENT_DIST ?? fileURLToPath(new URL('../../client/dist', import.meta.url)));
+    app.use(express.static(clientDist, { index: false }));
+    app.get('*', (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+  }
 
   app.use(errorHandler);
 

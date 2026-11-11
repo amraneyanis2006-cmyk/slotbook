@@ -41,8 +41,9 @@ const BOOKINGS: { day: number; staff: string; time: string; customer: string; st
   { day: -2, staff: 'staff.mali@slotbook.test', time: '09:30', customer: 'cust.ken@slotbook.test', status: 'NO_SHOW' },
 ];
 
-export async function seed(prisma: PrismaClient, today = bangkokDate(new Date())): Promise<void> {
-  if (process.env.NODE_ENV === 'production') throw new Error('Refusing to seed: NODE_ENV=production.');
+export async function seed(prisma: PrismaClient, today = bangkokDate(new Date())): Promise<'seeded' | 'skipped'> {
+  // Production seeds the demo accounts (Lab 6 UAT) only on explicit request (F-00 §2).
+  if (process.env.NODE_ENV === 'production' && process.env.SEED_DEMO_DATA !== 'true') return 'skipped';
   const password = process.env.SEED_PASSWORD;
   if (!password) throw new Error('SEED_PASSWORD is not set (see .env.example).');
 
@@ -96,12 +97,15 @@ export async function seed(prisma: PrismaClient, today = bangkokDate(new Date())
       await prisma.booking.create({ data: { ...data, slotId, customerId, reference } });
     }
   }
+  return 'seeded';
 }
 
 if (process.argv[1]?.endsWith('seed.ts')) {
   const prisma = new PrismaClient();
   seed(prisma)
-    .then(() => console.log('Seed complete.'))
+    .then((result) => console.log(result === 'seeded'
+      ? 'Seed complete.'
+      : 'Seed skipped: NODE_ENV=production and SEED_DEMO_DATA is not "true". Nothing was written.'))
     .catch((err) => { console.error(err.message); process.exitCode = 1; })
     .finally(() => prisma.$disconnect());
 }
