@@ -82,7 +82,8 @@ describe('seed in production (F-00, NFR-12)', () => {
     expect(skipped.stdout).toMatch(/Seed skipped/);
     const seeded = cli('true');
     expect(seeded.status).toBe(0);
-    expect(seeded.stdout).toMatch(/Seed complete/);
+    // Insert-only on the already seeded test DB: counts only, nothing created.
+    expect(seeded.stdout).toMatch(/Seed complete\. Created: 0 services, 0 users, 0 slots, 0 bookings\. Already present \(left unchanged\): 4 services, 6 users, 50 slots, 5 bookings\./);
     expect(seeded.stdout + seeded.stderr).not.toContain(password);
   }, 60_000);
 });
