@@ -1,0 +1,23 @@
+# Branch:  refactor/20-cloud-ready
+# Commit:  055100a (test(E2E-08): wait for the login form before tabbing (race with the auth check) (#20))
+# Date:    2026-11-11 11:46:02 +0700
+# Command: (cd server && npx vitest run tests/api/health.api.test.ts tests/api/production.api.test.ts tests/unit/sessionConfig.test.ts tests/db/seed.db.test.ts)
+
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server
+
+ ✓ tests/db/seed.db.test.ts (2 tests) 3123ms
+   ✓ seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password  2065ms
+   ✓ seed in production (F-00, NFR-12) > DB-03: with NODE_ENV=production the seed writes nothing unless SEED_DEMO_DATA=true and SEED_PASSWORD is set  1048ms
+ ✓ tests/unit/sessionConfig.test.ts (2 tests) 1875ms
+   ✓ server startup (F-00, NFR-12) > UNIT-07: in production the server refuses to start (exit 1, clear message) when SESSION_SECRET is missing or shorter than 32 characters  1870ms
+ ✓ tests/api/production.api.test.ts (2 tests) 644ms
+   ✓ production serving (F-00, NFR-12) > API-27: in production Express serves CLIENT_DIST with an index.html fallback for non-/api GET routes, /api 404s stay JSON, and the Secure cookie is set behind the proxy  633ms
+ ✓ tests/api/health.api.test.ts (2 tests) 94ms
+
+ Test Files  4 passed (4)
+      Tests  8 passed (8)
+   Start at  11:46:04
+   Duration  11.43s (transform 210ms, setup 0ms, collect 1.55s, tests 5.73s, environment 1ms, prepare 386ms)
+
+# Exit code: 0
