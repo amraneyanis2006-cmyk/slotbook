@@ -25,8 +25,8 @@ describe('server startup (F-00, NFR-12)', () => {
     timeout: 20_000,
   });
 
-  it('UNIT-07: in production the server refuses to start (exit 1, clear message) when SESSION_SECRET is missing or shorter than 32 characters', () => {
-    for (const secret of [undefined, 'x'.repeat(31)]) {
+  it('UNIT-07: in production the server refuses to start (exit 1, clear message) when SESSION_SECRET is missing, shorter than 32 characters or the .env.example placeholder', () => {
+    for (const secret of [undefined, 'x'.repeat(31), 'change-me-at-least-32-characters-long']) {
       const run = start(secret);
       expect(run.status, String(secret)).toBe(1);
       expect(run.stderr).toMatch(/Refusing to start: SESSION_SECRET/);

@@ -1,3 +1,5 @@
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { PrismaClient } from '@prisma/client';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { seed } from '../../prisma/seed.js';
@@ -53,12 +55,17 @@ describe('seed in production (F-00, NFR-12)', () => {
   afterEach(() => vi.unstubAllEnvs());
   // Any use of this client means the seed tried to touch the database.
   const untouchable = new Proxy({}, { get: (_t, key) => { throw new Error(`seed touched prisma.${String(key)}`); } }) as PrismaClient;
+  // The real command line (npm run db:seed), on the test database, so its output is what gets checked.
+  const cli = (flag: string) => spawnSync(process.execPath, ['--import', 'tsx', 'prisma/seed.ts'], {
+    cwd: fileURLToPath(new URL('../..', import.meta.url)),
+    env: { ...process.env, NODE_ENV: 'production', SEED_DEMO_DATA: flag },
+    encoding: 'utf8',
+    timeout: 30_000,
+  });
 
   it('DB-03: with NODE_ENV=production the seed writes nothing unless SEED_DEMO_DATA=true and SEED_PASSWORD is set', async () => {
     const password = process.env.SEED_PASSWORD!;
     vi.stubEnv('NODE_ENV', 'production');
-    const log = vi.spyOn(console, 'log');
-
     for (const flag of [undefined, '', 'false', '1']) {
       vi.stubEnv('SEED_DEMO_DATA', flag);
       await expect(seed(untouchable), String(flag)).resolves.toBe('skipped');
@@ -67,8 +74,13 @@ describe('seed in production (F-00, NFR-12)', () => {
     vi.stubEnv('SEED_PASSWORD', '');
     await expect(seed(untouchable)).rejects.toThrow('SEED_PASSWORD is not set');
 
-    vi.stubEnv('SEED_PASSWORD', password);
-    await expect(seed(prisma)).resolves.toBe('seeded');
-    expect(JSON.stringify(log.mock.calls)).not.toContain(password);
-  }, 30_000);
+    vi.unstubAllEnvs(); // the child gets the real SEED_PASSWORD and the test DATABASE_URL
+    const skipped = cli('false');
+    expect(skipped.status).toBe(0);
+    expect(skipped.stdout).toMatch(/Seed skipped/);
+    const seeded = cli('true');
+    expect(seeded.status).toBe(0);
+    expect(seeded.stdout).toMatch(/Seed complete/);
+    expect(seeded.stdout + seeded.stderr).not.toContain(password);
+  }, 60_000);
 });

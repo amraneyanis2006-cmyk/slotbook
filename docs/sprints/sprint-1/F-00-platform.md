@@ -32,7 +32,9 @@ CREATE INDEX "IDX_session_expire" ON "session" ("expire");
 
 **Seed** (`server/prisma/seed.ts`, idempotent). With `NODE_ENV=production` it writes the data below only when
 `SEED_DEMO_DATA=true` **and** `SEED_PASSWORD` is set (from Secret Manager): the demo accounts are needed for the
-Lab 6 UAT. Without `SEED_DEMO_DATA=true` it exits without writing; the password is never printed.
+Lab 6 UAT. Without `SEED_DEMO_DATA=true` it exits without writing; the password is never printed. Slots and
+bookings are placed relative to the seed day, so in production `SEED_DEMO_DATA=true` is for the **first** run only
+(a later run could reopen slots or collide with UAT bookings); set it back to `false` afterwards.
 
 | Data | Content |
 | :--- | :--- |
@@ -56,7 +58,8 @@ bookings (DB-02). Tests that need a slot starting within the next hour create it
 **Production mode** (`NODE_ENV=production`, one container): `trust proxy` is 1 (Cloud Run terminates TLS, so the
 Secure cookie is set); Express serves the built SPA from `CLIENT_DIST` (default `client/dist` of the repository) and
 returns `index.html` for every non-`/api` GET route; unknown `/api` routes stay the JSON 404. The server refuses to
-start (message on stderr, exit 1) when `SESSION_SECRET` is missing, or shorter than 32 characters in production.
+start (message on stderr, exit 1) when `SESSION_SECRET` is missing, or in production shorter than 32 characters or
+still the `.env.example` placeholder (`change-me…`).
 
 Also provided as skeleton for every later feature: `app.ts` (JSON body limit 100 kB, session middleware,
 routes, 404 JSON handler, error handler that maps `AppError(status, code, message, fields?)` and hides
@@ -86,7 +89,7 @@ No domain screen.
 | AC-32 | Running the seed twice leaves the same number of users, services, slots and bookings, and the seeded accounts can be found by e-mail with their roles; no plaintext password is stored. |
 | AC-33 | `GET /api/ready` returns 200 `{ status: "ready", database: "connected" }` when PostgreSQL answers `SELECT 1` and 503 `{ status: "not_ready" }` when it does not, without authentication. |
 | AC-34 | In production the server serves the SPA with an `index.html` fallback for non-`/api` GET routes, unknown `/api` routes return the JSON 404, and login behind the HTTPS proxy sets the Secure session cookie. |
-| AC-35 | In production the server exits with code 1 and a clear message, without listening, when `SESSION_SECRET` is missing or shorter than 32 characters. |
+| AC-35 | In production the server exits with code 1 and a clear message, without listening, when `SESSION_SECRET` is missing, shorter than 32 characters or the `.env.example` placeholder. |
 | AC-36 | In production the seed writes nothing unless `SEED_DEMO_DATA=true` and `SEED_PASSWORD` is set; with both it seeds; the password is never printed. |
 
 ## 7. Failure / Boundary Cases

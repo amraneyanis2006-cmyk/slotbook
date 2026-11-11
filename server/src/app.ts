@@ -29,6 +29,9 @@ export function createApp() {
   app.disable('x-powered-by');
   // Cloud Run terminates TLS one hop in front of us; needed for req.secure, hence the Secure cookie.
   if (production) app.set('trust proxy', 1);
+  // One container in production: the API also serves the built SPA. Assets skip the session store.
+  const clientDist = path.resolve(process.env.CLIENT_DIST ?? fileURLToPath(new URL('../../client/dist', import.meta.url)));
+  if (production) app.use(express.static(clientDist, { index: false }));
   app.use(express.json({ limit: '100kb' }));
   app.use(session({
     ...sessionOptions(process.env.NODE_ENV),
@@ -47,12 +50,8 @@ export function createApp() {
 
   app.use('/api', (_req, _res, next) => next(new AppError(404, 'NOT_FOUND', 'Not found.')));
 
-  // One container in production: the API also serves the built SPA (index.html for client-side routes).
-  if (production) {
-    const clientDist = path.resolve(process.env.CLIENT_DIST ?? fileURLToPath(new URL('../../client/dist', import.meta.url)));
-    app.use(express.static(clientDist, { index: false }));
-    app.get('*', (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
-  }
+  // Client-side routes of the SPA (after the /api 404, so unknown API routes stay JSON).
+  if (production) app.get('*', (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
 
   app.use(errorHandler);
 

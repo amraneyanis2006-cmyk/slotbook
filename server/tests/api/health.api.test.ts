@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { prisma } from '../../src/db.js';
 
@@ -14,6 +14,7 @@ describe('GET /api/health (F-00)', () => {
 });
 
 describe('GET /api/ready (F-00, NFR-12)', () => {
+  afterEach(() => vi.restoreAllMocks());
   it('API-26: 200 { status: "ready", database: "connected" } without a session; 503 { status: "not_ready" } when the database is unreachable', async () => {
     const app = createApp();
     const ok = await request(app).get('/api/ready');

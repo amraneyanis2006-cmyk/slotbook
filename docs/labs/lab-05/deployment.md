@@ -32,7 +32,7 @@ placeholder. "Secret" values never go in the repository, a log, a screenshot or 
 | `PORT` | HTTP port | No | `.env` (3000) | Workflow (3000) | Set by Cloud Run |
 | `NODE_ENV` | `development` / `test` / `production` (production: Secure cookie, trust proxy, SPA serving, seed opt-in) | No | `.env` (`development`) | `test` (set by Vitest/Playwright) | `production` (service and job config) |
 | `SEED_PASSWORD` | Password of every seeded demo account; never printed | **Yes** | `.env` | Generated test value in the workflow | Secret Manager `slotbook-seed-password` (migration/seed job) |
-| `SEED_DEMO_DATA` | Production only: `true` lets the seed write demo accounts | No | Not needed | Not needed | Job config, `true` for the Lab 6 UAT |
+| `SEED_DEMO_DATA` | Production only: `true` lets the seed write demo accounts | No | Not needed | Not needed | `true` for the **first** seed run only (Lab 6 UAT accounts), then `false`: a later run could reopen slots or collide with UAT bookings |
 | `CLIENT_DIST` | Production only: folder of the built SPA | No | Default `client/dist` | Not needed | Image path, set in Issue #21 if it differs |
 
 ## 3. Local commands
@@ -56,8 +56,8 @@ Run as in production, one process serving API and SPA (after `npm run build`; `S
 NODE_ENV=production npm start --prefix server   # http://localhost:3000 ; /api/ready shows the database state
 ```
 
-`npm start` reads `../.env` with `node --env-file`, so it needs that file; the container start command is defined in
-Issue #21.
+This only checks SPA serving and `/api/ready`: over plain `http://localhost` the Secure session cookie is not sent,
+so logging in needs HTTPS or a proxy that sets `X-Forwarded-Proto: https` (Cloud Run does).
 
 ## 4. GCP project and resources
 
@@ -67,7 +67,9 @@ migration job `slotbook-migrate`, service accounts `slotbook-runner` and `slotbo
 
 ## 5. Docker
 
-*To be filled in Issue #21.*
+*To be filled in Issue #21.* Known points for the image: `npm start` and `npm run prisma` use
+`node --env-file=../.env`, which fails when the file is missing (Cloud Run has none); the seed runs through `tsx`
+(a devDependency) and `prisma/seed.ts` is outside the `tsc` build.
 
 ## 6. CI
 

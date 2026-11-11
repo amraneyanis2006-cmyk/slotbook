@@ -88,5 +88,5 @@ now and receive AC/tests in their own sprint contracts.
   AC or test ID was added or removed.
 - **1.4 (2026-11-11), Lab 5 Issue #20 (NFR-12):** F-00 1.2 — the seed may run in production with
   `SEED_DEMO_DATA=true` (was: refuses production); `/api/ready`, production SPA serving, trust proxy and startup
-  refusal added as AC-33..AC-36 with UNIT-07, API-26, API-27, DB-03. Reason: Lab 5 cloud deployment and Lab 6 UAT
+  refusal added as AC-33..AC-36 (SDS 1.3 §4/§7 follow) with UNIT-07, API-26, API-27, DB-03. Reason: Lab 5 cloud deployment and Lab 6 UAT
   demo accounts. Made in the Issue #20 PR.

@@ -9,4 +9,4 @@ try {
   process.exit(1);
 }
 const port = Number(process.env.PORT ?? 3000);
-app.listen(port, () => console.log(`SlotBook on http://localhost:${port}`));
+app.listen(port, () => console.log(`SlotBook listening on port ${port}`));
