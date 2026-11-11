@@ -14,7 +14,7 @@ Version 0.1 (2026-11-11, Issue #20). Sections marked *To be filled* are complete
 | Container | **One container**: in production Express serves the API under `/api` and the built SPA, with `index.html` for every other GET route (`CLIENT_DIST`) | One container for UI and API |
 | Uploads | None (SlotBook stores no file) | Files as bytes in the database |
 | Readiness | `GET /api/ready` (200 / 503 after `SELECT 1`); `GET /api/health` kept from Sprint 1 | `GET /api/ready` |
-| Demo data | Seed writes demo accounts in production only with `SEED_DEMO_DATA=true` and `SEED_PASSWORD` | `ADMIN_PASSWORD`, `SEED_DEMO_DATA`, `DEMO_USER_PASSWORD` |
+| Demo data | Seed writes demo accounts in production only with `SEED_DEMO_DATA=true` and `SEED_PASSWORD`, insert-only (safe on every release) | `ADMIN_PASSWORD`, `SEED_DEMO_DATA`, `DEMO_USER_PASSWORD` |
 
 Kit variables SlotBook does not use: `ADMIN_PASSWORD`, `DEMO_USER_PASSWORD` (one `SEED_PASSWORD` for every demo
 account), `CORS_ORIGIN` (UI and API share one origin), `ALLOW_LEGACY_REQUESTER_HEADER` (no such shortcut).
@@ -32,7 +32,7 @@ placeholder. "Secret" values never go in the repository, a log, a screenshot or 
 | `PORT` | HTTP port | No | `.env` (3000) | Workflow (3000) | Set by Cloud Run |
 | `NODE_ENV` | `development` / `test` / `production` (production: Secure cookie, trust proxy, SPA serving, seed opt-in) | No | `.env` (`development`) | `test` (set by Vitest/Playwright) | `production` (service and job config) |
 | `SEED_PASSWORD` | Password of every seeded demo account; never printed | **Yes** | `.env` | Generated test value in the workflow | Secret Manager `slotbook-seed-password` (migration/seed job) |
-| `SEED_DEMO_DATA` | Production only: `true` lets the seed write demo accounts | No | Not needed | Not needed | `true` for the **first** seed run only (Lab 6 UAT accounts), then `false`: a later run could reopen slots or collide with UAT bookings |
+| `SEED_DEMO_DATA` | Production only: `true` lets the seed write demo accounts | No | Not needed | Not needed | `true` on the migration job (every release). Insert-only: creates missing services/users, demo slots and bookings only on an empty database, never changes an existing row; prints counts |
 | `CLIENT_DIST` | Production only: folder of the built SPA | No | Default `client/dist` | Not needed | Image path, set in Issue #21 if it differs |
 
 ## 3. Local commands

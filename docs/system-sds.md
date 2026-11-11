@@ -240,7 +240,7 @@ is never the protection.**
 | `PORT` | server | `3000` | Cloud Run injects `PORT`. |
 | `NODE_ENV` | server | `development` | `production` enables the `Secure` cookie, `trust proxy` and SPA serving; the seed then needs `SEED_DEMO_DATA=true`. |
 | `SEED_PASSWORD` | seed | `change-me` | Password of every demo account; never printed; Secret Manager in GCP. |
-| `SEED_DEMO_DATA` | seed | *(commented out)* | Production only: `true` lets the seed write the demo accounts (Lab 6 UAT). |
+| `SEED_DEMO_DATA` | seed | *(commented out)* | Production only: `true` lets the seed write the demo accounts (Lab 6 UAT), insert-only; demo slots and bookings only on an empty database. |
 | `CLIENT_DIST` | server | *(commented out)* | Production only: built SPA folder; default `client/dist`. |
 
 - `.env` files are git-ignored; only `.env.example` is committed. The client contains **no secret**

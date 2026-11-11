@@ -5,7 +5,7 @@
 | Linked requirements | NFR-07 (reproducible setup), NFR-10 (UTC storage), NFR-12 (deployable design), NFR-06 (safe errors — handler skeleton) |
 | Issue / owner / reviewer | Issue #2 — Yanis Amrane (author), Simeon Audouit (reviewer) |
 | Depends on | Contract PR (Issue #1) |
-| Contract version | 1.2 (2026-11-11, Lab 5 Issue #20: §2 seed in production, §3 `/api/ready` and production serving, §6 AC-33..AC-36, §7) |
+| Contract version | 1.2 (2026-11-11, Lab 5 Issue #20: §2 seed in production, §3 `/api/ready` and production serving, §6 AC-33..AC-37, §7) |
 
 ## 1. Behavior and Workflow
 
@@ -32,9 +32,12 @@ CREATE INDEX "IDX_session_expire" ON "session" ("expire");
 
 **Seed** (`server/prisma/seed.ts`, idempotent). With `NODE_ENV=production` it writes the data below only when
 `SEED_DEMO_DATA=true` **and** `SEED_PASSWORD` is set (from Secret Manager): the demo accounts are needed for the
-Lab 6 UAT. Without `SEED_DEMO_DATA=true` it exits without writing; the password is never printed. Slots and
-bookings are placed relative to the seed day, so in production `SEED_DEMO_DATA=true` is for the **first** run only
-(a later run could reopen slots or collide with UAT bookings); set it back to `false` afterwards.
+Lab 6 UAT. Without `SEED_DEMO_DATA=true` it exits without writing; the password is never printed. The Cloud
+Run migration job keeps `SEED_DEMO_DATA=true` and runs on every release, so the **production seed is insert-only**:
+services and users are created only when missing and an existing row is never updated (no password reset, no
+`isActive` change); the demo slots and bookings are created only when the `Slot` table is empty (first run) and
+skipped entirely otherwise. It prints the counts created and already present, never the password. Development and
+test keep the update-in-place behaviour above (DB-02).
 
 | Data | Content |
 | :--- | :--- |
@@ -91,9 +94,11 @@ No domain screen.
 | AC-34 | In production the server serves the SPA with an `index.html` fallback for non-`/api` GET routes, unknown `/api` routes return the JSON 404, and login behind the HTTPS proxy sets the Secure session cookie. |
 | AC-35 | In production the server exits with code 1 and a clear message, without listening, when `SESSION_SECRET` is missing, shorter than 32 characters or the `.env.example` placeholder. |
 | AC-36 | In production the seed writes nothing unless `SEED_DEMO_DATA=true` and `SEED_PASSWORD` is set; with both it seeds; the password is never printed. |
+| AC-37 | In production a rerun of the seed is insert-only: it changes no existing user, service, slot or booking (a changed password hash, a closed slot and a UAT booking stay as they are) and creates no booking when the database already has slots. |
 
 ## 7. Failure / Boundary Cases
 
 Database down → health 503 (no stack trace); seed in production without `SEED_DEMO_DATA=true` → exits
 without writing (message, exit 0); with `SEED_DEMO_DATA=true` but no `SEED_PASSWORD` → error message, exit 1, no write;
-database down → ready 503; missing/short `SESSION_SECRET` in production → no start (exit 1).
+production rerun (even on a later day) → no existing row changed, no demo slot or booking created, no unique
+violation; database down → ready 503; missing/short `SESSION_SECRET` in production → no start (exit 1).

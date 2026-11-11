@@ -55,7 +55,8 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | API-27 | AC-34 | API | `NODE_ENV=production`, 32-char secret, `CLIENT_DIST` = temporary build; then not production | `GET /`, `/login`, `/bookings/42`, `/assets/app.js`, `/api`, `/api/nope`; `POST /api/auth/login` with `X-Forwarded-Proto: https` | `index.html` for the routes, JS for the asset, JSON 404 `NOT_FOUND` for `/api…`, `sid` cookie with `Secure`; outside production `/bookings/42` is 404 | `server/tests/api/production.api.test.ts` | Pass (Lab 5, #20) |
 | DB-01 | AC-19 | DB | Free slot | Insert two `BOOKED` bookings for the slot directly with Prisma | Second insert fails with unique violation `P2002` on `booking_one_active_per_slot`; a second `CANCELLED` row is allowed | `server/tests/db/constraints.db.test.ts` | Pass |
 | DB-02 | AC-32 | DB | Fresh test DB, `NODE_ENV=test` | Run the seed twice | Same counts after both runs; seeded e-mails present with roles; every `passwordHash` starts with `$2` and no column equals `SEED_PASSWORD` | `server/tests/db/seed.db.test.ts` | Pass |
-| DB-03 | AC-36 | DB | `NODE_ENV=production`; a Prisma client that fails on any use | Seed with `SEED_DEMO_DATA` unset, `''`, `false`, `1`; then `true` without `SEED_PASSWORD`; then the real `prisma/seed.ts` command with `SEED_DEMO_DATA=false` and `true` on the test DB | `'skipped'` without touching Prisma; error "SEED_PASSWORD is not set" without touching Prisma; command prints "Seed skipped" (exit 0), then "Seed complete" (exit 0); the password is in neither stdout nor stderr | `server/tests/db/seed.db.test.ts` | Pass (Lab 5, #20) |
+| DB-03 | AC-36 | DB | `NODE_ENV=production`; a Prisma client that fails on any use | Seed with `SEED_DEMO_DATA` unset, `''`, `false`, `1`; then `true` without `SEED_PASSWORD`; then the real `prisma/seed.ts` command with `SEED_DEMO_DATA=false` and `true` on the test DB | `'skipped'` without touching Prisma; error "SEED_PASSWORD is not set" without touching Prisma; command prints "Seed skipped" (exit 0), then on the seeded DB "Seed complete. Created: 0 services, 0 users, 0 slots, 0 bookings. Already present (left unchanged): 4 services, 6 users, 50 slots, 5 bookings." (exit 0); the password is in neither stdout nor stderr | `server/tests/db/seed.db.test.ts` | Pass (Lab 5, #20) |
+| DB-04 | AC-37 | DB | Seeded test DB; Nina's `passwordHash` changed, Anan today+3 09:00 slot CLOSED, Anan today+2 09:00 booked by Nina (the slot a next-day seed books for Ploy) | `NODE_ENV=production`, `SEED_DEMO_DATA=true`: `seed(prisma, today+1)` (the next release a day later); rows restored afterwards | Same counts of users, services, slots and bookings; hash, CLOSED status and Nina's BOOKED booking unchanged; no other booking on that slot (no P2002) | `server/tests/db/seed.db.test.ts` | Pass (Lab 5, #20) |
 
 ## 3. UI Component Tests — `client/tests/`
 
@@ -101,6 +102,7 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | AC-16 | API-14 | AC-32 | DB-02 |
 | AC-33 | API-26 | AC-34 | API-27 |
 | AC-35 | UNIT-07 | AC-36 | DB-03 |
+| AC-37 | DB-04 | | |
 
 **Manual checks** (supplement only, recorded in Part F of the Deliverable 1 submission PDF, never replacing a test above): MAN-01 visual
 review of the five screens against `system-sds.md` §3; MAN-02 clean-clone setup following the README.
@@ -121,4 +123,4 @@ file of their Issue. For E2E-07/08, which are cross-cutting, the red step only c
 | 1.0 | 2026-11-07 | Yanis Amrane | Initial STS for Sprint 1 (reviewed by Simeon in the contract PR). |
 | 1.1 | 2026-11-07 | Yanis Amrane | UNIT-06 added; UNIT-01/04, API-07/08/18/24, E2E-03/04/06 updated; full paths; TDD file naming; see PR #9. |
 | 1.2 | 2026-11-10 | Simeon Audouit | Decisions by Yanis Amrane for Issue #8: UNIT-04 states that the query excludes the past and the rule ignores non-BOOKED bookings; NO_SHOW added to UNIT-05 and API-23 (already tested); E2E-06 dependency on E2E-05 written down; §6 red step for E2E-07/08; "Result" column filled from the release run. |
-| 1.3 | 2026-11-11 | Yanis Amrane | Lab 5 (Issue #20, NFR-12): UNIT-07, API-26, API-27, DB-03 added for AC-33..AC-36 (F-00 1.2); DB-02 precondition names `NODE_ENV=test`. |
+| 1.3 | 2026-11-11 | Yanis Amrane | Lab 5 (Issue #20, NFR-12): UNIT-07, API-26, API-27, DB-03, DB-04 added for AC-33..AC-37 (F-00 1.2); DB-02 precondition names `NODE_ENV=test`. |
