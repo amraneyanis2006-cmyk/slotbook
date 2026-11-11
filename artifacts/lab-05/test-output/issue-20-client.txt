@@ -1,6 +1,6 @@
 # Branch:  refactor/20-cloud-ready
-# Commit:  69ef940 (fix(F-00): pre-PR review fixes: placeholder secret refused, assets skip sessions, DB-03 checks the CLI output, SDS 1.3, deployment notes (#20))
-# Date:    2026-11-11 11:51:06 +0700
+# Commit:  41f6cb0 (docs(F-00): production seed is insert-only: F-00 AC-37, STS DB-04, traceability, SDS, deployment.md (#20))
+# Date:    2026-11-11 12:42:18 +0700
 # Command: (cd client && npx vitest run)
 
 
@@ -18,18 +18,18 @@ stderr | tests/BookSlotPage.test.tsx > BookSlotPage (F-04) > UI-03: dialog with 
 ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
 ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
 
- ✓ tests/MySlotsPage.test.tsx (1 test) 500ms
-   ✓ MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list  498ms
- ✓ tests/LoginPage.test.tsx (1 test) 541ms
-   ✓ LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home  539ms
- ✓ tests/MyBookingsPage.test.tsx (3 tests) 689ms
-   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled  563ms
- ✓ tests/BookSlotPage.test.tsx (2 tests) 980ms
-   ✓ BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state  939ms
+ ✓ tests/LoginPage.test.tsx (1 test) 991ms
+   ✓ LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home  988ms
+ ✓ tests/MySlotsPage.test.tsx (1 test) 1019ms
+   ✓ MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list  1016ms
+ ✓ tests/MyBookingsPage.test.tsx (3 tests) 1326ms
+   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled  1099ms
+ ✓ tests/BookSlotPage.test.tsx (2 tests) 1761ms
+   ✓ BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state  1707ms
 
  Test Files  4 passed (4)
       Tests  7 passed (7)
-   Start at  11:51:07
-   Duration  3.40s (transform 339ms, setup 1.42s, collect 1.18s, tests 2.71s, environment 4.32s, prepare 813ms)
+   Start at  12:42:20
+   Duration  5.46s (transform 573ms, setup 2.28s, collect 1.84s, tests 5.10s, environment 6.72s, prepare 1.23s)
 
 # Exit code: 0

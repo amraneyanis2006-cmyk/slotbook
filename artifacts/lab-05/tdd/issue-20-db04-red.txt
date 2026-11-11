@@ -4,7 +4,7 @@
 # Command: (cd server && npx vitest run --reporter=verbose tests/db/seed.db.test.ts)
 
 
- RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server
+ RUN  v3.2.7 <repo>/server
 
  ✓ tests/db/seed.db.test.ts > seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password 2174ms
  ✓ tests/db/seed.db.test.ts > seed in production (F-00, NFR-12) > DB-03: with NODE_ENV=production the seed writes nothing unless SEED_DEMO_DATA=true and SEED_PASSWORD is set 1714ms
