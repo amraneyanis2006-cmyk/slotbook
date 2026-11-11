@@ -70,7 +70,7 @@ now and receive AC/tests in their own sprint contracts.
 | NFR-09 Accessibility baseline | F-01..F-06 screens; F-18 full audit | Sprint 1 baseline; AC-30, AC-05, AC-15, AC-22, AC-27 / E2E-08, UI-01, UI-02, UI-03, UI-04; Sprint 3 audit |
 | NFR-10 Time correctness (UTC / Bangkok) | F-00 time helpers, F-03..F-05 rules | Sprint 1; AC-12, AC-20, AC-26 / UNIT-01, UNIT-04, UNIT-05 |
 | NFR-11 Performance p95 < 500 ms | F-12 Search (+ F-18 re-check) | Sprint 2; performance smoke test in Sprint 2 contract |
-| NFR-12 Deployability (env, stateless, Docker, GCP) | Designed in SDS §7 (Sprint 1); F-13 pipeline | Design Sprint 1 (health check AC-31 / API-25 for later container probes); verified Sprint 2 (Lab 5) |
+| NFR-12 Deployability (env, stateless, Docker, GCP) | Designed in SDS §7 (Sprint 1); F-00 1.2 cloud-ready server (Lab 5 #20); F-13 pipeline | Design Sprint 1 (health check AC-31 / API-25); Lab 5 #20: AC-33 / API-26 (`/api/ready`), AC-34 / API-27 (SPA in production, Secure cookie behind proxy), AC-35 / UNIT-07 (startup refusal), AC-36 / DB-03 (production seed opt-in); Docker, CI and GCP verified in the later Lab 5 Issues |
 | NFR-13 Test discipline / traceability | Release check of every sprint (Issue #8 in Sprint 1) | Every sprint; release traceability check |
 
 ## 4. Coverage Gaps and Approved Changes
@@ -86,3 +86,7 @@ now and receive AC/tests in their own sprint contracts.
 - **1.3 (2026-11-10), Issue #8 decisions by Yanis Amrane:** SRS A-04; STS UNIT-04, UNIT-05, API-23, E2E-06 and §6
   wording; SDS §3.2 empty-state example and Node/PostgreSQL versions. Made in the Issue #8 PR. No requirement,
   AC or test ID was added or removed.
+- **1.4 (2026-11-11), Lab 5 Issue #20 (NFR-12):** F-00 1.2 — the seed may run in production with
+  `SEED_DEMO_DATA=true` (was: refuses production); `/api/ready`, production SPA serving, trust proxy and startup
+  refusal added as AC-33..AC-36 with UNIT-07, API-26, API-27, DB-03. Reason: Lab 5 cloud deployment and Lab 6 UAT
+  demo accounts. Made in the Issue #20 PR.

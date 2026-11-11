@@ -5,7 +5,7 @@
 | Linked requirements | NFR-07 (reproducible setup), NFR-10 (UTC storage), NFR-12 (deployable design), NFR-06 (safe errors — handler skeleton) |
 | Issue / owner / reviewer | Issue #2 — Yanis Amrane (author), Simeon Audouit (reviewer) |
 | Depends on | Contract PR (Issue #1) |
-| Contract version | 1.1 (2026-11-07) |
+| Contract version | 1.2 (2026-11-11, Lab 5 Issue #20: §2 seed in production, §3 `/api/ready` and production serving, §6 AC-33..AC-36, §7) |
 
 ## 1. Behavior and Workflow
 
@@ -30,7 +30,9 @@ CREATE SEQUENCE "booking_ref_seq" START 1;
 CREATE INDEX "IDX_session_expire" ON "session" ("expire");
 ```
 
-**Seed** (`server/prisma/seed.ts`, idempotent, refuses `NODE_ENV=production`):
+**Seed** (`server/prisma/seed.ts`, idempotent). With `NODE_ENV=production` it writes the data below only when
+`SEED_DEMO_DATA=true` **and** `SEED_PASSWORD` is set (from Secret Manager): the demo accounts are needed for the
+Lab 6 UAT. Without `SEED_DEMO_DATA=true` it exits without writing; the password is never printed.
 
 | Data | Content |
 | :--- | :--- |
@@ -49,6 +51,12 @@ bookings (DB-02). Tests that need a slot starting within the next hour create it
 | Method and path | Auth | Success | Failure |
 | :--- | :--- | :--- | :--- |
 | `GET /api/health` | public | `200 { "status": "ok", "database": "up" }` | `503 { "status": "degraded", "database": "down" }` |
+| `GET /api/ready` | public | `200 { "status": "ready", "database": "connected" }` after `SELECT 1` | `503 { "status": "not_ready" }` |
+
+**Production mode** (`NODE_ENV=production`, one container): `trust proxy` is 1 (Cloud Run terminates TLS, so the
+Secure cookie is set); Express serves the built SPA from `CLIENT_DIST` (default `client/dist` of the repository) and
+returns `index.html` for every non-`/api` GET route; unknown `/api` routes stay the JSON 404. The server refuses to
+start (message on stderr, exit 1) when `SESSION_SECRET` is missing, or shorter than 32 characters in production.
 
 Also provided as skeleton for every later feature: `app.ts` (JSON body limit 100 kB, session middleware,
 routes, 404 JSON handler, error handler that maps `AppError(status, code, message, fields?)` and hides
@@ -76,7 +84,13 @@ No domain screen.
 | :--- | :--- |
 | AC-31 | `GET /api/health` returns 200 `{ status: "ok", database: "up" }` when PostgreSQL is reachable, without authentication. |
 | AC-32 | Running the seed twice leaves the same number of users, services, slots and bookings, and the seeded accounts can be found by e-mail with their roles; no plaintext password is stored. |
+| AC-33 | `GET /api/ready` returns 200 `{ status: "ready", database: "connected" }` when PostgreSQL answers `SELECT 1` and 503 `{ status: "not_ready" }` when it does not, without authentication. |
+| AC-34 | In production the server serves the SPA with an `index.html` fallback for non-`/api` GET routes, unknown `/api` routes return the JSON 404, and login behind the HTTPS proxy sets the Secure session cookie. |
+| AC-35 | In production the server exits with code 1 and a clear message, without listening, when `SESSION_SECRET` is missing or shorter than 32 characters. |
+| AC-36 | In production the seed writes nothing unless `SEED_DEMO_DATA=true` and `SEED_PASSWORD` is set; with both it seeds; the password is never printed. |
 
 ## 7. Failure / Boundary Cases
 
-Database down → health 503 (no stack trace); seed in production → exits with an error message, no write.
+Database down → health 503 (no stack trace); seed in production without `SEED_DEMO_DATA=true` → exits
+without writing (message, exit 0); with `SEED_DEMO_DATA=true` but no `SEED_PASSWORD` → error message, exit 1, no write;
+database down → ready 503; missing/short `SESSION_SECRET` in production → no start (exit 1).
