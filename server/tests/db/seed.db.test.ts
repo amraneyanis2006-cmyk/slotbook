@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { PrismaClient } from '@prisma/client';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { seed } from '../../prisma/seed.js';
+import { addDays, bangkokDate, bangkokToUtc } from '../../src/utils/time.js';
+import { makeBooking } from '../helpers.js';
 
 const prisma = new PrismaClient();
 afterAll(() => prisma.$disconnect());
@@ -83,4 +85,37 @@ describe('seed in production (F-00, NFR-12)', () => {
     expect(seeded.stdout).toMatch(/Seed complete/);
     expect(seeded.stdout + seeded.stderr).not.toContain(password);
   }, 60_000);
+});
+
+describe('seed rerun in production (F-00, NFR-12)', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('DB-04: with NODE_ENV=production and SEED_DEMO_DATA=true a later rerun is insert-only: a changed password hash, a closed seeded slot and a UAT booking stay as they are, and no booking is created', async () => {
+    const today = bangkokDate(new Date());
+    const nina = await prisma.user.findUniqueOrThrow({ where: { email: 'cust.nina@slotbook.test' } });
+    const anan = await prisma.user.findUniqueOrThrow({ where: { email: 'staff.anan@slotbook.test' } });
+    // Seeded OPEN slots that a next-day seed would reopen (today+3 09:00) and book for Ploy (today+2 09:00).
+    const toClose = await prisma.slot.findFirstOrThrow({ where: { staffId: anan.id, startAt: bangkokToUtc(addDays(today, 3), '09:00') } });
+    const toBook = await prisma.slot.findFirstOrThrow({ where: { staffId: anan.id, startAt: bangkokToUtc(addDays(today, 2), '09:00'), bookings: { none: {} } } });
+
+    await prisma.user.update({ where: { id: nina.id }, data: { passwordHash: 'changed-by-uat' } });
+    await prisma.slot.update({ where: { id: toClose.id }, data: { status: 'CLOSED' } });
+    const uatBooking = await makeBooking(prisma, { slotId: toBook.id, customerId: nina.id });
+    try {
+      const before = await counts();
+      vi.stubEnv('NODE_ENV', 'production');
+      vi.stubEnv('SEED_DEMO_DATA', 'true');
+      await seed(prisma, addDays(today, 1)); // the next release, one day later
+
+      expect(await counts()).toEqual(before);
+      expect((await prisma.user.findUniqueOrThrow({ where: { id: nina.id } })).passwordHash).toBe('changed-by-uat');
+      expect((await prisma.slot.findUniqueOrThrow({ where: { id: toClose.id } })).status).toBe('CLOSED');
+      expect(await prisma.booking.findMany({ where: { slotId: toBook.id }, select: { id: true, customerId: true, status: true } }))
+        .toEqual([{ id: uatBooking.id, customerId: nina.id, status: 'BOOKED' }]);
+    } finally {
+      await prisma.booking.delete({ where: { id: uatBooking.id } });
+      await prisma.slot.update({ where: { id: toClose.id }, data: { status: 'OPEN' } });
+      await prisma.user.update({ where: { id: nina.id }, data: { passwordHash: nina.passwordHash } });
+    }
+  }, 30_000);
 });
