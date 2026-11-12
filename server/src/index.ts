@@ -1,5 +1,12 @@
 import { createApp } from './app.js';
 
-// ponytail: API only. Serving the built SPA from Express comes with the Docker image (F-13, Sprint 2).
+let app;
+try {
+  app = createApp();
+} catch (err) {
+  // Configuration errors (e.g. a missing or short SESSION_SECRET) stop the process before it listens.
+  console.error(`Refusing to start: ${(err as Error).message}`);
+  process.exit(1);
+}
 const port = Number(process.env.PORT ?? 3000);
-createApp().listen(port, () => console.log(`SlotBook API on http://localhost:${port}`));
+app.listen(port, () => console.log(`SlotBook listening on port ${port}`));

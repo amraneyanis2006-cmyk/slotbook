@@ -1,10 +1,10 @@
 # Sprint 1 — Software Test Specification (STS)
 
-Version 1.2 (2026-11-10). Each test name in code **starts with its Test ID** (e.g.
+Version 1.3 (2026-11-11). Each test name in code **starts with its Test ID** (e.g.
 `it('API-15: books a bookable slot …')`). Test databases are reset and seeded before each run; time-based
 rules use `freezeClock()` (server) or slots created relative to the real clock (E2E). The "Result" column
 is filled from the real release run (Part F of the Deliverable 1 submission PDF): the clean-clone run of 2026-11-10 at
-commit `e5af45c` (`npm test` and `npm run test:e2e`; every Test ID below passed; see `artifacts/sprint-1/clean-clone-check.md`).
+commit `e5af45c` (`npm test` and `npm run test:e2e`; every Test ID below passed; see `artifacts/sprint-1/clean-clone-check.md`). Rows marked "Lab 5, #20" come from the Issue #20 PR run.
 
 Levels: **Unit** = pure function, no DB · **API** = Supertest against the Express app + test PostgreSQL ·
 **DB** = direct Prisma/SQL on the test database · **UI** = component test (Vitest + Testing Library,
@@ -20,6 +20,7 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | UNIT-04 | AC-20, AC-21 | Unit | Clock fixed; slots at +60 min, +59 min, CLOSED, inactive service; customer with 2 / 3 active future bookings; overlapping and back-to-back bookings | `isBookable`, `checkCustomerLimits` | +60 bookable, +59, CLOSED and inactive service → `SLOT_NOT_BOOKABLE`; 3 active → `BOOKING_LIMIT_REACHED`; past bookings are excluded by the service query (slot start > now) and the pure rule ignores bookings that are not BOOKED (CANCELLED, COMPLETED, NO_SHOW), while the query part is checked by API-19; overlap → `BOOKING_OVERLAP`; back-to-back → null | `server/tests/unit/bookingRules.test.ts` | Pass |
 | UNIT-05 | AC-26 | Unit | Bookings BOOKED at +120 min, +119 min; CANCELLED; COMPLETED; NO_SHOW | `canCustomerCancel` | +120 → null; +119 → `CANCELLATION_WINDOW_CLOSED`; CANCELLED/COMPLETED/NO_SHOW → `BOOKING_NOT_ACTIVE` (checked first) | `server/tests/unit/bookingRules.test.ts` | Pass |
 | UNIT-06 | AC-01 | Unit | — | `sessionOptions('production')`, `sessionOptions('development')` from `server/src/config/session.ts` | production: `cookie.secure` true, `cookie.httpOnly` true, `cookie.sameSite` `'lax'`, `cookie.maxAge` 8 h, `rolling` true; development: `cookie.secure` false | `server/tests/unit/sessionConfig.test.ts` | Pass |
+| UNIT-07 | AC-35 | Unit | `NODE_ENV=production` | Start `src/index.ts` as a child process with `SESSION_SECRET` unset, 31 characters, then the `.env.example` placeholder | Exit code 1, stderr "Refusing to start: SESSION_SECRET …", never listens | `server/tests/unit/sessionConfig.test.ts` | Pass (Lab 5, #20) |
 
 ## 2. API / Database Integration Tests — `server/tests/api/`, `server/tests/db/`
 
@@ -50,8 +51,12 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | API-23 | AC-26 | API | Ploy's booking at +90 min; a CANCELLED, a COMPLETED and a NO_SHOW booking | Cancel each | 409 `CANCELLATION_WINDOW_CLOSED`, 409 `BOOKING_NOT_ACTIVE` ×3; rows unchanged | `server/tests/api/my-bookings.api.test.ts` | Pass |
 | API-24 | AC-28 | API | Anan and Mali slots on a date, some booked | `GET /api/staff/schedule?date=` as Anan; as Ploy; bad date | Only Anan's slots with reference, customer, note and correct summary `{ total, booked, open, closed }` (total = booked + open + closed); Ploy 403; 422 | `server/tests/api/schedule.api.test.ts` | Pass |
 | API-25 | AC-31 | API | DB up | `GET /api/health` without session | 200 `{ status: "ok", database: "up" }` | `server/tests/api/health.api.test.ts` | Pass |
+| API-26 | AC-33 | API | DB up, then `prisma.$queryRaw` rejected once (DB unreachable) | `GET /api/ready` without session, twice | 200 `{ status: "ready", database: "connected" }`, no cookie; then 503 `{ status: "not_ready" }` | `server/tests/api/health.api.test.ts` | Pass (Lab 5, #20) |
+| API-27 | AC-34 | API | `NODE_ENV=production`, 32-char secret, `CLIENT_DIST` = temporary build; then not production | `GET /`, `/login`, `/bookings/42`, `/assets/app.js`, `/api`, `/api/nope`; `POST /api/auth/login` with `X-Forwarded-Proto: https` | `index.html` for the routes, JS for the asset, JSON 404 `NOT_FOUND` for `/api…`, `sid` cookie with `Secure`; outside production `/bookings/42` is 404 | `server/tests/api/production.api.test.ts` | Pass (Lab 5, #20) |
 | DB-01 | AC-19 | DB | Free slot | Insert two `BOOKED` bookings for the slot directly with Prisma | Second insert fails with unique violation `P2002` on `booking_one_active_per_slot`; a second `CANCELLED` row is allowed | `server/tests/db/constraints.db.test.ts` | Pass |
-| DB-02 | AC-32 | DB | Fresh test DB | Run the seed twice | Same counts after both runs; seeded e-mails present with roles; every `passwordHash` starts with `$2` and no column equals `SEED_PASSWORD` | `server/tests/db/seed.db.test.ts` | Pass |
+| DB-02 | AC-32 | DB | Fresh test DB, `NODE_ENV=test` | Run the seed twice | Same counts after both runs; seeded e-mails present with roles; every `passwordHash` starts with `$2` and no column equals `SEED_PASSWORD` | `server/tests/db/seed.db.test.ts` | Pass |
+| DB-03 | AC-36 | DB | `NODE_ENV=production`; a Prisma client that fails on any use | Seed with `SEED_DEMO_DATA` unset, `''`, `false`, `1`; then `true` without `SEED_PASSWORD`; then the real `prisma/seed.ts` command with `SEED_DEMO_DATA=false` and `true` on the test DB | `'skipped'` without touching Prisma; error "SEED_PASSWORD is not set" without touching Prisma; command prints "Seed skipped" (exit 0), then on the seeded DB "Seed complete. Created: 0 services, 0 users, 0 slots, 0 bookings. Already present (left unchanged): 4 services, 6 users, 50 slots, 5 bookings." (exit 0); the password is in neither stdout nor stderr | `server/tests/db/seed.db.test.ts` | Pass (Lab 5, #20) |
+| DB-04 | AC-37 | DB | Seeded test DB; Nina's `passwordHash` changed, Anan today+3 09:00 slot CLOSED, Anan today+2 09:00 booked by Nina (the slot a next-day seed books for Ploy) | `NODE_ENV=production`, `SEED_DEMO_DATA=true`: `seed(prisma, today+1)` (the next release a day later); rows restored afterwards | Same counts of users, services, slots and bookings; hash, CLOSED status and Nina's BOOKED booking unchanged; no other booking on that slot (no P2002) | `server/tests/db/seed.db.test.ts` | Pass (Lab 5, #20) |
 
 ## 3. UI Component Tests — `client/tests/`
 
@@ -95,6 +100,9 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | AC-14 | API-13 | AC-30 | E2E-07, E2E-08 |
 | AC-15 | UI-02, E2E-03 | AC-31 | API-25 |
 | AC-16 | API-14 | AC-32 | DB-02 |
+| AC-33 | API-26 | AC-34 | API-27 |
+| AC-35 | UNIT-07 | AC-36 | DB-03 |
+| AC-37 | DB-04 | | |
 
 **Manual checks** (supplement only, recorded in Part F of the Deliverable 1 submission PDF, never replacing a test above): MAN-01 visual
 review of the five screens against `system-sds.md` §3; MAN-02 clean-clone setup following the README.
@@ -115,3 +123,4 @@ file of their Issue. For E2E-07/08, which are cross-cutting, the red step only c
 | 1.0 | 2026-11-07 | Yanis Amrane | Initial STS for Sprint 1 (reviewed by Simeon in the contract PR). |
 | 1.1 | 2026-11-07 | Yanis Amrane | UNIT-06 added; UNIT-01/04, API-07/08/18/24, E2E-03/04/06 updated; full paths; TDD file naming; see PR #9. |
 | 1.2 | 2026-11-10 | Simeon Audouit | Decisions by Yanis Amrane for Issue #8: UNIT-04 states that the query excludes the past and the rule ignores non-BOOKED bookings; NO_SHOW added to UNIT-05 and API-23 (already tested); E2E-06 dependency on E2E-05 written down; §6 red step for E2E-07/08; "Result" column filled from the release run. |
+| 1.3 | 2026-11-11 | Yanis Amrane | Lab 5 (Issue #20, NFR-12): UNIT-07, API-26, API-27, DB-03, DB-04 added for AC-33..AC-37 (F-00 1.2); DB-02 precondition names `NODE_ENV=test`. |

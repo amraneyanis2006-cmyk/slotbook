@@ -41,22 +41,28 @@ const BOOKINGS: { day: number; staff: string; time: string; customer: string; st
   { day: -2, staff: 'staff.mali@slotbook.test', time: '09:30', customer: 'cust.ken@slotbook.test', status: 'NO_SHOW' },
 ];
 
-export async function seed(prisma: PrismaClient, today = bangkokDate(new Date())): Promise<void> {
-  if (process.env.NODE_ENV === 'production') throw new Error('Refusing to seed: NODE_ENV=production.');
+export async function seed(prisma: PrismaClient, today = bangkokDate(new Date())): Promise<'seeded' | 'skipped'> {
+  // Production seeds the demo accounts (Lab 6 UAT) only on explicit request (F-00 §2).
+  if (process.env.NODE_ENV === 'production' && process.env.SEED_DEMO_DATA !== 'true') return 'skipped';
   const password = process.env.SEED_PASSWORD;
   if (!password) throw new Error('SEED_PASSWORD is not set (see .env.example).');
+  // Production reruns on every release: create what is missing, never change a row users may have changed.
+  const insertOnly = process.env.NODE_ENV === 'production';
 
   const services = new Map<string, { id: number; durationMin: number }>();
   for (const s of SERVICES) {
-    services.set(s.name, await prisma.service.upsert({ where: { name: s.name }, update: s, create: s }));
+    services.set(s.name, await prisma.service.upsert({ where: { name: s.name }, update: insertOnly ? {} : s, create: s }));
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
   const users = new Map<string, number>();
   for (const u of USERS) {
-    const row = await prisma.user.upsert({ where: { email: u.email }, update: { ...u, passwordHash }, create: { ...u, passwordHash } });
+    const row = await prisma.user.upsert({ where: { email: u.email }, update: insertOnly ? {} : { ...u, passwordHash }, create: { ...u, passwordHash } });
     users.set(u.email, row.id);
   }
+
+  // Demo slots and bookings are relative to the seed day: in production only on an empty database (first run).
+  if (insertOnly && await prisma.slot.count() > 0) return 'seeded';
 
   const slotAt = async (day: number, staff: string, time: string, service: string, status: SlotStatus) => {
     const staffId = users.get(staff)!;
@@ -96,12 +102,32 @@ export async function seed(prisma: PrismaClient, today = bangkokDate(new Date())
       await prisma.booking.create({ data: { ...data, slotId, customerId, reference } });
     }
   }
+  return 'seeded';
 }
+
+const countRows = async (prisma: PrismaClient) => ({
+  services: await prisma.service.count(), users: await prisma.user.count(),
+  slots: await prisma.slot.count(), bookings: await prisma.booking.count(),
+});
+const PLANNED = {
+  services: SERVICES.length, users: USERS.length,
+  slots: (LAST_DAY - FIRST_DAY + 1) * DAY_PATTERN.length, bookings: BOOKINGS.length,
+};
 
 if (process.argv[1]?.endsWith('seed.ts')) {
   const prisma = new PrismaClient();
-  seed(prisma)
-    .then(() => console.log('Seed complete.'))
+  countRows(prisma)
+    .then(async (before) => {
+      if (await seed(prisma) === 'skipped') {
+        console.log('Seed skipped: NODE_ENV=production and SEED_DEMO_DATA is not "true". Nothing was written.');
+        return;
+      }
+      const after = await countRows(prisma);
+      const keys = Object.keys(PLANNED) as (keyof typeof PLANNED)[];
+      const created = keys.map((k) => `${after[k] - before[k]} ${k}`).join(', ');
+      const skipped = keys.map((k) => `${Math.max(PLANNED[k] - (after[k] - before[k]), 0)} ${k}`).join(', ');
+      console.log(`Seed complete. Created: ${created}. Already present (${process.env.NODE_ENV === 'production' ? 'left unchanged' : 'updated'}): ${skipped}.`);
+    })
     .catch((err) => { console.error(err.message); process.exitCode = 1; })
     .finally(() => prisma.$disconnect());
 }

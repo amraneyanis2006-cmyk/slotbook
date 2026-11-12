@@ -6,6 +6,7 @@ const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
 export const sessionOptions = (env: string | undefined, secret = process.env.SESSION_SECRET ?? ''): SessionOptions => {
   if (!secret) throw new Error('SESSION_SECRET is not set (see .env.example).');
   if (env === 'production' && secret.length < 32) throw new Error('SESSION_SECRET must be at least 32 characters in production.');
+  if (env === 'production' && secret.startsWith('change-me')) throw new Error('SESSION_SECRET is still the .env.example placeholder.');
   return {
     name: 'sid',
     secret,
