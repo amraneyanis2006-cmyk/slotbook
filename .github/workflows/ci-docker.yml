@@ -148,6 +148,12 @@ jobs:
           npm run install:all
           npx playwright install --with-deps chromium
 
+      - name: Create the test database schema (webServer starts before globalSetup)
+        working-directory: server
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL_TEST }}
+        run: npx prisma migrate deploy
+
       - name: Playwright tests
         run: npm run test:e2e
 
