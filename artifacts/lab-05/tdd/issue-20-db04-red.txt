@@ -1,0 +1,49 @@
+# Branch:  refactor/20-cloud-ready
+# Commit:  d2e8ae6 (test(F-00): DB-04 production seed rerun is insert-only [red] (#20))
+# Date:    2026-11-11 12:39:14 +0700
+# Command: (cd server && npx vitest run --reporter=verbose tests/db/seed.db.test.ts)
+
+
+ RUN  v3.2.7 <repo>/server
+
+ ✓ tests/db/seed.db.test.ts > seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password 2174ms
+ ✓ tests/db/seed.db.test.ts > seed in production (F-00, NFR-12) > DB-03: with NODE_ENV=production the seed writes nothing unless SEED_DEMO_DATA=true and SEED_PASSWORD is set 1714ms
+ × tests/db/seed.db.test.ts > seed rerun in production (F-00, NFR-12) > DB-04: with NODE_ENV=production and SEED_DEMO_DATA=true a later rerun is insert-only: a changed password hash, a closed seeded slot and a UAT booking stay as they are, and no booking is created 949ms
+   → 
+Invalid `prisma.booking.create()` invocation:
+
+
+Unique constraint failed on the fields: (`slotId`)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/db/seed.db.test.ts > seed rerun in production (F-00, NFR-12) > DB-04: with NODE_ENV=production and SEED_DEMO_DATA=true a later rerun is insert-only: a changed password hash, a closed seeded slot and a UAT booking stay as they are, and no booking is created
+PrismaClientKnownRequestError: 
+Invalid `prisma.booking.create()` invocation:
+
+
+Unique constraint failed on the fields: (`slotId`)
+ ❯ $n.handleRequestError node_modules/@prisma/client/runtime/library.js:121:7315
+ ❯ $n.handleAndLogRequestError node_modules/@prisma/client/runtime/library.js:121:6623
+ ❯ $n.request node_modules/@prisma/client/runtime/library.js:121:6307
+ ❯ l node_modules/@prisma/client/runtime/library.js:130:9633
+ ❯ seed prisma/seed.ts:97:7
+     95|       const [{ seq }] = await prisma.$queryRaw<{ seq: bigint }[]>`SELE…
+     96|       const reference = formatReference(Number(today.slice(0, 4)), Num…
+     97|       await prisma.booking.create({ data: { ...data, slotId, customerI…
+       |       ^
+     98|     }
+     99|   }
+ ❯ tests/db/seed.db.test.ts:108:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'P2002', clientVersion: '5.22.0', meta: { modelName: 'Booking', target: [ 'slotId' ] }, batchRequestIdx: undefined }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  12:39:16
+   Duration  9.23s (transform 148ms, setup 0ms, collect 131ms, tests 4.85s, environment 0ms, prepare 148ms)
+
+# Exit code: 1

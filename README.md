@@ -10,15 +10,16 @@ book them. CPE 334 project, team EN-036 "Y Que Fue". Contracts and requirements 
 
 ## Setup
 
-**1. Database role and databases (once).** `.env.example` expects a PostgreSQL role `slotbook` with password
-`slotbook` (a synthetic local password) that owns `slotbook` and `slotbook_test`. Create them as the PostgreSQL
+**1. Database role and databases (once).** Create a PostgreSQL role `slotbook` that owns `slotbook` and
+`slotbook_test`, with a local password you choose (replace `<local-password>` below). Use the **same value** in
+`DATABASE_URL` and `DATABASE_URL_TEST` of your `.env` (step 2), in place of `change-me`. Create them as the PostgreSQL
 superuser; `psql` asks for that user's password. Use `psql -U postgres -h localhost …` with the EDB installer
 (Windows/macOS), `sudo -u postgres psql …` on Linux, and `psql -d postgres …` as your own user with
 Homebrew/Postgres.app. In Git Bash, if the password prompt does not appear, prefix the command with
 `PGPASSWORD=<postgres password>` or use `winpty psql …`:
 
 ```bash
-psql -U postgres -h localhost -c "CREATE ROLE slotbook LOGIN CREATEDB PASSWORD 'slotbook';" -c "CREATE DATABASE slotbook OWNER slotbook;" -c "CREATE DATABASE slotbook_test OWNER slotbook;"
+psql -U postgres -h localhost -c "CREATE ROLE slotbook LOGIN CREATEDB PASSWORD '<local-password>';" -c "CREATE DATABASE slotbook OWNER slotbook;" -c "CREATE DATABASE slotbook_test OWNER slotbook;"
 ```
 
 If you use another role or password, put it in `DATABASE_URL` and `DATABASE_URL_TEST` of your `.env`. The test
@@ -27,7 +28,7 @@ database name must end in `_test` (the test setup refuses anything else).
 **2. Install, migrate, seed, test, run** (from the repository root):
 
 ```bash
-cp .env.example .env               # first: install:all needs it; synthetic local values (set your own SEED_PASSWORD/SESSION_SECRET if you like)
+cp .env.example .env               # first: install:all needs it; then replace every change-me (see the comments in the file)
 npm run install:all                # root + server + client, then generates the Prisma client in server/
 npx playwright install chromium    # browser for npm run test:e2e, once per machine (Linux: add --with-deps)
 npm run db:migrate                 # applies server/prisma/migrations to DATABASE_URL
@@ -36,8 +37,9 @@ npm test                           # server then client tests (uses slotbook_tes
 npm run dev                        # API on http://localhost:3000, app on http://localhost:5173
 ```
 
-`.env` is git-ignored; only `.env.example` (synthetic values) is committed. The seed refuses to run when
-`NODE_ENV=production`.
+`.env` is git-ignored; only `.env.example` (placeholders) is committed. With `NODE_ENV=production` the seed
+writes nothing unless `SEED_DEMO_DATA=true` and `SEED_PASSWORD` are set. Cloud deployment:
+[`docs/labs/lab-05/deployment.md`](docs/labs/lab-05/deployment.md).
 
 **npm 12 or newer** blocks dependency install scripts that are not listed in `allowScripts` and prints
 `npm warn install-scripts … had install scripts blocked` for `prisma`, `@prisma/client`, `@prisma/engines`,
@@ -48,8 +50,7 @@ first use, and bcrypt and esbuild use their prebuilt binaries. To run the script
 
 ## Seeded accounts
 
-All accounts use the password set in `SEED_PASSWORD` in your `.env` (the example value is
-`slotbook-dev-password`, a synthetic local password).
+All accounts use the password you set in `SEED_PASSWORD` in your `.env`.
 
 | Role | E-mail | Name |
 | :--- | :--- | :--- |
@@ -95,6 +96,7 @@ commit them only when you mean to replace the evidence, otherwise restore them w
 | :--- | :--- |
 | `npm run db:generate` | Regenerate the Prisma client in `server/` (after a change to `schema.prisma`) |
 | `npm run build` | Compile the server (`server/dist`) and build the client (`client/dist`) |
+| `docker compose up --build -d` | Production-like run in Docker (PostgreSQL 16, migrate + seed, app on `localhost:3000`); see [`deployment.md` §5](docs/labs/lab-05/deployment.md) |
 | `npm run db:migrate:dev` | Create a new migration from `server/prisma/schema.prisma` (development) |
 | `npm run db:reset` | Drop, re-migrate and re-seed the development database |
 | `npm run demo:readback -- <reference>` | Print one booking joined with its slot, service, staff and customer, straight from PostgreSQL (`DATABASE_URL`) |

@@ -1,6 +1,6 @@
 # SlotBook — System-Level Software Design Specification (SDS)
 
-Version 1.2 (2026-11-10). Applies to the whole product; Sprint 1 feature contracts in
+Version 1.3 (2026-11-11). Applies to the whole product; Sprint 1 feature contracts in
 `docs/sprints/sprint-1/` give the detailed endpoints and screens.
 
 ---
@@ -157,8 +157,9 @@ any page redirects to `/login`; a page of the other role redirects to the user's
 - **Success:** `200` (read/update), `201` (create), `204` (logout). Body is the resource or
   `{ <collection>: [...] }`.
 - **Errors:** always `{ "error": "<CODE>", "message": "<human text>", "fields"?: { "<field>": "<text>" } }`.
-- **Only exception:** `GET /api/health` answers `200 { "status": "ok", "database": "up" }` or
-  `503 { "status": "degraded", "database": "down" }` (probe format, F-00 §3).
+- **Only exceptions (probe format, F-00 §3):** `GET /api/health` answers `200 { "status": "ok", "database": "up" }`
+  or `503 { "status": "degraded", "database": "down" }`; `GET /api/ready` answers
+  `200 { "status": "ready", "database": "connected" }` or `503 { "status": "not_ready" }`.
 
 | Status | Codes |
 | :--- | :--- |
@@ -168,7 +169,7 @@ any page redirects to `/login`; a page of the other role redirects to the user's
 | 404 | `NOT_FOUND` (missing **or not owned** — BR-09) |
 | 409 | `SLOT_ALREADY_BOOKED`, `SLOT_NOT_BOOKABLE`, `BOOKING_LIMIT_REACHED`, `BOOKING_OVERLAP`, `SLOT_OVERLAP`, `CANCELLATION_WINDOW_CLOSED`, `BOOKING_NOT_ACTIVE`; `SLOT_HAS_BOOKING` (Sprint 2), `OUTCOME_TOO_EARLY` (Sprint 2), `BOOKING_SUSPENDED` (Sprint 3) |
 | 422 | `VALIDATION_ERROR` with `fields` |
-| 503 | `GET /api/health` only: `{ "status": "degraded", "database": "down" }` (the exception above) |
+| 503 | `GET /api/health` and `GET /api/ready` only (the exceptions above) |
 | 500 | `INTERNAL_ERROR` — generic message, error logged server-side with a request id, no stack/SQL in the body (NFR-06) |
 
 ### 4.1 Endpoint Overview (Sprint 1)
@@ -176,6 +177,7 @@ any page redirects to `/login`; a page of the other role redirects to the user's
 | Method and path | Purpose | Roles |
 | :--- | :--- | :--- |
 | `GET /api/health` | Liveness + `SELECT 1` | public |
+| `GET /api/ready` | Readiness for the post-deploy smoke test (`SELECT 1`), Lab 5 | public |
 | `POST /api/auth/login` | Log in | public |
 | `POST /api/auth/logout` | Log out | any authenticated |
 | `GET /api/auth/me` | Current user | any authenticated |
@@ -232,12 +234,14 @@ is never the protection.**
 
 | Variable | Used by | Example in `.env.example` | Notes |
 | :--- | :--- | :--- | :--- |
-| `DATABASE_URL` | server, Prisma | `postgresql://slotbook:slotbook@localhost:5432/slotbook` | Test DB uses `DATABASE_URL_TEST`. |
-| `DATABASE_URL_TEST` | server tests, E2E | `postgresql://slotbook:slotbook@localhost:5432/slotbook_test` | Reset + seeded by the test setup. |
-| `SESSION_SECRET` | server | `change-me-local-only` | ≥ 32 random chars outside dev; Secret Manager in GCP. |
+| `DATABASE_URL` | server, Prisma | `postgresql://slotbook:change-me@localhost:5432/slotbook` | Test DB uses `DATABASE_URL_TEST`. |
+| `DATABASE_URL_TEST` | server tests, E2E | `postgresql://slotbook:change-me@localhost:5432/slotbook_test` | Reset + seeded by the test setup. |
+| `SESSION_SECRET` | server | `change-me-at-least-32-characters-long` | Production: ≥ 32 random chars and not the placeholder, or the server exits 1; Secret Manager in GCP. |
 | `PORT` | server | `3000` | Cloud Run injects `PORT`. |
-| `NODE_ENV` | server | `development` | `production` enables `Secure` cookie and static SPA serving; blocks the seed. |
-| `SEED_PASSWORD` | seed | *(documented local dev value in README, synthetic)* | Local accounts only; never a real password. |
+| `NODE_ENV` | server | `development` | `production` enables the `Secure` cookie, `trust proxy` and SPA serving; the seed then needs `SEED_DEMO_DATA=true`. |
+| `SEED_PASSWORD` | seed | `change-me` | Password of every demo account; never printed; Secret Manager in GCP. |
+| `SEED_DEMO_DATA` | seed | *(commented out)* | Production only: `true` lets the seed write the demo accounts (Lab 6 UAT), insert-only; demo slots and bookings only on an empty database. |
+| `CLIENT_DIST` | server | *(commented out)* | Production only: built SPA folder; default `client/dist`. |
 
 - `.env` files are git-ignored; only `.env.example` is committed. The client contains **no secret**
   (it only knows relative `/api` paths).
@@ -258,3 +262,4 @@ is never the protection.**
 | 1.0 | 2026-11-07 | Yanis Amrane | Baseline SDS for Deliverable 1, reviewed by Simeon Audouit. |
 | 1.1 | 2026-11-07 | Yanis Amrane | Pre-PR review fixes (seed, health exception, S2/S3 codes, login 422, session options); see PR #9. |
 | 1.2 | 2026-11-10 | Simeon Audouit | Decisions by Yanis Amrane for Issue #8: §3.2 empty-state example now matches the F-04 text; versions unified to "Node 20 or newer (tested with 20 and 24), PostgreSQL 16 or newer (tested with 16 and 18)". |
+| 1.3 | 2026-11-11 | Yanis Amrane | Lab 5 (Issue #20): `GET /api/ready` in §4 (probe exception, 503, endpoint table); §7 variables follow the new `.env.example` (placeholders, `SEED_DEMO_DATA`, `CLIENT_DIST`, production seed opt-in, startup refusal). |

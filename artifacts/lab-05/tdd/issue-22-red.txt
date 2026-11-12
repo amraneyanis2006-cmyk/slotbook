@@ -1,0 +1,189 @@
+# Branch:  ci/22-pr-checks
+# Commit:  bdb39f9 (test(deploy): empty-array expansion that works on bash 3.2 (macOS) too (#22))
+# Date:    2026-11-12 22:41:05 +0700
+# Command: (echo '== deploy stub'; bash deploy/tests/test_deploy_stub.sh; echo "exit $?"; echo '== release stub'; bash deploy/tests/test_release_stub.sh; echo "exit $?"; echo '== smoke'; python3 -m unittest discover -s deploy/tests -p 'test_smoke.py')
+
+== deploy stub
+exit 1
+== release stub
+Image digest not found.
+exit 1
+== smoke
+EEEEEEEEE
+======================================================================
+ERROR: test_each_public_check_fails_on_a_wrong_answer (test_smoke.SmokeTests.test_each_public_check_fails_on_a_wrong_answer) (path='/api/ready')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<repo>/deploy/tests/test_smoke.py", line 59, in test_each_public_check_fails_on_a_wrong_answer
+    smoke.check('https://demo.test')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 65, in check
+    if not predicate(request(base, path)):
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 57, in <lambda>
+    ('/api/health', lambda b: json.loads(b).get('status') == 'ok'),
+                              ~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/json/__init__.py", line 363, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+                    f'not {s.__class__.__name__}')
+TypeError: the JSON object must be str, bytes or bytearray, not tuple
+
+======================================================================
+ERROR: test_each_public_check_fails_on_a_wrong_answer (test_smoke.SmokeTests.test_each_public_check_fails_on_a_wrong_answer) (path='/')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<repo>/deploy/tests/test_smoke.py", line 59, in test_each_public_check_fails_on_a_wrong_answer
+    smoke.check('https://demo.test')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 65, in check
+    if not predicate(request(base, path)):
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 57, in <lambda>
+    ('/api/health', lambda b: json.loads(b).get('status') == 'ok'),
+                              ~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/json/__init__.py", line 363, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+                    f'not {s.__class__.__name__}')
+TypeError: the JSON object must be str, bytes or bytearray, not tuple
+
+======================================================================
+ERROR: test_each_public_check_fails_on_a_wrong_answer (test_smoke.SmokeTests.test_each_public_check_fails_on_a_wrong_answer) (path='/api/services')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<repo>/deploy/tests/test_smoke.py", line 59, in test_each_public_check_fails_on_a_wrong_answer
+    smoke.check('https://demo.test')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 65, in check
+    if not predicate(request(base, path)):
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 57, in <lambda>
+    ('/api/health', lambda b: json.loads(b).get('status') == 'ok'),
+                              ~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/json/__init__.py", line 363, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+                    f'not {s.__class__.__name__}')
+TypeError: the JSON object must be str, bytes or bytearray, not tuple
+
+======================================================================
+ERROR: test_each_public_check_fails_on_a_wrong_answer (test_smoke.SmokeTests.test_each_public_check_fails_on_a_wrong_answer) (path='/api/health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<repo>/deploy/tests/test_smoke.py", line 59, in test_each_public_check_fails_on_a_wrong_answer
+    smoke.check('https://demo.test')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 65, in check
+    if not predicate(request(base, path)):
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 57, in <lambda>
+    ('/api/health', lambda b: json.loads(b).get('status') == 'ok'),
+                              ~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/json/__init__.py", line 363, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+                    f'not {s.__class__.__name__}')
+TypeError: the JSON object must be str, bytes or bytearray, not tuple
+
+======================================================================
+ERROR: test_login_uses_the_session_cookie_then_logs_out (test_smoke.SmokeTests.test_login_uses_the_session_cookie_then_logs_out)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/unittest/mock.py", line 1905, in _inner
+    return f(*args, **kw)
+  File "<repo>/deploy/tests/test_smoke.py", line 64, in test_login_uses_the_session_cookie_then_logs_out
+    smoke.check('https://demo.test')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 65, in check
+    if not predicate(request(base, path)):
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 57, in <lambda>
+    ('/api/health', lambda b: json.loads(b).get('status') == 'ok'),
+                              ~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/json/__init__.py", line 363, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+                    f'not {s.__class__.__name__}')
+TypeError: the JSON object must be str, bytes or bytearray, not tuple
+
+======================================================================
+ERROR: test_only_one_credential_is_an_error (test_smoke.SmokeTests.test_only_one_credential_is_an_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/unittest/mock.py", line 1905, in _inner
+    return f(*args, **kw)
+  File "<repo>/deploy/tests/test_smoke.py", line 83, in test_only_one_credential_is_an_error
+    smoke.check('https://demo.test')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 65, in check
+    if not predicate(request(base, path)):
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 57, in <lambda>
+    ('/api/health', lambda b: json.loads(b).get('status') == 'ok'),
+                              ~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/json/__init__.py", line 363, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+                    f'not {s.__class__.__name__}')
+TypeError: the JSON object must be str, bytes or bytearray, not tuple
+
+======================================================================
+ERROR: test_password_is_never_printed (test_smoke.SmokeTests.test_password_is_never_printed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/unittest/mock.py", line 1905, in _inner
+    return f(*args, **kw)
+  File "<repo>/deploy/tests/test_smoke.py", line 88, in test_password_is_never_printed
+    smoke.check('https://demo.test')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 65, in check
+    if not predicate(request(base, path)):
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 57, in <lambda>
+    ('/api/health', lambda b: json.loads(b).get('status') == 'ok'),
+                              ~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/json/__init__.py", line 363, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+                    f'not {s.__class__.__name__}')
+TypeError: the JSON object must be str, bytes or bytearray, not tuple
+
+======================================================================
+ERROR: test_public_checks_pass_and_skip_optional_login (test_smoke.SmokeTests.test_public_checks_pass_and_skip_optional_login)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/unittest/mock.py", line 1905, in _inner
+    return f(*args, **kw)
+  File "<repo>/deploy/tests/test_smoke.py", line 44, in test_public_checks_pass_and_skip_optional_login
+    smoke.check('https://demo.test')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 65, in check
+    if not predicate(request(base, path)):
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 57, in <lambda>
+    ('/api/health', lambda b: json.loads(b).get('status') == 'ok'),
+                              ~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/json/__init__.py", line 363, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+                    f'not {s.__class__.__name__}')
+TypeError: the JSON object must be str, bytes or bytearray, not tuple
+
+======================================================================
+ERROR: test_session_is_logged_out_even_if_services_fails (test_smoke.SmokeTests.test_session_is_logged_out_even_if_services_fails)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/unittest/mock.py", line 1905, in _inner
+    return f(*args, **kw)
+  File "<repo>/deploy/tests/test_smoke.py", line 76, in test_session_is_logged_out_even_if_services_fails
+    smoke.check('https://demo.test')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 65, in check
+    if not predicate(request(base, path)):
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<repo>/deploy/smoke_test.py", line 57, in <lambda>
+    ('/api/health', lambda b: json.loads(b).get('status') == 'ok'),
+                              ~~~~~~~~~~^^^
+  File "/usr/local/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/json/__init__.py", line 363, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+                    f'not {s.__class__.__name__}')
+TypeError: the JSON object must be str, bytes or bytearray, not tuple
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.086s
+
+FAILED (errors=9)
+# Exit code: 1

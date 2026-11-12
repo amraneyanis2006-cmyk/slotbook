@@ -1,0 +1,15 @@
+# Keep the build context small and free of secrets (adapted from the starter kit).
+**/node_modules
+**/dist
+**/coverage
+**/.env*
+.git
+.github
+.pr-drafts
+artifacts
+test-results
+playwright-report
+*.log
+**/.DS_Store
+docs
+e2e
