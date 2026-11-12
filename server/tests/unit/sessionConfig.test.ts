@@ -1,6 +1,6 @@
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { sessionOptions } from '../../src/config/session.js';
 
 const SECRET = 'x'.repeat(32);
@@ -32,5 +32,23 @@ describe('server startup (F-00, NFR-12)', () => {
       expect(run.stderr).toMatch(/Refusing to start: SESSION_SECRET/);
       expect(run.stdout).not.toMatch(/listening|http:\/\//);
     }
+  }, 30_000);
+});
+
+describe('graceful shutdown (F-00, NFR-12)', () => {
+  it('UNIT-08: on SIGTERM (Cloud Run stop, docker stop) the running server closes and exits 0 instead of waiting for SIGKILL', async () => {
+    const child = spawn(process.execPath, ['--import', 'tsx', 'src/index.ts'], {
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
+      env: { ...process.env, NODE_ENV: 'production', PORT: '0', SESSION_SECRET: 's'.repeat(32) },
+    });
+    let out = '';
+    child.stdout.on('data', (chunk) => { out += chunk; });
+    await vi.waitFor(() => expect(out).toMatch(/listening/), { timeout: 20_000, interval: 100 });
+
+    const started = Date.now();
+    child.kill('SIGTERM');
+    const code = await new Promise<number | null>((resolve) => child.on('exit', resolve));
+    expect(code).toBe(0);
+    expect(Date.now() - started).toBeLessThan(5_000);
   }, 30_000);
 });
