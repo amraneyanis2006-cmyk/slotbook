@@ -1,0 +1,56 @@
+# Local production-like run: PostgreSQL 16 + one-off migrate/seed + the app on http://localhost:3000.
+# Every value comes from .env (copy .env.example and replace every change-me):
+#   docker compose up --build -d
+# The app runs with NODE_ENV=production, so its session cookie is Secure: a browser on plain
+# http://localhost will not keep it (Cloud Run serves https). See docs/labs/lab-05/deployment.md §5.
+
+x-app-env: &app-env
+  NODE_ENV: production
+  # The compose network host `db` replaces the localhost URL that .env uses for npm runs.
+  DATABASE_URL: postgresql://slotbook:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/slotbook
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: slotbook
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: slotbook
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U slotbook -d slotbook"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Same command as the Cloud Run job slotbook-migrate. The seed is insert-only in production.
+  migrate:
+    build: .
+    image: slotbook:local
+    env_file: .env
+    environment:
+      <<: *app-env
+      SEED_DEMO_DATA: "true"
+    command: ["sh", "-c", "npx prisma migrate deploy && npm run db:seed"]
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build: .
+    image: slotbook:local
+    env_file: .env
+    environment:
+      <<: *app-env
+      PORT: "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
