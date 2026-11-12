@@ -48,7 +48,7 @@ set -euo pipefail
 # Settings & argument parsing
 # ------------------------------------------------------------------------------
 DRY_RUN="${DRY_RUN:-0}"
-# CHANGE ME: default region if your group uses another one.
+# Region (RULES 5): asia-southeast1.
 REGION="${REGION:-asia-southeast1}"
 SEED_DEMO_DATA="false"
 
@@ -163,7 +163,7 @@ fi
 #       db-f1-micro and asserted by deploy/tests/test_deploy_stub.sh.
 #       Creating the instance takes several minutes and costs money until
 #       deploy/teardown.sh is run.
-#    CHANGE ME: --database-version / --tier for a different database.
+#    PostgreSQL 16, smallest tier, storage auto-increase off (RULES 5, cost control).
 # ==============================================================================
 if [ "$DRY_RUN" = "1" ]; then
   run_cmd gcloud sql instances describe "$SQL_INSTANCE" --project "$PROJECT_ID"
@@ -222,7 +222,7 @@ run_cmd gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 # 6. Create DB User & Store DATABASE_URL in Secret Manager (only if secret does not exist yet)
 #    ⭐ IMPORTANT: the DB user's password and the password inside DATABASE_URL
 #       must be the same value (checked by test_deploy_stub.sh). Never echo it.
-#    CHANGE ME: the URL format below is PostgreSQL + Prisma specific
+#    URL format for PostgreSQL + Prisma over the Cloud SQL unix socket
 #       (host=/cloudsql/... unix socket, schema=public, connection_limit=3).
 # ==============================================================================
 if [ "$DRY_RUN" = "1" ]; then
