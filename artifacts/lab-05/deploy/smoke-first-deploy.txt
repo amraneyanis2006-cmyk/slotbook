@@ -1,0 +1,5 @@
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/services
+SKIP sign-in: optional smoke credentials not configured

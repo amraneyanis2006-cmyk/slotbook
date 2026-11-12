@@ -1,0 +1,463 @@
+==================================================================
+SlotBook Cloud Run Deployment
+Project : cpe334-slotbook-y
+Region  : asia-southeast1
+Demo    : true
+Dry Run : 0
+==================================================================
++ gcloud services enable run.googleapis.com sqladmin.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com iam.googleapis.com --project cpe334-slotbook-y 
+Operation "operations/acf.p2-320205618114-a2b47f81-be72-45c9-a7cd-edea0215dca2" finished successfully.
++ gcloud artifacts repositories create slotbook --repository-format=docker --location asia-southeast1 --description=SlotBook\ container\ repository --project cpe334-slotbook-y 
+Create request issued for: [slotbook]
+Waiting for operation [projects/cpe334-slotbook-y/locations/asia-southeast1/operations/2d7e20de-a9a1-416b-a930-043dc37784b0] to complete...
+..............................done.
+Created repository [slotbook].
++ gcloud sql instances create slotbook-pg --database-version=POSTGRES_16 --edition=enterprise --tier=db-f1-micro --region=asia-southeast1 --storage-size=10GB --storage-type=SSD --no-storage-auto-increase --backup-start-time=03:00 --project cpe334-slotbook-y 
+Creating Cloud SQL instance for POSTGRES_16...
+...................................done.
+Created [https://sqladmin.googleapis.com/sql/v1beta4/projects/cpe334-slotbook-y/instances/slotbook-pg].
+NAME: slotbook-pg
+DATABASE_VERSION: POSTGRES_16
+LOCATION: asia-southeast1-c
+TIER: db-f1-micro
+PRIMARY_ADDRESS: 34.87.98.36
+PRIVATE_ADDRESS: -
+STATUS: RUNNABLE
++ gcloud sql databases create slotbook --instance=slotbook-pg --project cpe334-slotbook-y 
+Creating Cloud SQL database...
+.done.
+Created database [slotbook].
+instance: slotbook-pg
+name: slotbook
+project: cpe334-slotbook-y
++ gcloud iam service-accounts create slotbook-runner --display-name=SlotBook\ Cloud\ Run\ Service\ Account --project cpe334-slotbook-y 
+Created service account [slotbook-runner].
+Service account email: slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com
++ gcloud projects add-iam-policy-binding cpe334-slotbook-y --member=serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --role=roles/cloudsql.client --condition=None --quiet 
+Updated IAM policy for project [cpe334-slotbook-y].
+bindings:
+- members:
+  - serviceAccount:service-320205618114@gcp-sa-artifactregistry.iam.gserviceaccount.com
+  role: roles/artifactregistry.serviceAgent
+- members:
+  - serviceAccount:320205618114@cloudbuild.gserviceaccount.com
+  role: roles/cloudbuild.builds.builder
+- members:
+  - serviceAccount:service-320205618114@gcp-sa-cloudbuild.iam.gserviceaccount.com
+  role: roles/cloudbuild.serviceAgent
+- members:
+  - serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com
+  role: roles/cloudsql.client
+- members:
+  - serviceAccount:service-320205618114@containerregistry.iam.gserviceaccount.com
+  role: roles/containerregistry.ServiceAgent
+- members:
+  - serviceAccount:320205618114-compute@developer.gserviceaccount.com
+  role: roles/editor
+- members:
+  - user:<owner>
+  role: roles/owner
+- members:
+  - serviceAccount:service-320205618114@gcp-sa-pubsub.iam.gserviceaccount.com
+  role: roles/pubsub.serviceAgent
+- members:
+  - serviceAccount:service-320205618114@serverless-robot-prod.iam.gserviceaccount.com
+  role: roles/run.serviceAgent
+- members:
+  - user:<teammate>
+  role: roles/writer
+etag: BwZgGEaT4Zw=
+version: 1
++ gcloud sql users create slotbook --instance=slotbook-pg --password=<REDACTED> --project cpe334-slotbook-y 
+Creating Cloud SQL user...
+.done.
+Created user [slotbook].
++ gcloud secrets create slotbook-database-url --replication-policy=automatic --project cpe334-slotbook-y 
+Created secret [slotbook-database-url].
+Created version [1] of the secret [slotbook-database-url].
++ gcloud secrets create slotbook-session-secret --replication-policy=automatic --project cpe334-slotbook-y 
+Created secret [slotbook-session-secret].
+Created version [1] of the secret [slotbook-session-secret].
++ gcloud secrets create slotbook-seed-password --replication-policy=automatic --project cpe334-slotbook-y 
+Created secret [slotbook-seed-password].
+Created version [1] of the secret [slotbook-seed-password].
++ gcloud secrets add-iam-policy-binding slotbook-database-url --member=serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --role=roles/secretmanager.secretAccessor --project cpe334-slotbook-y --quiet 
+Updated IAM policy for secret [slotbook-database-url].
+bindings:
+- members:
+  - serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com
+  role: roles/secretmanager.secretAccessor
+etag: BwZgGEhvbzU=
+version: 1
++ gcloud secrets add-iam-policy-binding slotbook-session-secret --member=serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --role=roles/secretmanager.secretAccessor --project cpe334-slotbook-y --quiet 
+Updated IAM policy for secret [slotbook-session-secret].
+bindings:
+- members:
+  - serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com
+  role: roles/secretmanager.secretAccessor
+etag: BwZgGEiQyEI=
+version: 1
++ gcloud secrets add-iam-policy-binding slotbook-seed-password --member=serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --role=roles/secretmanager.secretAccessor --project cpe334-slotbook-y --quiet 
+Updated IAM policy for secret [slotbook-seed-password].
+bindings:
+- members:
+  - serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com
+  role: roles/secretmanager.secretAccessor
+etag: BwZgGEi1wss=
+version: 1
++ gcloud builds submit --tag asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook:latest --project cpe334-slotbook-y 
+Creating temporary archive of 200 file(s) totalling 2.2 MiB before compression.
+Some files were not included in the source upload.
+
+Check the gcloud log [/tmp/tmp.fKABYruXTs/logs/2026.11.12/18.14.36.814030.log] to see which files and the contents of the
+default gcloudignore file used (see `$ gcloud topic gcloudignore` to learn
+more).
+
+Uploading tarball of [.] to [gs://cpe334-slotbook-y_cloudbuild/source/1794507277.160318-0ef551cefd5a4589ab420d6c14827239.tgz]
+Created [https://cloudbuild.googleapis.com/v1/projects/cpe334-slotbook-y/locations/global/builds/35520304-a032-47d5-b7e2-465457893033].
+Logs are available at [ https://console.cloud.google.com/cloud-build/builds/35520304-a032-47d5-b7e2-465457893033?project=320205618114 ].
+Waiting for build to complete. Polling interval: 1 second(s).
+----------------------------------------------------------------------------------------------- REMOTE BUILD OUTPUT -----------------------------------------------------------------------------------------------
+starting build "35520304-a032-47d5-b7e2-465457893033" using release legacy
+
+FETCHSOURCE
+Fetching storage object: gs://cpe334-slotbook-y_cloudbuild/source/1794507277.160318-0ef551cefd5a4589ab420d6c14827239.tgz#1794507281149382
+Copying gs://cpe334-slotbook-y_cloudbuild/source/1794507277.160318-0ef551cefd5a4589ab420d6c14827239.tgz#1794507281149382...
+/ [0 files][    0.0 B/  1.3 MiB]                                                / [1 files][  1.3 MiB/  1.3 MiB]                                                
+Operation completed over 1 objects/1.3 MiB.
+BUILD
+Already have image (with digest): gcr.io/cloud-builders/gcb-internal
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  582.1kB
+Step 1/25 : FROM node:22-bookworm-slim AS build
+22-bookworm-slim: Pulling from library/node
+dd051e1b8c92: Pulling fs layer
+076cba098ace: Pulling fs layer
+0c4023204e5b: Pulling fs layer
+aa4e89108622: Pulling fs layer
+cce880541c96: Pulling fs layer
+cce880541c96: Verifying Checksum
+cce880541c96: Download complete
+076cba098ace: Verifying Checksum
+076cba098ace: Download complete
+aa4e89108622: Verifying Checksum
+aa4e89108622: Download complete
+dd051e1b8c92: Verifying Checksum
+dd051e1b8c92: Download complete
+0c4023204e5b: Verifying Checksum
+0c4023204e5b: Download complete
+dd051e1b8c92: Pull complete
+076cba098ace: Pull complete
+0c4023204e5b: Pull complete
+aa4e89108622: Pull complete
+cce880541c96: Pull complete
+Digest: sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee
+Status: Downloaded newer image for node:22-bookworm-slim
+ b774d993885c
+Step 2/25 : RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+ Running in c939928d1a88
+Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [368 kB]
+Fetched 9407 kB in 2s (4847 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  libssl3
+Suggested packages:
+  ca-certificates
+The following NEW packages will be installed:
+  libssl3 openssl
+0 upgraded, 2 newly installed, 0 to remove and 0 not upgraded.
+Need to get 3482 kB of archives.
+After this operation, 8558 kB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian-security bookworm-security/main amd64 libssl3 amd64 3.0.22-1~deb12u2 [2040 kB]
+Get:2 http://deb.debian.org/debian-security bookworm-security/main amd64 openssl amd64 3.0.22-1~deb12u2 [1442 kB]
+[91mdebconf: delaying package configuration, since apt-utils is not installed
+[0mFetched 3482 kB in 0s (40.1 MB/s)
+Selecting previously unselected package libssl3:amd64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+Preparing to unpack .../libssl3_3.0.22-1~deb12u2_amd64.deb ...
+Unpacking libssl3:amd64 (3.0.22-1~deb12u2) ...
+Selecting previously unselected package openssl.
+Preparing to unpack .../openssl_3.0.22-1~deb12u2_amd64.deb ...
+Unpacking openssl (3.0.22-1~deb12u2) ...
+Setting up libssl3:amd64 (3.0.22-1~deb12u2) ...
+Setting up openssl (3.0.22-1~deb12u2) ...
+Processing triggers for libc-bin (2.36-9+deb12u14) ...
+Removing intermediate container c939928d1a88
+ 785bcbe37976
+Step 3/25 : WORKDIR /app
+ Running in f17897855421
+Removing intermediate container f17897855421
+ 052e3f0bd71f
+Step 4/25 : COPY client/package*.json client/
+ 9d7955acffdc
+Step 5/25 : RUN npm ci --prefix client
+ Running in 203bd56efacf
+[91mnpm warn deprecated whatwg-encoding@3.1.1: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+[0m
+added 165 packages, and audited 166 packages in 7s
+
+27 packages are looking for funding
+  run `npm fund` for details
+
+5 vulnerabilities (3 moderate, 2 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+[91mnpm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
+[0mRemoving intermediate container 203bd56efacf
+ 1ab368317f24
+Step 6/25 : COPY server/package*.json server/
+ 47114a262be5
+Step 7/25 : COPY server/prisma/schema.prisma server/prisma/
+ 97db5495ceda
+Step 8/25 : RUN npm ci --prefix server
+ Running in 31e728dc4b44
+
+> postinstall
+> prisma generate
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 176ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+
+
+added 195 packages, and audited 196 packages in 10s
+
+39 packages are looking for funding
+  run `npm fund` for details
+
+4 vulnerabilities (1 moderate, 1 high, 2 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+Removing intermediate container 31e728dc4b44
+ 9a92b0d52709
+Step 9/25 : COPY server server
+ 8b9cf22f8276
+Step 10/25 : COPY client client
+ 33c622712292
+Step 11/25 : RUN npm run build --prefix server  && npm run build --prefix client  && npm prune --omit=dev --prefix server
+ Running in b3107a8503c3
+
+> build
+> tsc
+
+> build
+> tsc --noEmit && vite build
+vite v6.4.5 building for production...
+transforming...
+✓ 49 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.39 kB │ gzip:  0.26 kB
+dist/assets/index-C1ew9YAK.css    6.44 kB │ gzip:  1.86 kB
+dist/assets/index-UB9fol61.js   189.24 kB │ gzip: 60.64 kB
+✓ built in 2.12s
+
+up to date, audited 102 packages in 1s
+
+20 packages are looking for funding
+  run `npm fund` for details
+
+1 high severity vulnerability
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+Removing intermediate container b3107a8503c3
+ 1eaf8d290025
+Step 12/25 : FROM node:22-bookworm-slim
+ b774d993885c
+Step 13/25 : RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates  && rm -rf /var/lib/apt/lists/*
+ Running in aacb300fb6d7
+Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [368 kB]
+Fetched 9407 kB in 2s (4775 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  libssl3
+The following NEW packages will be installed:
+  ca-certificates libssl3 openssl
+0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.
+Need to get 3643 kB of archives.
+After this operation, 8955 kB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian-security bookworm-security/main amd64 libssl3 amd64 3.0.22-1~deb12u2 [2040 kB]
+Get:2 http://deb.debian.org/debian-security bookworm-security/main amd64 openssl amd64 3.0.22-1~deb12u2 [1442 kB]
+Get:3 http://deb.debian.org/debian-security bookworm-security/main amd64 ca-certificates all 20250419~deb12u2 [161 kB]
+[91mdebconf: delaying package configuration, since apt-utils is not installed
+[0mFetched 3643 kB in 0s (33.9 MB/s)
+Selecting previously unselected package libssl3:amd64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+Preparing to unpack .../libssl3_3.0.22-1~deb12u2_amd64.deb ...
+Unpacking libssl3:amd64 (3.0.22-1~deb12u2) ...
+Selecting previously unselected package openssl.
+Preparing to unpack .../openssl_3.0.22-1~deb12u2_amd64.deb ...
+Unpacking openssl (3.0.22-1~deb12u2) ...
+Selecting previously unselected package ca-certificates.
+Preparing to unpack .../ca-certificates_20250419~deb12u2_all.deb ...
+Unpacking ca-certificates (20250419~deb12u2) ...
+Setting up libssl3:amd64 (3.0.22-1~deb12u2) ...
+Setting up openssl (3.0.22-1~deb12u2) ...
+Setting up ca-certificates (20250419~deb12u2) ...
+debconf: unable to initialize frontend: Dialog
+debconf: (TERM is not set, so the dialog frontend is not usable.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/x86_64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+debconf: falling back to frontend: Teletype
+Updating certificates in /etc/ssl/certs...
+148 added, 0 removed; done.
+Processing triggers for libc-bin (2.36-9+deb12u14) ...
+Processing triggers for ca-certificates (20250419~deb12u2) ...
+Updating certificates in /etc/ssl/certs...
+0 added, 0 removed; done.
+Running hooks in /etc/ca-certificates/update.d...
+done.
+Removing intermediate container aacb300fb6d7
+ 0fcced75d8a6
+Step 14/25 : WORKDIR /app/server
+ Running in 80be0d79270b
+Removing intermediate container 80be0d79270b
+ 602c51c6a28b
+Step 15/25 : COPY --from=build /app/server/package*.json ./
+ 4a29022fd635
+Step 16/25 : COPY --from=build /app/server/node_modules ./node_modules
+ 8c3802c49180
+Step 17/25 : COPY --from=build /app/server/dist ./dist
+ 8d73356191a3
+Step 18/25 : COPY --from=build /app/server/prisma ./prisma
+ f36141c54172
+Step 19/25 : COPY --from=build /app/server/src ./src
+ 5a68ea7d340a
+Step 20/25 : COPY --from=build /app/client/dist /app/client/dist
+ 232998c647ad
+Step 21/25 : ENV NODE_ENV=production
+ Running in a27ee60eff61
+Removing intermediate container a27ee60eff61
+ 8cc9ffcdbc23
+Step 22/25 : ENV PORT=3000
+ Running in 490f534a426b
+Removing intermediate container 490f534a426b
+ 2cce3c4c4c07
+Step 23/25 : EXPOSE 3000
+ Running in ecab4e0da247
+Removing intermediate container ecab4e0da247
+ adf1b79b07dc
+Step 24/25 : USER node
+ Running in 9d8a183db108
+Removing intermediate container 9d8a183db108
+ 179cee57f656
+Step 25/25 : CMD ["node", "dist/index.js"]
+ Running in 7f1f1461c4ab
+Removing intermediate container 7f1f1461c4ab
+ 87c25e3b71e6
+Successfully built 87c25e3b71e6
+Successfully tagged asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook:latest
+PUSH
+Pushing asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook:latest
+The push refers to repository [asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook]
+52f1a2944264: Preparing
+3e5b626098c4: Preparing
+f16b22fe24e2: Preparing
+987e02c3452d: Preparing
+0176d09e3776: Preparing
+50fc00151a21: Preparing
+4e76d873b75d: Preparing
+c9aeabf882e6: Preparing
+0e13b71b82a1: Preparing
+b5561a64a8a5: Preparing
+c4da131eaaf2: Preparing
+2d7efcc31ab7: Preparing
+1d7b9dd8778e: Preparing
+c4da131eaaf2: Waiting
+2d7efcc31ab7: Waiting
+1d7b9dd8778e: Waiting
+f16b22fe24e2: Pushed
+4e76d873b75d: Pushed
+50fc00151a21: Pushed
+987e02c3452d: Pushed
+3e5b626098c4: Pushed
+52f1a2944264: Pushed
+0e13b71b82a1: Pushed
+c9aeabf882e6: Pushed
+b5561a64a8a5: Pushed
+2d7efcc31ab7: Pushed
+0176d09e3776: Pushed
+1d7b9dd8778e: Pushed
+c4da131eaaf2: Pushed
+latest: digest: sha256:f696ce9dc31fe06219e1b6343f7c243f24dc868140196e7f5b934b90e2e15c54 size: 3042
+DONE
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ID: 35520304-a032-47d5-b7e2-465457893033
+CREATE_TIME: 2026-11-12T18:14:41+00:00
+DURATION: 1M52S
+SOURCE: gs://cpe334-slotbook-y_cloudbuild/source/1794507277.160318-0ef551cefd5a4589ab420d6c14827239.tgz
+IMAGES: asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook (+1 more)
+STATUS: SUCCESS
++ gcloud run jobs deploy slotbook-migrate --image asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook:latest --region asia-southeast1 --service-account slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --set-cloudsql-instances cpe334-slotbook-y:asia-southeast1:slotbook-pg --set-secrets DATABASE_URL=slotbook-database-url:latest\,SEED_PASSWORD=slotbook-seed-password:latest --set-env-vars NODE_ENV=production\,SEED_DEMO_DATA=true --command sh --args -c\,npx\ prisma\ migrate\ deploy\ \&\&\ npm\ run\ db:seed --max-retries 1 --task-timeout 300s --project cpe334-slotbook-y 
+Deploying container to Cloud Run job [[1mslotbook-migrate[m] in project [[1mcpe334-slotbook-y[m] region [[1masia-southeast1[m]
+Creating job...
+Done.
+Job [[1mslotbook-migrate[m] has successfully been deployed.
+
+To execute this job, use:
+gcloud run jobs execute slotbook-migrate
++ gcloud run jobs execute slotbook-migrate --region asia-southeast1 --wait --project cpe334-slotbook-y 
+Creating execution...
+Provisioning resources..............................................................done
+Starting execution.......................................................................done
+Running execution......................................................................................done
+Done.
+Execution [[1mslotbook-migrate-8ccgl[m] has successfully completed.
+
+View details about this execution by running:
+gcloud run jobs executions describe slotbook-migrate-8ccgl
+
+Or visit https://console.cloud.google.com/run/jobs/executions/details/asia-southeast1/slotbook-migrate-8ccgl?project=320205618114
++ gcloud run deploy slotbook --image asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook:latest --region asia-southeast1 --platform managed --allow-unauthenticated --service-account slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --add-cloudsql-instances cpe334-slotbook-y:asia-southeast1:slotbook-pg --set-secrets DATABASE_URL=slotbook-database-url:latest\,SESSION_SECRET=slotbook-session-secret:latest --set-env-vars NODE_ENV=production --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --port 3000 --project cpe334-slotbook-y 
+Deploying container to Cloud Run service [[1mslotbook[m] in project [[1mcpe334-slotbook-y[m] region [[1masia-southeast1[m]
+Deploying new service...
+Setting IAM Policy.............done
+Creating Revision.........................................................done
+Routing traffic.....done
+Done.
+Service [[1mslotbook[m] revision [[1mslotbook-00001-jcd[m] has been deployed and is serving [1m100[m percent of traffic.
+Service URL: [1mhttps://slotbook-320205618114.asia-southeast1.run.app[m
+
+==================================================================
+Deployment Completed!
+Service URL    : https://slotbook-mivepbjoza-as.a.run.app
+Health Check   : https://slotbook-mivepbjoza-as.a.run.app/api/health
+Readiness Check: https://slotbook-mivepbjoza-as.a.run.app/api/ready
+Demo accounts  : *@slotbook.test (see README); password in Secret Manager: slotbook-seed-password (not printed).
+==================================================================

@@ -1,0 +1,43 @@
+==================================================================
+SlotBook Cloud Run Deployment
+Project : cpe334-slotbook-y
+Region  : asia-southeast1
+Demo    : true
+Dry Run : 1
+==================================================================
+[DRY_RUN] gcloud services enable run.googleapis.com sqladmin.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com iam.googleapis.com --project cpe334-slotbook-y 
+[DRY_RUN] gcloud artifacts repositories describe slotbook --location asia-southeast1 --project cpe334-slotbook-y 
+[DRY_RUN] gcloud artifacts repositories create slotbook --repository-format=docker --location asia-southeast1 --description=SlotBook\ container\ repository --project cpe334-slotbook-y 
+[DRY_RUN] gcloud sql instances describe slotbook-pg --project cpe334-slotbook-y 
+[DRY_RUN] gcloud sql instances create slotbook-pg --database-version=POSTGRES_16 --edition=enterprise --tier=db-f1-micro --region=asia-southeast1 --storage-size=10GB --storage-type=SSD --no-storage-auto-increase --backup-start-time=03:00 --project cpe334-slotbook-y 
+[DRY_RUN] gcloud sql databases describe slotbook --instance=slotbook-pg --project cpe334-slotbook-y 
+[DRY_RUN] gcloud sql databases create slotbook --instance=slotbook-pg --project cpe334-slotbook-y 
+[DRY_RUN] gcloud iam service-accounts describe slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --project cpe334-slotbook-y 
+[DRY_RUN] gcloud iam service-accounts create slotbook-runner --display-name=SlotBook\ Cloud\ Run\ Service\ Account --project cpe334-slotbook-y 
+[DRY_RUN] gcloud projects add-iam-policy-binding cpe334-slotbook-y --member=serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --role=roles/cloudsql.client --condition=None --quiet 
+[DRY_RUN] gcloud secrets describe slotbook-database-url --project cpe334-slotbook-y 
+[DRY_RUN] gcloud sql users list --instance=slotbook-pg --project cpe334-slotbook-y --format=value\(name\) 
+[DRY_RUN] gcloud sql users create slotbook --instance=slotbook-pg --password=<REDACTED> --project cpe334-slotbook-y 
+[DRY_RUN] gcloud secrets create slotbook-database-url --replication-policy=automatic --project cpe334-slotbook-y 
+[DRY_RUN] gcloud secrets versions add slotbook-database-url --data-file=- --project cpe334-slotbook-y 
+[DRY_RUN] gcloud secrets describe slotbook-session-secret --project cpe334-slotbook-y 
+[DRY_RUN] gcloud secrets create slotbook-session-secret --replication-policy=automatic --project cpe334-slotbook-y 
+[DRY_RUN] gcloud secrets versions add slotbook-session-secret --data-file=- --project cpe334-slotbook-y 
+[DRY_RUN] gcloud secrets describe slotbook-seed-password --project cpe334-slotbook-y 
+[DRY_RUN] gcloud secrets create slotbook-seed-password --replication-policy=automatic --project cpe334-slotbook-y 
+[DRY_RUN] gcloud secrets versions add slotbook-seed-password --data-file=- --project cpe334-slotbook-y 
+[DRY_RUN] gcloud secrets add-iam-policy-binding slotbook-database-url --member=serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --role=roles/secretmanager.secretAccessor --project cpe334-slotbook-y --quiet 
+[DRY_RUN] gcloud secrets add-iam-policy-binding slotbook-session-secret --member=serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --role=roles/secretmanager.secretAccessor --project cpe334-slotbook-y --quiet 
+[DRY_RUN] gcloud secrets add-iam-policy-binding slotbook-seed-password --member=serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --role=roles/secretmanager.secretAccessor --project cpe334-slotbook-y --quiet 
+[DRY_RUN] gcloud builds submit --tag asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook:latest --project cpe334-slotbook-y 
+[DRY_RUN] gcloud run jobs deploy slotbook-migrate --image asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook:latest --region asia-southeast1 --service-account slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --set-cloudsql-instances cpe334-slotbook-y:asia-southeast1:slotbook-pg --set-secrets DATABASE_URL=slotbook-database-url:latest\,SEED_PASSWORD=slotbook-seed-password:latest --set-env-vars NODE_ENV=production\,SEED_DEMO_DATA=true --command sh --args -c\,npx\ prisma\ migrate\ deploy\ \&\&\ npm\ run\ db:seed --max-retries 1 --task-timeout 300s --project cpe334-slotbook-y 
+[DRY_RUN] gcloud run jobs execute slotbook-migrate --region asia-southeast1 --wait --project cpe334-slotbook-y 
+[DRY_RUN] gcloud run deploy slotbook --image asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook:latest --region asia-southeast1 --platform managed --allow-unauthenticated --service-account slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --add-cloudsql-instances cpe334-slotbook-y:asia-southeast1:slotbook-pg --set-secrets DATABASE_URL=slotbook-database-url:latest\,SESSION_SECRET=slotbook-session-secret:latest --set-env-vars NODE_ENV=production --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --port 3000 --project cpe334-slotbook-y 
+
+==================================================================
+Deployment Completed!
+Service URL    : https://slotbook-<hash>-as.a.run.app
+Health Check   : https://slotbook-<hash>-as.a.run.app/api/health
+Readiness Check: https://slotbook-<hash>-as.a.run.app/api/ready
+Demo accounts  : *@slotbook.test (see README); password in Secret Manager: slotbook-seed-password (not printed).
+==================================================================
