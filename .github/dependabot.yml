@@ -1,0 +1,7 @@
+# Dependabot proposes updates of the SHA-pinned GitHub Actions weekly (starter kit).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

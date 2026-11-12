@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.2 (2026-11-12, Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.4 (2026-11-12, Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -26,13 +26,13 @@ placeholder. "Secret" values never go in the repository, a log, a screenshot or 
 
 | Name | Purpose | Secret | Local | CI | Cloud Run |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `DATABASE_URL` | PostgreSQL connection of the app, migrations and seed | **Yes** | `.env` (your local role password) | Throw-away CI database, set in the workflow | Secret Manager `slotbook-database-url` |
+| `DATABASE_URL` | PostgreSQL connection of the app, migrations and seed | **Yes** | `.env` (your local role password) | Throw-away CI database (`ci-docker.yml` env) | Secret Manager `slotbook-database-url` |
 | `DATABASE_URL_TEST` | Test database (name ends in `_test`), reset by the test setup | Yes (local) | `.env` | Throw-away CI database | Not set |
-| `SESSION_SECRET` | Signs the session cookie; ≥ 32 characters in production or the server exits 1 | **Yes** | `.env` | Generated test value in the workflow | Secret Manager `slotbook-session-secret` |
-| `PORT` | HTTP port | No | `.env` (3000) | Workflow (3000) | Set by Cloud Run |
+| `SESSION_SECRET` | Signs the session cookie; ≥ 32 characters in production or the server exits 1 | **Yes** | `.env` | Fixed throw-away value in `ci-docker.yml` | Secret Manager `slotbook-session-secret` |
+| `PORT` | HTTP port | No | `.env` (3000) | From the copied `.env.example` (3000) | Set by Cloud Run |
 | `NODE_ENV` | `development` / `test` / `production` (production: Secure cookie, trust proxy, SPA serving, seed opt-in) | No | `.env` (`development`) | `test` (set by Vitest/Playwright) | `production` (service and job config) |
-| `SEED_PASSWORD` | Password of every seeded demo account; never printed | **Yes** | `.env` | Generated test value in the workflow | Secret Manager `slotbook-seed-password` (migration/seed job) |
-| `SEED_DEMO_DATA` | Production only: `true` lets the seed write demo accounts | No | Not needed | Not needed | `true` on the migration job (every release). Insert-only: creates missing services/users, demo slots and bookings only on an empty database, never changes an existing row; prints counts |
+| `SEED_PASSWORD` | Password of every seeded demo account; never printed | **Yes** | `.env` | Fixed throw-away value in `ci-docker.yml` | Secret Manager `slotbook-seed-password` (migration/seed job) |
+| `SEED_DEMO_DATA` | Production only: `true` lets the seed write demo accounts | No | Not needed | Not needed | `true` on the migration job only if `deploy/deploy.sh --demo` was used (Lab 6 UAT); every release keeps it. Insert-only: creates missing services/users, demo slots and bookings only on an empty database, never changes an existing row; prints counts |
 | `CLIENT_DIST` | Production only: folder of the built SPA | No | Default `client/dist` | Not needed | Not set: the image puts the SPA at `/app/client/dist`, the default |
 | `POSTGRES_PASSWORD` | Docker Compose only: password of the `slotbook` role in the compose database | Yes (local) | `.env` | Not needed | Not used (Cloud SQL) |
 
@@ -62,9 +62,32 @@ so logging in needs HTTPS or a proxy that sets `X-Forwarded-Proto: https` (Cloud
 
 ## 4. GCP project and resources
 
-*To be filled in Issues #19 and #23.* Planned names: region `asia-southeast1`, Artifact Registry `slotbook`, image
-`slotbook`, Cloud SQL `slotbook-pg` (PostgreSQL 16), database and user `slotbook`, Cloud Run service `slotbook`,
-migration job `slotbook-migrate`, service accounts `slotbook-runner` and `slotbook-deployer`.
+**Project (Issue #19, guide Episode 1):** project ID `cpe334-slotbook-y` (name "CPE334 SlotBook"), region
+`asia-southeast1` for every resource, linked to the GCP Free Trial billing account (USD 300 credit, until
+11 Feb 2027). Budget **`CPE334-Alert`**: alerts only (no spending cap), 1,700 THB ≈ USD 50, 12 Nov – 15 Dec 2026,
+this project only, e-mail alerts at 10 / 20 / 50 / 90 % of **actual** cost. The teammate has the basic role
+**Writer** (`roles/writer`, the new name of the basic role Editor); the project owner keeps Owner. Evidence:
+`artifacts/lab-05/screenshots/issue-19/`. The first deployment is *to be filled in Issue #23*. Every name below
+is set once in `deploy/deploy.sh` and reused by `deploy/release.sh`, `deploy/teardown.sh` and the offline tests.
+`deploy/deploy.sh` creates billing-relevant resources, IAM bindings, Cloud SQL and secrets, so **a human runs it from
+Cloud Shell** (Issue #23), first with `DRY_RUN=1`; the coding agent never runs it.
+
+| Resource | Name | Created by | Notes |
+| :--- | :--- | :--- | :--- |
+| Artifact Registry (Docker) | `slotbook`, image `slotbook` | `deploy.sh` step 2 | `asia-southeast1-docker.pkg.dev/<project>/slotbook/slotbook:<tag>`; deploy.yml tags with the full commit SHA (Issue #25) |
+| Cloud SQL for PostgreSQL | `slotbook-pg` | step 3 | `POSTGRES_16`, `db-f1-micro`, `--edition=enterprise`, 10 GB SSD, `--no-storage-auto-increase` |
+| Database and user | `slotbook` / `slotbook` | steps 4, 6 | password generated, stored only inside the `slotbook-database-url` secret |
+| Runtime service account | `slotbook-runner` | step 5 | `roles/cloudsql.client` on the project; `secretAccessor` on each of the three secrets only |
+| Secret `slotbook-database-url` | `DATABASE_URL` | step 6 | Cloud SQL unix socket URL; read by the service and the job |
+| Secret `slotbook-session-secret` | `SESSION_SECRET` | step 7 | 48 random hex characters; mounted in the service only |
+| Secret `slotbook-seed-password` | `SEED_PASSWORD` | step 8 | password of the demo accounts; mounted in the migration job only (`--set-secrets`). The service and the job share `slotbook-runner`, which can read all three secrets |
+| Cloud Run job | `slotbook-migrate` | step 10 | `sh -c "npx prisma migrate deploy && npm run db:seed"`, `NODE_ENV=production`, `SEED_DEMO_DATA=true` with `--demo`; runs before every service update |
+| Cloud Run service | `slotbook` | step 11 | public, `--port 3000`, min 0 / max 2 instances, 512 MiB, `NODE_ENV=production` |
+| Deployer service account | `slotbook-deployer` | Issue #24 (Workload Identity) | used by GitHub Actions only; no JSON key |
+
+Read a secret when needed (never paste it anywhere): `gcloud secrets versions access latest --secret=slotbook-seed-password`.
+Changes from the kit: `slotbook*` names; session and seed secrets instead of the kit's admin/demo passwords; storage
+auto-increase off; max 2 instances; no `TZ` variable.
 
 ## 5. Docker
 
@@ -118,7 +141,25 @@ proxy does.
 
 ## 6. CI
 
-*To be filled in Issue #22* (required check `test-and-docker`).
+Workflow `.github/workflows/ci-docker.yml` (adapted from the kit), on every pull request into `staging` or `main`, and
+reusable (`workflow_call`) by the deploy workflow (Issue #25). Read-only `contents: read`; actions pinned to full commit
+SHAs (checkout v7.0.1, setup-node v7.1.0, setup-python v7.1.0 from the kit; upload-artifact v7.0.2 added); Dependabot
+(`.github/dependabot.yml`) proposes their updates weekly. Every step runs with `bash -eo pipefail`, so a failure is
+never hidden by `| tee`.
+
+**Job `test-and-docker`** (the required check, Issue #24; do not rename): PostgreSQL 16 service with throw-away CI
+values (not secrets) → Node 22 + Python 3.14 → deploy scripts offline (`bash -n` on each script, `deploy/tests/test_deploy_stub.sh` incl. a teardown dry run,
+`test_release_stub.sh`, `test_smoke.py`; no GCP access) → `cp .env.example .env` (the npm scripts read it; the job's
+env vars win) → `npm run install:all` → migrate + seed the test database → server tests → client tests →
+`npm run build` → `docker build` of the production image (not pushed). Outputs are uploaded as the `ci-output`
+artifact (`deploy-scripts.txt`, `server-tests.txt`, `client-tests.txt`, `build.txt`, `docker-build.txt`).
+
+**Job `e2e`** (optional, not a required check, pull requests only, so it never gates a deploy): Playwright with
+Chromium against the dev servers; the report is uploaded when it fails.
+
+Run the same deploy-script checks locally: `bash deploy/tests/test_deploy_stub.sh && bash deploy/tests/test_release_stub.sh && python3 -m unittest discover -s deploy/tests -p 'test_smoke.py'`.
+Smoke test of a deployment (read-only): `python3 deploy/smoke_test.py <URL>`, optionally with `SMOKE_EMAIL` and
+`SMOKE_PASSWORD` for the sign-in check.
 
 ## 7. Release procedure
 

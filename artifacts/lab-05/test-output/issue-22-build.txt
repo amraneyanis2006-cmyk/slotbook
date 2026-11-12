@@ -1,0 +1,27 @@
+# Branch:  ci/22-pr-checks
+# Commit:  50d5fcb (fix(ci): pre-PR review: bash -n on each script, e2e on PRs only, teardown removes the IAM binding, logout status, accurate docs (#22))
+# Date:    2026-11-12 23:12:40 +0700
+# Command: (npm run build)
+
+
+> build
+> npm run build --prefix server && npm run build --prefix client
+
+
+> build
+> tsc
+
+
+> build
+> tsc --noEmit && vite build
+
+vite v6.4.5 building for production...
+transforming...
+✓ 49 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.39 kB │ gzip:  0.27 kB
+dist/assets/index-C1ew9YAK.css    6.44 kB │ gzip:  1.86 kB
+dist/assets/index-UB9fol61.js   189.24 kB │ gzip: 60.64 kB
+✓ built in 5.52s
+# Exit code: 0

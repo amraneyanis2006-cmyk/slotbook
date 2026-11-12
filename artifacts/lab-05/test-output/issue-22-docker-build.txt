@@ -1,0 +1,21 @@
+# Branch:  ci/22-pr-checks
+# Commit:  50d5fcb (fix(ci): pre-PR review: bash -n on each script, e2e on PRs only, teardown removes the IAM binding, logout status, accurate docs (#22))
+# Date:    2026-11-12 23:13:10 +0700
+# Command: (docker build -t slotbook:ci22 . 2>&1 | grep -vE '^#[0-9]+ [0-9.]+ ' | tail -15)
+
+ ---> 05c8bdce0e16
+Step 22/25 : ENV PORT=3000
+ ---> Using cache
+ ---> e2af34d614c2
+Step 23/25 : EXPOSE 3000
+ ---> Using cache
+ ---> 5ec24b48c5a1
+Step 24/25 : USER node
+ ---> Using cache
+ ---> dd2cdae1f904
+Step 25/25 : CMD ["node", "dist/index.js"]
+ ---> Using cache
+ ---> 35b9dfd95f94
+Successfully built 35b9dfd95f94
+Successfully tagged slotbook:ci22
+# Exit code: 0

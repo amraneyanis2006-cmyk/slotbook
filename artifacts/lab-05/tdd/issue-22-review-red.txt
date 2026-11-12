@@ -1,0 +1,13 @@
+# Branch:  ci/22-pr-checks
+# Commit:  ad0c732 (test(deploy): teardown check reports its failure instead of exiting silently (#22))
+# Date:    2026-11-12 23:08:56 +0700
+# Command: (bash deploy/tests/test_deploy_stub.sh)
+
+PASS: first_run (exit, migration gate, credential handling, secret redaction)
+PASS: rerun (exit, migration gate, credential handling, secret redaction)
+PASS: partial (exit, migration gate, credential handling, secret redaction)
+PASS: job-fail (exit, migration gate, credential handling, secret redaction)
+PASS: demo (exit, migration gate, credential handling, secret redaction)
+PASS: dry run makes no gcloud calls
+FAIL: teardown must remove the cloudsql.client binding before deleting the service account
+# Exit code: 1
