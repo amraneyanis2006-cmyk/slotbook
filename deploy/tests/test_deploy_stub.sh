@@ -108,7 +108,7 @@ for MODE in first_run rerun partial job-fail demo; do
   args=()
   if [ "$MODE" = demo ]; then args+=(--demo); fi
   result=0
-  bash "$DEPLOY_SCRIPT" "${args[@]}" > "$TEST_STATE_DIR/output" 2>&1 || result=$?
+  bash "$DEPLOY_SCRIPT" ${args[@]+"${args[@]}"} > "$TEST_STATE_DIR/output" 2>&1 || result=$?
   expected=0
   if [ "$MODE" = job-fail ]; then expected=1; fi
   if [ "$result" -ne "$expected" ]; then
