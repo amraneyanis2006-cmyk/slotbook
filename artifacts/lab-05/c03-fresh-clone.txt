@@ -1,8 +1,8 @@
 # C-03 fresh-clone check (R-01, R-02)
-# Date: 2026-11-12 22:29:02 +0700   Host: macOS 15.7.9 x86_64, Docker version 29.9.3, build 5457199aa5, Docker Compose version 5.7.1
+# Date: 2026-11-12 22:49:51 +0700   Host: macOS 15.7.9 x86_64, Docker version 29.9.3, build 5457199aa5, Docker Compose version 5.7.1
 
 $ git clone --quiet --branch build/21-docker https://github.com/amraneyanis2006-cmyk/slotbook.git slotbook && git -C slotbook log -1 --format='commit %H (%s)'
-commit 167bb0cc02e4817b764fe4b944949da853eb18bc (build(docker): single production image, .dockerignore, docker-compose with migrate/seed job (#21))
+commit 596062265ac477f49e958c2505c69f5b7104b4d6 (fix(docker): pre-PR review: graceful SIGTERM (UNIT-08), **/.env* ignored, explicit compose vars + healthcheck, cache order, docs and history (#21))
 exit 0
 
 $ cp .env.example .env
@@ -15,13 +15,13 @@ $ grep -c 'change-me' .env || true
 exit 0
 
 $ docker compose up --build -d 2>&1 | grep -vE '^ *#[0-9]+ ' | tail -25
- ---> 20da96efe8ac
-Successfully built 20da96efe8ac
+ ---> fd4e12ee3f50
+Successfully built fd4e12ee3f50
 Successfully tagged slotbook:local
  Image slotbook:local Built 
  Image slotbook:local Built 
- Volume slotbook_pgdata Creating 
  Network slotbook_default Creating 
+ Volume slotbook_pgdata Creating 
  Volume slotbook_pgdata Created 
  Network slotbook_default Created 
  Container slotbook-db-1 Creating 
@@ -44,9 +44,9 @@ exit 0
 
 $ docker compose ps -a --format 'table {{.Service}}\t{{.State}}\t{{.Status}}'
 SERVICE   STATE     STATUS
-app       running   Up 2 seconds
-db        running   Up 29 seconds (healthy)
-migrate   exited    Exited (0) 2 seconds ago
+app       running   Up 1 second (health: starting)
+db        running   Up 19 seconds (healthy)
+migrate   exited    Exited (0) 1 second ago
 exit 0
 
 $ docker compose logs migrate --no-log-prefix | grep -E 'migrations|Seed|applied|No pending' 
@@ -78,7 +78,10 @@ $ PW=$(grep ^SEED_PASSWORD= .env | cut -d= -f2-)   # read from .env, never print
 
 $ python3 -c "import json,os; print(json.dumps({\"email\": \"cust.nina@slotbook.test\", \"password\": os.environ[\"PW\"]}))" | curl -s -D headers.txt -H "X-Forwarded-Proto: https" -H "Content-Type: application/json" --data-binary @- http://localhost:3000/api/auth/login; echo; grep -i '^set-cookie' headers.txt | sed -E 's/sid=[^;]+/sid=<redacted>/'
 {"user":{"id":5,"name":"Nina Park","email":"cust.nina@slotbook.test","role":"CUSTOMER"}}
-Set-Cookie: sid=<redacted>; Path=/; Expires=Thu, 12 Nov 2026 23:41:22 GMT; HttpOnly; Secure; SameSite=Lax
+Set-Cookie: sid=<redacted>; Path=/; Expires=Thu, 12 Nov 2026 23:55:51 GMT; HttpOnly; Secure; SameSite=Lax
+exit 0
+
+$ grep -i '^set-cookie' headers.txt | sed -E 's/.*(sid=[^;]+).*/\1/' > .sid && rm headers.txt   # cookie kept in .sid, not printed
 exit 0
 
 $ curl -s -H "Cookie: $(cat .sid)" -H "X-Forwarded-Proto: https" 'http://localhost:3000/api/slots/available?date=2026-11-13' | python3 -c 'import json,sys; s=json.load(sys.stdin)["slots"]; print(len(s), "available slots on 2026-11-13; first:", json.dumps(s[0]))'
@@ -87,7 +90,7 @@ exit 0
 
 $ curl -s -H "Cookie: $(cat .sid)" -H "X-Forwarded-Proto: https" -H 'Content-Type: application/json' -d '{"slotId": 19, "note": "C-03 persistence check"}' -o booking.json -w 'HTTP %{http_code}\n' http://localhost:3000/api/bookings && cat booking.json
 HTTP 201
-{"booking":{"reference":"BK-2026-000006","status":"BOOKED","note":"C-03 persistence check","createdAt":"2026-11-12T15:41:23.054Z","cancelledAt":null,"slot":{"id":19,"startAt":"2026-11-13T02:30:00.000Z","endAt":"2026-11-13T03:00:00.000Z","service":{"id":1,"name":"Academic advising","durationMin":30},"staff":{"id":2,"name":"Mali Srisuk"}}}}exit 0
+{"booking":{"reference":"BK-2026-000006","status":"BOOKED","note":"C-03 persistence check","createdAt":"2026-11-12T15:55:52.291Z","cancelledAt":null,"slot":{"id":19,"startAt":"2026-11-13T02:30:00.000Z","endAt":"2026-11-13T03:00:00.000Z","service":{"id":1,"name":"Academic advising","durationMin":30},"staff":{"id":2,"name":"Mali Srisuk"}}}}exit 0
 
 # Booking created: BK-2026-000006
 
@@ -98,11 +101,11 @@ exit 0
 
 $ docker compose ps app --format 'table {{.Service}}\t{{.State}}\t{{.Status}}'
 SERVICE   STATE     STATUS
-app       running   Up 6 seconds
+app       running   Up 6 seconds (health: starting)
 exit 0
 
 $ curl -s -H "Cookie: $(cat .sid)" -H "X-Forwarded-Proto: https" -w ' HTTP %{http_code}\n' http://localhost:3000/api/bookings/BK-2026-000006
-{"booking":{"reference":"BK-2026-000006","status":"BOOKED","note":"C-03 persistence check","createdAt":"2026-11-12T15:41:23.054Z","cancelledAt":null,"slot":{"id":19,"startAt":"2026-11-13T02:30:00.000Z","endAt":"2026-11-13T03:00:00.000Z","service":{"id":1,"name":"Academic advising","durationMin":30},"staff":{"id":2,"name":"Mali Srisuk"}}}} HTTP 200
+{"booking":{"reference":"BK-2026-000006","status":"BOOKED","note":"C-03 persistence check","createdAt":"2026-11-12T15:55:52.291Z","cancelledAt":null,"slot":{"id":19,"startAt":"2026-11-13T02:30:00.000Z","endAt":"2026-11-13T03:00:00.000Z","service":{"id":1,"name":"Academic advising","durationMin":30},"staff":{"id":2,"name":"Mali Srisuk"}}}} HTTP 200
 exit 0
 
 $ docker compose exec -T db psql -U slotbook -d slotbook -c "SELECT reference, status, note FROM \"Booking\" WHERE reference = 'BK-2026-000006';"
@@ -113,7 +116,7 @@ $ docker compose exec -T db psql -U slotbook -d slotbook -c "SELECT reference, s
 
 exit 0
 
-# Extra checks (same clone)
+# Extra checks: non-root user, image size, healthcheck, rerun of the insert-only seed, graceful stop
 
 $ docker compose exec -T app sh -c 'id; echo NODE_ENV=$NODE_ENV PORT=$PORT'
 uid=1000(node) gid=1000(node) groups=1000(node)
@@ -122,6 +125,11 @@ exit 0
 
 $ docker image ls slotbook:local --format '{{.Repository}}:{{.Tag}} {{.Size}}'
 slotbook:local 501MB
+exit 0
+
+$ docker compose ps app --format 'table {{.Service}}\t{{.Status}}'
+SERVICE   STATUS
+app       Up 13 seconds (healthy)
 exit 0
 
 $ docker compose run --rm migrate 2>&1 | grep -E 'migrations|Seed'
@@ -133,4 +141,11 @@ exit 0
 $ docker compose exec -T db psql -U slotbook -d slotbook -tc 'SELECT count(*) AS bookings FROM "Booking";'
         6
 
+exit 0
+
+$ s=$(date +%s); docker compose stop app; echo "stopped in $(( $(date +%s) - s )) s (Docker kills after 10 s if SIGTERM is ignored)"; docker compose ps -a app --format '{{.Service}} {{.Status}}'
+ Container slotbook-app-1 Stopping 
+ Container slotbook-app-1 Stopped 
+stopped in 1 s (Docker kills after 10 s if SIGTERM is ignored)
+app Exited (0) Less than a second ago
 exit 0

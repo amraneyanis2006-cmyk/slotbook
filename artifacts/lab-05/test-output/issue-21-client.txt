@@ -1,14 +1,10 @@
 # Branch:  build/21-docker
-# Commit:  167bb0c (build(docker): single production image, .dockerignore, docker-compose with migrate/seed job (#21))
-# Date:    2026-11-12 22:21:27 +0700
+# Commit:  5960622 (fix(docker): pre-PR review: graceful SIGTERM (UNIT-08), **/.env* ignored, explicit compose vars + healthcheck, cache order, docs and history (#21))
+# Date:    2026-11-12 22:59:29 +0700
 # Command: (cd client && npx vitest run)
 
 
  RUN  v3.2.7 <repo>/client
-
-stderr | tests/MyBookingsPage.test.tsx > MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled
-⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
-⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
 
 stderr | tests/LoginPage.test.tsx > LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home
 ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
@@ -18,18 +14,22 @@ stderr | tests/BookSlotPage.test.tsx > BookSlotPage (F-04) > UI-03: dialog with 
 ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
 ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
 
- ✓ tests/MyBookingsPage.test.tsx (3 tests) 2089ms
-   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled  1686ms
- ✓ tests/LoginPage.test.tsx (1 test) 1656ms
-   ✓ LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home  1646ms
- ✓ tests/MySlotsPage.test.tsx (1 test) 1654ms
-   ✓ MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list  1647ms
- ✓ tests/BookSlotPage.test.tsx (2 tests) 2883ms
-   ✓ BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state  2768ms
+stderr | tests/MyBookingsPage.test.tsx > MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ tests/LoginPage.test.tsx (1 test) 1715ms
+   ✓ LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home  1708ms
+ ✓ tests/MySlotsPage.test.tsx (1 test) 1763ms
+   ✓ MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list  1756ms
+ ✓ tests/MyBookingsPage.test.tsx (3 tests) 2283ms
+   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled  1870ms
+ ✓ tests/BookSlotPage.test.tsx (2 tests) 3101ms
+   ✓ BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state  2991ms
 
  Test Files  4 passed (4)
       Tests  7 passed (7)
-   Start at  22:21:31
-   Duration  10.54s (transform 799ms, setup 2.67s, collect 2.34s, tests 8.28s, environment 18.12s, prepare 2.08s)
+   Start at  22:59:33
+   Duration  11.19s (transform 987ms, setup 2.87s, collect 2.82s, tests 8.86s, environment 18.80s, prepare 2.37s)
 
 # Exit code: 0
