@@ -2,7 +2,7 @@
 **/node_modules
 **/dist
 **/coverage
-.env*
+**/.env*
 .git
 .github
 .pr-drafts
@@ -10,3 +10,6 @@ artifacts
 test-results
 playwright-report
 *.log
+**/.DS_Store
+docs
+e2e

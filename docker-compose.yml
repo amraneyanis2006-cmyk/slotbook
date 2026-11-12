@@ -1,8 +1,9 @@
 # Local production-like run: PostgreSQL 16 + one-off migrate/seed + the app on http://localhost:3000.
 # Every value comes from .env (copy .env.example and replace every change-me):
 #   docker compose up --build -d
-# The app runs with NODE_ENV=production, so its session cookie is Secure: a browser on plain
-# http://localhost will not keep it (Cloud Run serves https). See docs/labs/lab-05/deployment.md §5.
+# The app runs with NODE_ENV=production: the server sends its Secure session cookie only over https
+# (X-Forwarded-Proto: https on Cloud Run), not over plain http://localhost. See deployment.md §5.
+# Only the variables each service needs are passed (interpolated from .env).
 
 x-app-env: &app-env
   NODE_ENV: production
@@ -28,10 +29,10 @@ services:
   migrate:
     build: .
     image: slotbook:local
-    env_file: .env
     environment:
       <<: *app-env
       SEED_DEMO_DATA: "true"
+      SEED_PASSWORD: ${SEED_PASSWORD:?set SEED_PASSWORD in .env}
     command: ["sh", "-c", "npx prisma migrate deploy && npm run db:seed"]
     restart: "no"
     depends_on:
@@ -41,13 +42,19 @@ services:
   app:
     build: .
     image: slotbook:local
-    env_file: .env
     environment:
       <<: *app-env
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
       PORT: "3000"
     ports:
       - "127.0.0.1:3000:3000"
     restart: unless-stopped
+    # The slim image has no curl: node itself asks /api/ready.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/ready').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       migrate:
         condition: service_completed_successfully

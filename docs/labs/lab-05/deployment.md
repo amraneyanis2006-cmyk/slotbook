@@ -87,13 +87,21 @@ migration job `slotbook-migrate`, service accounts `slotbook-runner` and `slotbo
 **Why not the kit's `client/Dockerfile`, `server/Dockerfile`, `client/nginx.conf` and `docker-entrypoint.sh`:**
 Express already serves the built SPA with the `index.html` fallback (F-00 §3, API-27), so the same single image
 runs locally and on Cloud Run; a second nginx container would add a second origin (CORS, cookies) and a config
-that Cloud Run never runs. The entrypoint script only did `exec "$@"`; `CMD` in exec form already makes `node`
-PID 1, so it receives Cloud Run's SIGTERM.
+that Cloud Run never runs. The kit's entrypoint script only did `exec "$@"`; with `CMD` in exec form the base
+image's entrypoint already execs `node`, so `node` is PID 1. Because PID 1 gets no default action for SIGTERM,
+`server/src/index.ts` handles it: it closes the server and exits 0 (UNIT-08), so Cloud Run and `docker stop` do not
+wait for the grace period and then kill it.
+
+The kit sets `TZ=Asia/Bangkok`; SlotBook does not: it stores UTC and converts with explicit Asia/Bangkok helpers
+(NFR-10), so the container time zone does not matter.
 
 **Local run with Docker Compose** (`docker-compose.yml`: `db` = `postgres:16` with the named volume `pgdata`;
 `migrate` = one-off `npx prisma migrate deploy && npm run db:seed` with `SEED_DEMO_DATA=true`, the same command as
 the Cloud Run job; `app` on `127.0.0.1:3000` after `migrate` succeeded). Every value comes from `.env`; compose
-replaces `DATABASE_URL` with the `db` host and sets `NODE_ENV=production`.
+builds `DATABASE_URL` with the `db` host from `POSTGRES_PASSWORD`, sets `NODE_ENV=production`, and passes each
+service only what it needs (`migrate`: `SEED_PASSWORD`; `app`: `SESSION_SECRET`). `app` has a healthcheck on
+`/api/ready`. `POSTGRES_PASSWORD` is applied only when the `pgdata` volume is first created: after changing it, run
+`docker compose down -v` (deletes the local data) or the app gets "authentication failed".
 
 ```bash
 cp .env.example .env                  # replace every change-me; SESSION_SECRET ≥ 32 characters
@@ -103,8 +111,8 @@ docker compose logs migrate           # migration + seed counts (never the passw
 docker compose down                   # keeps the data volume; `down -v` deletes it
 ```
 
-The app runs in production mode, so its session cookie is Secure and a browser on plain `http://localhost`
-does not keep it: logging in through the UI needs HTTPS (Cloud Run). The C-03 check
+The app runs in production mode: the server sends its Secure session cookie only over HTTPS (`X-Forwarded-Proto:
+https` from Cloud Run's proxy), not over plain `http://localhost`, so logging in through the UI needs Cloud Run. The C-03 check
 (`artifacts/lab-05/c03-fresh-clone.txt`) logs in through the API with `X-Forwarded-Proto: https`, as Cloud Run's
 proxy does.
 
