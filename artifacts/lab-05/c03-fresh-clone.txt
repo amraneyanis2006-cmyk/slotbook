@@ -1,0 +1,136 @@
+# C-03 fresh-clone check (R-01, R-02)
+# Date: 2026-11-12 22:29:02 +0700   Host: macOS 15.7.9 x86_64, Docker version 29.9.3, build 5457199aa5, Docker Compose version 5.7.1
+
+$ git clone --quiet --branch build/21-docker https://github.com/amraneyanis2006-cmyk/slotbook.git slotbook && git -C slotbook log -1 --format='commit %H (%s)'
+commit 167bb0cc02e4817b764fe4b944949da853eb18bc (build(docker): single production image, .dockerignore, docker-compose with migrate/seed job (#21))
+exit 0
+
+$ cp .env.example .env
+exit 0
+
+# .env filled with generated local values (POSTGRES_PASSWORD, SESSION_SECRET 48 chars, SEED_PASSWORD); values not shown.
+
+$ grep -c 'change-me' .env || true
+0
+exit 0
+
+$ docker compose up --build -d 2>&1 | grep -vE '^ *#[0-9]+ ' | tail -25
+ ---> 20da96efe8ac
+Successfully built 20da96efe8ac
+Successfully tagged slotbook:local
+ Image slotbook:local Built 
+ Image slotbook:local Built 
+ Volume slotbook_pgdata Creating 
+ Network slotbook_default Creating 
+ Volume slotbook_pgdata Created 
+ Network slotbook_default Created 
+ Container slotbook-db-1 Creating 
+ Container slotbook-db-1 Created 
+ Container slotbook-migrate-1 Creating 
+ Container slotbook-migrate-1 Created 
+ Container slotbook-app-1 Creating 
+ Container slotbook-app-1 Created 
+ Container slotbook-db-1 Starting 
+ Container slotbook-db-1 Started 
+ Container slotbook-db-1 Waiting 
+ Container slotbook-db-1 Healthy 
+ Container slotbook-migrate-1 Starting 
+ Container slotbook-migrate-1 Started 
+ Container slotbook-migrate-1 Waiting 
+ Container slotbook-migrate-1 Exited 
+ Container slotbook-app-1 Starting 
+ Container slotbook-app-1 Started 
+exit 0
+
+$ docker compose ps -a --format 'table {{.Service}}\t{{.State}}\t{{.Status}}'
+SERVICE   STATE     STATUS
+app       running   Up 2 seconds
+db        running   Up 29 seconds (healthy)
+migrate   exited    Exited (0) 2 seconds ago
+exit 0
+
+$ docker compose logs migrate --no-log-prefix | grep -E 'migrations|Seed|applied|No pending' 
+1 migration found in prisma/migrations
+The following migration(s) have been applied:
+migrations/
+All migrations have been successfully applied.
+Seed complete. Created: 4 services, 6 users, 50 slots, 5 bookings. Already present (left unchanged): 0 services, 0 users, 0 slots, 0 bookings.
+exit 0
+
+$ curl -s -w ' HTTP %{http_code}\n' http://localhost:3000/api/health
+{"status":"ok","database":"up"} HTTP 200
+exit 0
+
+$ curl -s -w ' HTTP %{http_code}\n' http://localhost:3000/api/ready
+{"status":"ready","database":"connected"} HTTP 200
+exit 0
+
+$ curl -s -o /dev/null -w 'HTTP %{http_code} %{content_type}\n' http://localhost:3000/ && curl -s http://localhost:3000/ | grep -o '<title>[^<]*</title>'
+HTTP 200 text/html; charset=UTF-8
+<title>SlotBook</title>
+exit 0
+
+$ curl -s -o /dev/null -w 'HTTP %{http_code} %{content_type}\n' http://localhost:3000/bookings
+HTTP 200 text/html; charset=UTF-8
+exit 0
+
+$ PW=$(grep ^SEED_PASSWORD= .env | cut -d= -f2-)   # read from .env, never printed
+
+$ python3 -c "import json,os; print(json.dumps({\"email\": \"cust.nina@slotbook.test\", \"password\": os.environ[\"PW\"]}))" | curl -s -D headers.txt -H "X-Forwarded-Proto: https" -H "Content-Type: application/json" --data-binary @- http://localhost:3000/api/auth/login; echo; grep -i '^set-cookie' headers.txt | sed -E 's/sid=[^;]+/sid=<redacted>/'
+{"user":{"id":5,"name":"Nina Park","email":"cust.nina@slotbook.test","role":"CUSTOMER"}}
+Set-Cookie: sid=<redacted>; Path=/; Expires=Thu, 12 Nov 2026 23:41:22 GMT; HttpOnly; Secure; SameSite=Lax
+exit 0
+
+$ curl -s -H "Cookie: $(cat .sid)" -H "X-Forwarded-Proto: https" 'http://localhost:3000/api/slots/available?date=2026-11-13' | python3 -c 'import json,sys; s=json.load(sys.stdin)["slots"]; print(len(s), "available slots on 2026-11-13; first:", json.dumps(s[0]))'
+4 available slots on 2026-11-13; first: {"id": 19, "startAt": "2026-11-13T02:30:00.000Z", "endAt": "2026-11-13T03:00:00.000Z", "service": {"id": 1, "name": "Academic advising", "durationMin": 30}, "staff": {"id": 2, "name": "Mali Srisuk"}}
+exit 0
+
+$ curl -s -H "Cookie: $(cat .sid)" -H "X-Forwarded-Proto: https" -H 'Content-Type: application/json' -d '{"slotId": 19, "note": "C-03 persistence check"}' -o booking.json -w 'HTTP %{http_code}\n' http://localhost:3000/api/bookings && cat booking.json
+HTTP 201
+{"booking":{"reference":"BK-2026-000006","status":"BOOKED","note":"C-03 persistence check","createdAt":"2026-11-12T15:41:23.054Z","cancelledAt":null,"slot":{"id":19,"startAt":"2026-11-13T02:30:00.000Z","endAt":"2026-11-13T03:00:00.000Z","service":{"id":1,"name":"Academic advising","durationMin":30},"staff":{"id":2,"name":"Mali Srisuk"}}}}exit 0
+
+# Booking created: BK-2026-000006
+
+$ docker compose restart app
+ Container slotbook-app-1 Restarting 
+ Container slotbook-app-1 Started 
+exit 0
+
+$ docker compose ps app --format 'table {{.Service}}\t{{.State}}\t{{.Status}}'
+SERVICE   STATE     STATUS
+app       running   Up 6 seconds
+exit 0
+
+$ curl -s -H "Cookie: $(cat .sid)" -H "X-Forwarded-Proto: https" -w ' HTTP %{http_code}\n' http://localhost:3000/api/bookings/BK-2026-000006
+{"booking":{"reference":"BK-2026-000006","status":"BOOKED","note":"C-03 persistence check","createdAt":"2026-11-12T15:41:23.054Z","cancelledAt":null,"slot":{"id":19,"startAt":"2026-11-13T02:30:00.000Z","endAt":"2026-11-13T03:00:00.000Z","service":{"id":1,"name":"Academic advising","durationMin":30},"staff":{"id":2,"name":"Mali Srisuk"}}}} HTTP 200
+exit 0
+
+$ docker compose exec -T db psql -U slotbook -d slotbook -c "SELECT reference, status, note FROM \"Booking\" WHERE reference = 'BK-2026-000006';"
+   reference    | status |          note          
+----------------+--------+------------------------
+ BK-2026-000006 | BOOKED | C-03 persistence check
+(1 row)
+
+exit 0
+
+# Extra checks (same clone)
+
+$ docker compose exec -T app sh -c 'id; echo NODE_ENV=$NODE_ENV PORT=$PORT'
+uid=1000(node) gid=1000(node) groups=1000(node)
+NODE_ENV=production PORT=3000
+exit 0
+
+$ docker image ls slotbook:local --format '{{.Repository}}:{{.Tag}} {{.Size}}'
+slotbook:local 501MB
+exit 0
+
+$ docker compose run --rm migrate 2>&1 | grep -E 'migrations|Seed'
+1 migration found in prisma/migrations
+No pending migrations to apply.
+Seed complete. Created: 0 services, 0 users, 0 slots, 0 bookings. Already present (left unchanged): 4 services, 6 users, 50 slots, 5 bookings.
+exit 0
+
+$ docker compose exec -T db psql -U slotbook -d slotbook -tc 'SELECT count(*) AS bookings FROM "Booking";'
+        6
+
+exit 0
