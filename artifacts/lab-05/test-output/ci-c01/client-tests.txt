@@ -1,0 +1,28 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/home/runner/work/slotbook/slotbook/client[39m
+
+[90mstderr[2m | tests/MyBookingsPage.test.tsx[2m > [22m[2mMyBookingsPage / BookingDetailPage (F-05)[2m > [22m[2mUI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled
+[22m[39m⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+[90mstderr[2m | tests/BookSlotPage.test.tsx[2m > [22m[2mBookSlotPage (F-04)[2m > [22m[2mUI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state
+[22m[39m⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ [32m✓[39m tests/MySlotsPage.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 357[2mms[22m[39m
+   [33m[2m✓[22m[39m MySlotsPage (F-03)[2m > [22mUI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list [33m 356[2mms[22m[39m
+ [32m✓[39m tests/MyBookingsPage.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 478[2mms[22m[39m
+   [33m[2m✓[22m[39m MyBookingsPage / BookingDetailPage (F-05)[2m > [22mUI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled [33m 377[2mms[22m[39m
+ [32m✓[39m tests/BookSlotPage.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 811[2mms[22m[39m
+   [33m[2m✓[22m[39m BookSlotPage (F-04)[2m > [22mUI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state [33m 767[2mms[22m[39m
+[90mstderr[2m | tests/LoginPage.test.tsx[2m > [22m[2mLoginPage (F-01)[2m > [22m[2mUI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home
+[22m[39m⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ [32m✓[39m tests/LoginPage.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 293[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 17:34:33
+[2m   Duration [22m 2.69s[2m (transform 341ms, setup 788ms, collect 770ms, tests 1.94s, environment 1.79s, prepare 424ms)[22m
+

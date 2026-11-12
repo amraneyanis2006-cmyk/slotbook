@@ -1,0 +1,269 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.72kB done
+#1 DONE 0.0s
+
+#2 [auth] library/node:pull token for registry-1.docker.io
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#3 DONE 0.6s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 263B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 415.02kB 0.0s done
+#5 DONE 0.0s
+
+#6 [build  1/11] FROM docker.io/library/node:22-bookworm-slim@sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee
+#6 resolve docker.io/library/node:22-bookworm-slim@sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee 0.0s done
+#6 sha256:aa4e8910862263c3bad50c754fb555bbbb7661c41e35ba703ae082ec6749c175 1.71MB / 1.71MB 0.1s done
+#6 sha256:cce880541c96dc730321857781d113e3c75c0cb383f9510300922762006d734e 448B / 448B 0.1s done
+#6 sha256:076cba098ace87d6950e8fa4cc530bfe59834eba28f30061e8526d6f00bf52c8 3.31kB / 3.31kB 0.1s done
+#6 sha256:0c4023204e5b4bcd551170279c40ff58285cc8ea87ddf9ff25cb3713e6ecda79 10.49MB / 49.90MB 0.2s
+#6 sha256:0c4023204e5b4bcd551170279c40ff58285cc8ea87ddf9ff25cb3713e6ecda79 48.23MB / 49.90MB 0.3s
+#6 sha256:dd051e1b8c92ff101fa3071ab97ea4924885942f15644e01c3dc095764e863e3 20.97MB / 28.25MB 0.2s
+#6 sha256:dd051e1b8c92ff101fa3071ab97ea4924885942f15644e01c3dc095764e863e3 28.25MB / 28.25MB 0.3s
+#6 sha256:dd051e1b8c92ff101fa3071ab97ea4924885942f15644e01c3dc095764e863e3 28.25MB / 28.25MB 0.5s done
+#6 sha256:0c4023204e5b4bcd551170279c40ff58285cc8ea87ddf9ff25cb3713e6ecda79 49.90MB / 49.90MB 0.6s done
+#6 extracting sha256:dd051e1b8c92ff101fa3071ab97ea4924885942f15644e01c3dc095764e863e3
+#6 extracting sha256:dd051e1b8c92ff101fa3071ab97ea4924885942f15644e01c3dc095764e863e3 0.6s done
+#6 DONE 1.3s
+
+#6 [build  1/11] FROM docker.io/library/node:22-bookworm-slim@sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee
+#6 extracting sha256:076cba098ace87d6950e8fa4cc530bfe59834eba28f30061e8526d6f00bf52c8 done
+#6 extracting sha256:0c4023204e5b4bcd551170279c40ff58285cc8ea87ddf9ff25cb3713e6ecda79
+#6 extracting sha256:0c4023204e5b4bcd551170279c40ff58285cc8ea87ddf9ff25cb3713e6ecda79 0.9s done
+#6 DONE 2.2s
+
+#6 [build  1/11] FROM docker.io/library/node:22-bookworm-slim@sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee
+#6 extracting sha256:aa4e8910862263c3bad50c754fb555bbbb7661c41e35ba703ae082ec6749c175 0.0s done
+#6 extracting sha256:cce880541c96dc730321857781d113e3c75c0cb383f9510300922762006d734e done
+#6 DONE 2.2s
+
+#7 [build  2/11] RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+#7 0.251 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#7 0.298 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#7 0.315 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#7 0.353 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+#7 0.463 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+#7 0.481 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [368 kB]
+#7 1.310 Fetched 9407 kB in 1s (8571 kB/s)
+#7 1.310 Reading package lists...
+#7 1.818 Reading package lists...
+#7 2.297 Building dependency tree...
+#7 2.425 Reading state information...
+#7 2.544 The following additional packages will be installed:
+#7 2.544   libssl3
+#7 2.545 Suggested packages:
+#7 2.545   ca-certificates
+#7 2.561 The following NEW packages will be installed:
+#7 2.561   libssl3 openssl
+#7 2.608 0 upgraded, 2 newly installed, 0 to remove and 0 not upgraded.
+#7 2.608 Need to get 3482 kB of archives.
+#7 2.608 After this operation, 8558 kB of additional disk space will be used.
+#7 2.608 Get:1 http://deb.debian.org/debian-security bookworm-security/main amd64 libssl3 amd64 3.0.22-1~deb12u2 [2040 kB]
+#7 2.708 Get:2 http://deb.debian.org/debian-security bookworm-security/main amd64 openssl amd64 3.0.22-1~deb12u2 [1442 kB]
+#7 2.807 debconf: delaying package configuration, since apt-utils is not installed
+#7 2.828 Fetched 3482 kB in 0s (23.6 MB/s)
+#7 2.841 Selecting previously unselected package libssl3:amd64.
+#7 2.841 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+#7 2.848 Preparing to unpack .../libssl3_3.0.22-1~deb12u2_amd64.deb ...
+#7 2.850 Unpacking libssl3:amd64 (3.0.22-1~deb12u2) ...
+#7 2.989 Selecting previously unselected package openssl.
+#7 2.990 Preparing to unpack .../openssl_3.0.22-1~deb12u2_amd64.deb ...
+#7 2.992 Unpacking openssl (3.0.22-1~deb12u2) ...
+#7 3.108 Setting up libssl3:amd64 (3.0.22-1~deb12u2) ...
+#7 3.111 Setting up openssl (3.0.22-1~deb12u2) ...
+#7 3.115 Processing triggers for libc-bin (2.36-9+deb12u14) ...
+#7 DONE 4.8s
+
+#8 [stage-1 2/9] RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates  && rm -rf /var/lib/apt/lists/*
+#8 0.268 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#8 0.316 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#8 0.334 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#8 0.368 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+#8 0.475 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+#8 0.482 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [368 kB]
+#8 1.328 Fetched 9407 kB in 1s (8358 kB/s)
+#8 1.328 Reading package lists...
+#8 1.833 Reading package lists...
+#8 2.307 Building dependency tree...
+#8 2.434 Reading state information...
+#8 2.551 The following additional packages will be installed:
+#8 2.552   libssl3
+#8 2.568 The following NEW packages will be installed:
+#8 2.569   ca-certificates libssl3 openssl
+#8 2.621 0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.
+#8 2.621 Need to get 3643 kB of archives.
+#8 2.621 After this operation, 8955 kB of additional disk space will be used.
+#8 2.621 Get:1 http://deb.debian.org/debian-security bookworm-security/main amd64 libssl3 amd64 3.0.22-1~deb12u2 [2040 kB]
+#8 2.719 Get:2 http://deb.debian.org/debian-security bookworm-security/main amd64 openssl amd64 3.0.22-1~deb12u2 [1442 kB]
+#8 2.724 Get:3 http://deb.debian.org/debian-security bookworm-security/main amd64 ca-certificates all 20250419~deb12u2 [161 kB]
+#8 2.816 debconf: delaying package configuration, since apt-utils is not installed
+#8 2.837 Fetched 3643 kB in 0s (24.2 MB/s)
+#8 2.854 Selecting previously unselected package libssl3:amd64.
+#8 2.854 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+#8 2.859 Preparing to unpack .../libssl3_3.0.22-1~deb12u2_amd64.deb ...
+#8 2.861 Unpacking libssl3:amd64 (3.0.22-1~deb12u2) ...
+#8 2.999 Selecting previously unselected package openssl.
+#8 3.001 Preparing to unpack .../openssl_3.0.22-1~deb12u2_amd64.deb ...
+#8 3.002 Unpacking openssl (3.0.22-1~deb12u2) ...
+#8 3.117 Selecting previously unselected package ca-certificates.
+#8 3.118 Preparing to unpack .../ca-certificates_20250419~deb12u2_all.deb ...
+#8 3.119 Unpacking ca-certificates (20250419~deb12u2) ...
+#8 3.394 Setting up libssl3:amd64 (3.0.22-1~deb12u2) ...
+#8 3.459 Setting up openssl (3.0.22-1~deb12u2) ...
+#8 3.500 Setting up ca-certificates (20250419~deb12u2) ...
+#8 3.576 debconf: unable to initialize frontend: Dialog
+#8 3.576 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#8 3.576 debconf: falling back to frontend: Readline
+#8 3.576 debconf: unable to initialize frontend: Readline
+#8 3.576 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/x86_64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+#8 3.576 debconf: falling back to frontend: Teletype
+#8 3.903 Updating certificates in /etc/ssl/certs...
+#8 4.346 148 added, 0 removed; done.
+#8 4.609 Processing triggers for libc-bin (2.36-9+deb12u14) ...
+#8 4.640 Processing triggers for ca-certificates (20250419~deb12u2) ...
+#8 4.652 Updating certificates in /etc/ssl/certs...
+#8 ...
+
+#9 [build  3/11] WORKDIR /app
+#9 DONE 0.0s
+
+#10 [build  4/11] COPY client/package*.json client/
+#10 DONE 0.0s
+
+#8 [stage-1 2/9] RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates  && rm -rf /var/lib/apt/lists/*
+#8 5.069 0 added, 0 removed; done.
+#8 5.069 Running hooks in /etc/ca-certificates/update.d...
+#8 5.071 done.
+#8 DONE 5.1s
+
+#11 [stage-1 3/9] WORKDIR /app/server
+#11 DONE 0.0s
+
+#12 [build  5/11] RUN npm ci --prefix client
+#12 1.276 npm warn deprecated whatwg-encoding@3.1.1: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+#12 3.510 
+#12 3.510 added 166 packages, and audited 167 packages in 3s
+#12 3.510 
+#12 3.510 27 packages are looking for funding
+#12 3.510   run `npm fund` for details
+#12 3.533 
+#12 3.533 5 vulnerabilities (3 moderate, 2 critical)
+#12 3.533 
+#12 3.533 To address all issues (including breaking changes), run:
+#12 3.533   npm audit fix --force
+#12 3.533 
+#12 3.533 Run `npm audit` for details.
+#12 3.534 npm notice
+#12 3.534 npm notice New major version of npm available! 10.9.9 -> 12.2.2
+#12 3.534 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+#12 3.534 npm notice To update run: npm install -g npm@12.2.2
+#12 3.534 npm notice
+#12 DONE 4.3s
+
+#13 [build  6/11] COPY server/package*.json server/
+#13 DONE 0.0s
+
+#14 [build  7/11] COPY server/prisma/schema.prisma server/prisma/
+#14 DONE 0.0s
+
+#15 [build  8/11] RUN npm ci --prefix server
+#15 4.118 
+#15 4.118 > postinstall
+#15 4.118 > prisma generate
+#15 4.118 
+#15 4.500 Prisma schema loaded from prisma/schema.prisma
+#15 4.778 
+#15 4.778 ✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 68ms
+#15 4.778 
+#15 4.778 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+#15 4.778 
+#15 4.778 Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+#15 4.778 
+#15 4.977 
+#15 4.977 added 196 packages, and audited 197 packages in 5s
+#15 4.977 
+#15 4.977 39 packages are looking for funding
+#15 4.977   run `npm fund` for details
+#15 4.994 
+#15 4.994 4 vulnerabilities (1 moderate, 1 high, 2 critical)
+#15 4.994 
+#15 4.994 To address all issues (including breaking changes), run:
+#15 4.994   npm audit fix --force
+#15 4.994 
+#15 4.994 Run `npm audit` for details.
+#15 DONE 5.6s
+
+#16 [build  9/11] COPY server server
+#16 DONE 0.0s
+
+#17 [build 10/11] COPY client client
+#17 DONE 0.0s
+
+#18 [build 11/11] RUN npm run build --prefix server  && npm run build --prefix client  && npm prune --omit=dev --prefix server
+#18 0.202 
+#18 0.202 > build
+#18 0.202 > tsc
+#18 0.202 
+#18 2.002 
+#18 2.002 > build
+#18 2.002 > tsc --noEmit && vite build
+#18 2.002 
+#18 4.256 vite v6.4.5 building for production...
+#18 4.325 transforming...
+#18 5.051 ✓ 49 modules transformed.
+#18 5.162 rendering chunks...
+#18 5.168 computing gzip size...
+#18 5.176 dist/index.html                   0.39 kB │ gzip:  0.26 kB
+#18 5.176 dist/assets/index-C1ew9YAK.css    6.44 kB │ gzip:  1.86 kB
+#18 5.176 dist/assets/index-UB9fol61.js   189.24 kB │ gzip: 60.64 kB
+#18 5.176 ✓ built in 887ms
+#18 5.746 
+#18 5.746 up to date, audited 102 packages in 501ms
+#18 5.746 
+#18 5.746 20 packages are looking for funding
+#18 5.746   run `npm fund` for details
+#18 5.756 
+#18 5.756 1 high severity vulnerability
+#18 5.756 
+#18 5.756 To address all issues (including breaking changes), run:
+#18 5.756   npm audit fix --force
+#18 5.756 
+#18 5.756 Run `npm audit` for details.
+#18 DONE 5.8s
+
+#19 [stage-1 4/9] COPY --from=build /app/server/package*.json ./
+#19 DONE 0.0s
+
+#20 [stage-1 5/9] COPY --from=build /app/server/node_modules ./node_modules
+#20 DONE 0.8s
+
+#21 [stage-1 6/9] COPY --from=build /app/server/dist ./dist
+#21 DONE 0.0s
+
+#22 [stage-1 7/9] COPY --from=build /app/server/prisma ./prisma
+#22 DONE 0.0s
+
+#23 [stage-1 8/9] COPY --from=build /app/server/src ./src
+#23 DONE 0.0s
+
+#24 [stage-1 9/9] COPY --from=build /app/client/dist /app/client/dist
+#24 DONE 0.0s
+
+#25 exporting to image
+#25 exporting layers
+#25 exporting layers 4.6s done
+#25 exporting manifest sha256:270f26674f1c2a6f2ecab9344f1a9a61b5e4fc0fe7cba24a0792e152d0d9a2f8 done
+#25 exporting config sha256:46f63b28f5e8b6a36a6135b3690303c14a8374b059bbd3873e334508ac0b675b done
+#25 exporting attestation manifest sha256:f1b653ebed2665329969dfa6305e597104c8309c630e30647ef6f641ab7ea795 done
+#25 exporting manifest list sha256:b86f11b1d7f9d71b7daf528ca7b28e05d08eed53371d458fb76afe62ed9cb0d0 done
+#25 naming to docker.io/library/slotbook:bb6cf82063ed92d05842dadd928f75aa4c084df8 done
+#25 unpacking to docker.io/library/slotbook:bb6cf82063ed92d05842dadd928f75aa4c084df8
+#25 unpacking to docker.io/library/slotbook:bb6cf82063ed92d05842dadd928f75aa4c084df8 0.8s done
+#25 DONE 5.5s
