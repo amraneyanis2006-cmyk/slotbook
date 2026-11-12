@@ -190,8 +190,8 @@ if [ -f "$GCLOUD_LOG" ]; then echo 'FAIL: teardown dry run called gcloud'; exit 
 for secret in slotbook-database-url slotbook-session-secret slotbook-seed-password; do
   grep -q "secrets delete $secret " "$TEST_STATE_DIR/teardown-output" || { echo "FAIL: teardown keeps $secret"; exit 1; }
 done
-binding=$(grep -n 'remove-iam-policy-binding .*roles/cloudsql.client' "$TEST_STATE_DIR/teardown-output" | cut -d: -f1)
-sa=$(grep -n 'service-accounts delete slotbook-runner@' "$TEST_STATE_DIR/teardown-output" | cut -d: -f1)
+binding=$(grep -n 'remove-iam-policy-binding .*roles/cloudsql.client' "$TEST_STATE_DIR/teardown-output" | cut -d: -f1 || true)
+sa=$(grep -n 'service-accounts delete slotbook-runner@' "$TEST_STATE_DIR/teardown-output" | cut -d: -f1 || true)
 if [ -z "$binding" ] || [ -z "$sa" ] || [ "$binding" -gt "$sa" ]; then
   echo 'FAIL: teardown must remove the cloudsql.client binding before deleting the service account'; exit 1
 fi
