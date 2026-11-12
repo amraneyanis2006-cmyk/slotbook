@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.5 (2026-11-13, Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.6 (2026-11-13, C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -160,6 +160,14 @@ Chromium against the dev servers; the report is uploaded when it fails.
 Run the same deploy-script checks locally: `bash deploy/tests/test_deploy_stub.sh && bash deploy/tests/test_release_stub.sh && python3 -m unittest discover -s deploy/tests -p 'test_smoke.py'`.
 Smoke test of a deployment (read-only): `python3 deploy/smoke_test.py <URL>`, optionally with `SMOKE_EMAIL` and
 `SMOKE_PASSWORD` for the sign-in check.
+
+**C-01 evidence (R-05):** run [43270720258](https://github.com/amraneyanis2006-cmyk/slotbook/actions/runs/43270720258)
+of PR #30 into `staging`, head commit `7ea5930` (the Docker image is tagged with the PR merge ref
+`bb6cf82063ed92d05842dadd928f75aa4c084df8`, which is GitHub's `github.sha` for pull requests). Both jobs green:
+`test-and-docker` (deploy scripts 7 stub + 5 release checks and 6 smoke tests, server 13 files / 63 tests, client
+4 files / 7 tests, build, Docker build) and `e2e` (Playwright 9 passed). Its `ci-output` artifact, unchanged, is in
+`artifacts/lab-05/test-output/ci-c01/`. The earlier run 43269454819 (PR #29) had `test-and-docker` green but `e2e`
+failed (no test database before Playwright's web servers), fixed in PR #30.
 
 ## 7. Release procedure
 
