@@ -10,8 +10,8 @@
 #   4. invalid tag    : rejected before any gcloud call
 # HOW TO RUN (repo root, needs bash):  bash deploy/tests/test_release_stub.sh
 #   Prints `PASS ...` lines; any failure exits non-zero. CI runs it too.
-# ⭐ CHANGE ME: if you rename the image path `toktickit/toktickit` or the job /
-#    service names in deploy/release.sh, update the stub strings below.
+# SlotBook names (RULES 5): image path slotbook/slotbook, job slotbook-migrate,
+#    service slotbook.
 # ==============================================================================
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -27,7 +27,7 @@ echo "$*" >> "$CALL_LOG"
 case "$*" in
   'artifacts docker images describe '*)
     [[ "${FAIL_AT:-}" != image ]] || exit 1
-    echo 'asia-southeast1-docker.pkg.dev/release-test/toktickit/toktickit@sha256:abcdef' ;;
+    echo 'asia-southeast1-docker.pkg.dev/release-test/slotbook/slotbook@sha256:abcdef' ;;
   'run jobs execute '*) [[ "${FAIL_AT:-}" != migration ]] || exit 1 ;;
   'run services describe '*) echo 'https://demo.example.test' ;;
 esac
@@ -35,8 +35,9 @@ STUB
 chmod +x "$TASK_TMP/gcloud"
 export ROLLBACK=false
 bash "$ROOT/deploy/release.sh"
-grep -q 'run jobs execute .*--wait' "$CALL_LOG"
-grep -q 'run services update .*@sha256:abcdef' "$CALL_LOG"
+grep -q 'run jobs update slotbook-migrate --image=asia-southeast1-docker.pkg.dev/release-test/slotbook/slotbook@sha256:abcdef' "$CALL_LOG"
+grep -q 'run jobs execute slotbook-migrate .*--wait' "$CALL_LOG"
+grep -q 'run services update slotbook .*@sha256:abcdef' "$CALL_LOG"
 grep -q 'SERVICE_URL=https://demo.example.test' "$GITHUB_ENV"
 echo 'PASS normal release uses digest and waits for migration'
 

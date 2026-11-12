@@ -8,18 +8,21 @@
 #     rerun     : everything exists   -> nothing replaced (credentials kept)
 #     partial   : DB secret missing   -> DB user password reset + secret created
 #     job-fail  : migration fails     -> script exits 1, service NOT deployed
-#     demo      : --demo flag         -> demo secret is created and granted
-#   It also checks: `--edition=enterprise`, no project-wide secretAccessor role,
-#   DB password == password inside DATABASE_URL, and that no password/secret
-#   value leaks into the output. Finally DRY_RUN=1 must make zero gcloud calls.
+#     demo      : --demo flag         -> migration job seeds with SEED_DEMO_DATA=true
+#   It also checks: Cloud SQL POSTGRES_16 / db-f1-micro / `--edition=enterprise` /
+#   storage auto-increase off, no project-wide secretAccessor role, DB password ==
+#   password inside DATABASE_URL, a 48-character session secret, the service gets
+#   DATABASE_URL + SESSION_SECRET only (never SEED_PASSWORD), the migration job gets
+#   DATABASE_URL + SEED_PASSWORD and runs migrate deploy + db:seed, port 3000,
+#   min 0 / max 2 instances, and that no secret value leaks into the output.
+#   Finally DRY_RUN=1 must make zero gcloud calls.
 #
 # HOW TO RUN (repo root, needs bash):  bash deploy/tests/test_deploy_stub.sh
 #   Prints `PASS: <scenario>` per scenario; any `FAIL ...` exits non-zero.
 #   CI runs it too (.github/workflows/ci-docker.yml).
 #
-# ⭐ CHANGE ME: if you rename resources in deploy/deploy.sh (e.g. the secret
-#    names toktickit-database-url / -admin-password / -demo-password, the DB
-#    user `toktickit`), update the matching strings below.
+# SlotBook names (RULES 5): secrets slotbook-database-url, slotbook-session-secret,
+# slotbook-seed-password; DB user slotbook; service slotbook; job slotbook-migrate.
 # ==============================================================================
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,8 +35,9 @@ mkdir -p "$TEST_STATE_DIR/bin"
 # --- Fake `openssl` (deterministic "random" values) ---------------------------
 cat > "$TEST_STATE_DIR/bin/openssl" <<'STUB'
 #!/usr/bin/env bash
+# `rand -hex N` returns 2N hex characters, like the real openssl.
 if [ "$2" = "-hex" ]; then
-  printf '%s\n' '0123456789abcdef0123456789abcdef0123456789abcdef'
+  printf '%s\n' "$(printf '0123456789abcdef%.0s' $(seq 1 8) | cut -c1-$(( $3 * 2 )))"
 else
   printf '%s\n' 'TESTONLYGENERATEDPASSWORD'
 fi
@@ -58,7 +62,7 @@ if [ "${1:-} ${2:-}" = 'config get-value' ]; then
   exit 0
 fi
 if [ "${1:-} ${2:-} ${3:-}" = 'run services describe' ]; then
-  echo https://toktickit-stub.example.invalid
+  echo https://slotbook-stub.example.invalid
   exit 0
 fi
 if [ "${1:-} ${2:-} ${3:-}" = 'run jobs execute' ]; then
@@ -73,7 +77,7 @@ if [ "${1:-} ${2:-} ${3:-}" = 'sql users list' ]; then
   if [ "$STUB_MODE" = first_run ]; then
     echo postgres
   else
-    printf 'postgres\ntoktickit\n'
+    printf 'postgres\nslotbook\n'
   fi
   exit 0
 fi
@@ -82,7 +86,7 @@ for word in "$@"; do
     case "$STUB_MODE" in
       first_run) exit 1 ;;
       partial)
-        if [ "${1:-} ${3:-}" = 'secrets toktickit-database-url' ]; then
+        if [ "${1:-} ${3:-}" = 'secrets slotbook-database-url' ]; then
           exit 1
         fi ;;
     esac
@@ -121,18 +125,29 @@ for MODE in first_run rerun partial job-fail demo; do
   if grep -q '^projects add-iam-policy-binding .*roles/secretmanager.secretAccessor' "$GCLOUD_LOG"; then
     echo 'FAIL: runtime has project-wide secret access'; exit 1
   fi
-  for secret in toktickit-database-url toktickit-admin-password; do
-    grep -q "^secrets add-iam-policy-binding $secret .*roles/secretmanager.secretAccessor" "$GCLOUD_LOG"
+  for secret in slotbook-database-url slotbook-session-secret slotbook-seed-password; do
+    grep -q "^secrets add-iam-policy-binding $secret .*serviceAccount:slotbook-runner@.*roles/secretmanager.secretAccessor" "$GCLOUD_LOG"
   done
-  if [ "$MODE" = demo ]; then
-    grep -q '^secrets add-iam-policy-binding toktickit-demo-password ' "$GCLOUD_LOG"
-  elif grep -q '^secrets add-iam-policy-binding toktickit-demo-password ' "$GCLOUD_LOG"; then
-    echo 'FAIL: granted optional demo secret in non-demo mode'; exit 1
+  # Migration job: migrate + seed from the same image, DATABASE_URL + SEED_PASSWORD, seed only with --demo.
+  job="$(grep '^run jobs deploy slotbook-migrate ' "$GCLOUD_LOG")"
+  case "$job" in *'--args -c,npx prisma migrate deploy && npm run db:seed'*) ;; *) echo 'FAIL: job command'; exit 1 ;; esac
+  case "$job" in *'DATABASE_URL=slotbook-database-url:latest'*'SEED_PASSWORD=slotbook-seed-password:latest'*) ;; *) echo 'FAIL: job secrets'; exit 1 ;; esac
+  want_seed=false; [ "$MODE" != demo ] || want_seed=true
+  case "$job" in *"SEED_DEMO_DATA=${want_seed}"*) ;; *) echo "FAIL: job SEED_DEMO_DATA is not ${want_seed}"; exit 1 ;; esac
+  # Service: DATABASE_URL + SESSION_SECRET only; port 3000, min 0, max 2.
+  if [ "$MODE" != job-fail ]; then
+    svc="$(grep '^run deploy slotbook ' "$GCLOUD_LOG")"
+    case "$svc" in *'--set-secrets DATABASE_URL=slotbook-database-url:latest,SESSION_SECRET=slotbook-session-secret:latest '*) ;; *) echo 'FAIL: service secrets'; exit 1 ;; esac
+    case "$svc" in *SEED_PASSWORD*) echo 'FAIL: service can read the seed password'; exit 1 ;; esac
+    case "$svc" in *'--min-instances 0 --max-instances 2 '*'--port 3000 '*) ;; *) echo 'FAIL: service scaling/port'; exit 1 ;; esac
   fi
   case "$MODE" in
     first_run)
-      grep -q -- '--edition=enterprise' "$GCLOUD_LOG"
-      grep -q '^sql users create ' "$GCLOUD_LOG" ;;
+      grep -q -- '^sql instances create slotbook-pg --database-version=POSTGRES_16 --edition=enterprise --tier=db-f1-micro .*--no-storage-auto-increase' "$GCLOUD_LOG"
+      grep -q '^artifacts repositories create slotbook ' "$GCLOUD_LOG"
+      grep -q '^sql users create slotbook ' "$GCLOUD_LOG"
+      [ "$(wc -c < "$TEST_STATE_DIR/payload-slotbook-session-secret" | tr -d ' ')" -eq 48 ] || { echo 'FAIL: session secret is not 48 characters'; exit 1; }
+      [ -s "$TEST_STATE_DIR/payload-slotbook-seed-password" ] || { echo 'FAIL: seed password not created'; exit 1; } ;;
     partial) grep -q '^sql users set-password ' "$GCLOUD_LOG" ;;
     rerun)
       if grep -Eq '^(secrets create|sql users (create|set-password)) ' "$GCLOUD_LOG"; then
@@ -141,9 +156,9 @@ for MODE in first_run rerun partial job-fail demo; do
   esac
   if [ -f "$TEST_STATE_DIR/sql-pass" ]; then
     db_pass="$(cat "$TEST_STATE_DIR/sql-pass")"
-    db_url="$(cat "$TEST_STATE_DIR/payload-toktickit-database-url")"
+    db_url="$(cat "$TEST_STATE_DIR/payload-slotbook-database-url")"
     case "$db_url" in
-      "postgresql://toktickit:${db_pass}@"*) ;;
+      "postgresql://slotbook:${db_pass}@localhost/slotbook?host=/cloudsql/stub-gcp-project:asia-southeast1:slotbook-pg"*) ;;
       *) echo 'FAIL: DB password differs from secret'; exit 1 ;;
     esac
     if grep -Fq "$db_pass" "$TEST_STATE_DIR/output"; then
