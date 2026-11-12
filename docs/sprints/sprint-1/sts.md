@@ -1,6 +1,6 @@
 # Sprint 1 — Software Test Specification (STS)
 
-Version 1.3 (2026-11-11). Each test name in code **starts with its Test ID** (e.g.
+Version 1.4 (2026-11-12). Each test name in code **starts with its Test ID** (e.g.
 `it('API-15: books a bookable slot …')`). Test databases are reset and seeded before each run; time-based
 rules use `freezeClock()` (server) or slots created relative to the real clock (E2E). The "Result" column
 is filled from the real release run (Part F of the Deliverable 1 submission PDF): the clean-clone run of 2026-11-10 at
@@ -21,6 +21,7 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | UNIT-05 | AC-26 | Unit | Bookings BOOKED at +120 min, +119 min; CANCELLED; COMPLETED; NO_SHOW | `canCustomerCancel` | +120 → null; +119 → `CANCELLATION_WINDOW_CLOSED`; CANCELLED/COMPLETED/NO_SHOW → `BOOKING_NOT_ACTIVE` (checked first) | `server/tests/unit/bookingRules.test.ts` | Pass |
 | UNIT-06 | AC-01 | Unit | — | `sessionOptions('production')`, `sessionOptions('development')` from `server/src/config/session.ts` | production: `cookie.secure` true, `cookie.httpOnly` true, `cookie.sameSite` `'lax'`, `cookie.maxAge` 8 h, `rolling` true; development: `cookie.secure` false | `server/tests/unit/sessionConfig.test.ts` | Pass |
 | UNIT-07 | AC-35 | Unit | `NODE_ENV=production` | Start `src/index.ts` as a child process with `SESSION_SECRET` unset, 31 characters, then the `.env.example` placeholder | Exit code 1, stderr "Refusing to start: SESSION_SECRET …", never listens | `server/tests/unit/sessionConfig.test.ts` | Pass (Lab 5, #20) |
+| UNIT-08 | AC-38 | Unit | `NODE_ENV=production`, valid secret, `PORT=0` | Start `src/index.ts` as a child process, wait for "listening", send SIGTERM | Exit code 0 within 5 s (not killed by the signal) | `server/tests/unit/sessionConfig.test.ts` | Pass (Lab 5, #21) |
 
 ## 2. API / Database Integration Tests — `server/tests/api/`, `server/tests/db/`
 
@@ -102,7 +103,7 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | AC-16 | API-14 | AC-32 | DB-02 |
 | AC-33 | API-26 | AC-34 | API-27 |
 | AC-35 | UNIT-07 | AC-36 | DB-03 |
-| AC-37 | DB-04 | | |
+| AC-37 | DB-04 | AC-38 | UNIT-08 |
 
 **Manual checks** (supplement only, recorded in Part F of the Deliverable 1 submission PDF, never replacing a test above): MAN-01 visual
 review of the five screens against `system-sds.md` §3; MAN-02 clean-clone setup following the README.
@@ -124,3 +125,4 @@ file of their Issue. For E2E-07/08, which are cross-cutting, the red step only c
 | 1.1 | 2026-11-07 | Yanis Amrane | UNIT-06 added; UNIT-01/04, API-07/08/18/24, E2E-03/04/06 updated; full paths; TDD file naming; see PR #9. |
 | 1.2 | 2026-11-10 | Simeon Audouit | Decisions by Yanis Amrane for Issue #8: UNIT-04 states that the query excludes the past and the rule ignores non-BOOKED bookings; NO_SHOW added to UNIT-05 and API-23 (already tested); E2E-06 dependency on E2E-05 written down; §6 red step for E2E-07/08; "Result" column filled from the release run. |
 | 1.3 | 2026-11-11 | Yanis Amrane | Lab 5 (Issue #20, NFR-12): UNIT-07, API-26, API-27, DB-03, DB-04 added for AC-33..AC-37 (F-00 1.2); DB-02 precondition names `NODE_ENV=test`. |
+| 1.4 | 2026-11-12 | Yanis Amrane | Lab 5 (Issue #21, NFR-12): UNIT-08 added for AC-38 (graceful shutdown on SIGTERM, F-00 1.3). |

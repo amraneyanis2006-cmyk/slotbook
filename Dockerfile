@@ -12,13 +12,13 @@ FROM node:22-bookworm-slim AS build
 RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-# Dependencies first (cached until a lockfile changes). The schema is needed by the postinstall
-# `prisma generate`, which also downloads the engines that `prisma migrate deploy` uses at run time.
-COPY server/package*.json server/
-COPY server/prisma server/prisma
-RUN npm ci --prefix server
+# Dependencies first (cached until a lockfile or the schema changes). The schema is needed by the
+# postinstall `prisma generate`, which also downloads the engines `prisma migrate deploy` uses at run time.
 COPY client/package*.json client/
 RUN npm ci --prefix client
+COPY server/package*.json server/
+COPY server/prisma/schema.prisma server/prisma/
+RUN npm ci --prefix server
 
 COPY server server
 COPY client client
@@ -43,11 +43,12 @@ COPY --from=build /app/server/src ./src
 COPY --from=build /app/client/dist /app/client/dist
 
 ENV NODE_ENV=production
-# Cloud Run sets PORT; 3000 matches `--port 3000` in deploy/deploy.sh.
+# Cloud Run sets PORT; 3000 is the default and the `--port` of the Cloud Run service (deploy/deploy.sh, #22/#23).
 ENV PORT=3000
 EXPOSE 3000
 
 # Never run as root.
 USER node
-# node is PID 1 and receives Cloud Run's SIGTERM directly (no shell, no entrypoint script).
+# Exec form: the base image's entrypoint execs node, so node is PID 1 and gets Cloud Run's SIGTERM;
+# server/src/index.ts handles it (close, exit 0), because PID 1 has no default action for SIGTERM.
 CMD ["node", "dist/index.js"]

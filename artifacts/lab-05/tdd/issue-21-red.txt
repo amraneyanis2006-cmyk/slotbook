@@ -1,0 +1,41 @@
+# Branch:  build/21-docker
+# Commit:  7f8ad65 (test(F-00): UNIT-08 graceful shutdown on SIGTERM [red] (#21))
+# Date:    2026-11-12 22:46:34 +0700
+# Command: (cd server && npx vitest run --reporter=verbose tests/unit/sessionConfig.test.ts)
+
+
+ RUN  v3.2.7 <repo>/server
+
+ ✓ tests/unit/sessionConfig.test.ts > sessionOptions (F-01) > UNIT-06: production cookie is Secure, HttpOnly, SameSite=Lax, 8 h rolling; development is not Secure 14ms
+ ✓ tests/unit/sessionConfig.test.ts > server startup (F-00, NFR-12) > UNIT-07: in production the server refuses to start (exit 1, clear message) when SESSION_SECRET is missing, shorter than 32 characters or the .env.example placeholder 9674ms
+ × tests/unit/sessionConfig.test.ts > graceful shutdown (F-00, NFR-12) > UNIT-08: on SIGTERM (Cloud Run stop, docker stop) the running server closes and exits 0 instead of waiting for SIGKILL 2807ms
+   → expected null to be +0 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/sessionConfig.test.ts > graceful shutdown (F-00, NFR-12) > UNIT-08: on SIGTERM (Cloud Run stop, docker stop) the running server closes and exits 0 instead of waiting for SIGKILL
+AssertionError: expected null to be +0 // Object.is equality
+
+- Expected: 
+0
+
++ Received: 
+null
+
+ ❯ tests/unit/sessionConfig.test.ts:51:18
+     49|     child.kill('SIGTERM');
+     50|     const code = await new Promise<number | null>((resolve) => child.o…
+     51|     expect(code).toBe(0);
+       |                  ^
+     52|     expect(Date.now() - started).toBeLessThan(5_000);
+     53|   }, 30_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  22:46:41
+   Duration  24.24s (transform 362ms, setup 0ms, collect 101ms, tests 12.50s, environment 1ms, prepare 399ms)
+
+# Exit code: 1
