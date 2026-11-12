@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ==============================================================================
-# TokTickIT — Idempotent Google Cloud Run Deployment Script
+# SlotBook — Idempotent Google Cloud Run Deployment Script (adapted from the Lab 5 starter kit)
 # ==============================================================================
 # Usage:
 #   ./deploy/deploy.sh [--demo]
@@ -15,8 +15,10 @@ set -euo pipefail
 # WHAT THIS SCRIPT DOES  (one-time / manual first setup; safe to re-run)
 #   Creates every cloud resource the app needs and does the first deployment:
 #   1 enable APIs     2 Artifact Registry  3 Cloud SQL instance  4 database
-#   5 runtime SA+IAM  6 DB user + secret   7 admin password      8 demo password
+#   5 runtime SA+IAM  6 DB user + secret   7 session secret      8 seed password
 #   (secret access)   9 build image        10 migrate+seed job   11 Cloud Run service
+#   --demo sets SEED_DEMO_DATA=true on the job: the seed then creates the demo accounts
+#   (insert-only in production, F-00 §2). Without it the job only migrates.
 #   After this, routine releases are done by GitHub Actions (deploy.yml ->
 #   deploy/release.sh), which only UPDATES these resources.
 #
@@ -36,11 +38,10 @@ set -euo pipefail
 #   - Secret Manager    : https://cloud.google.com/secret-manager/docs
 #   - Artifact Registry : https://cloud.google.com/artifact-registry/docs/docker
 #
-# ⭐ CHANGE ME — groups using another tech stack must review (marked below):
-#   # CHANGE ME: resource names (REPO_NAME, SQL_INSTANCE, SERVICE_NAME, ...)
-#   # CHANGE ME: database engine/version (steps 3, 4, 6)
-#   # CHANGE ME: migrate/seed command of the Cloud Run job (step 10)
-#   # CHANGE ME: port / memory / scaling flags (step 11)
+# ⭐ SLOTBOOK CHANGES vs the kit: RULES 5 names (slotbook*), secrets
+#   slotbook-session-secret + slotbook-seed-password instead of admin/demo
+#   passwords, storage auto-increase off, job runs `npm run db:seed`, the service
+#   reads DATABASE_URL + SESSION_SECRET only, max 2 instances.
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -100,33 +101,27 @@ fi
 
 # ------------------------------------------------------------------------------
 # Resource names
-# ⚠️ The lab guide refers to these names (toktickit, toktickit-pg,
-#    toktickit-runner, ...) and deploy.yml / release.sh / teardown.sh use the
-#    same ones. Keep them unless the guide says otherwise.
-# CHANGE ME: rename only if your group uses its own naming (then rename it in
-#            deploy.yml, release.sh, teardown.sh and the tests too).
+# SlotBook names (RULES 5); release.sh, teardown.sh, deploy.yml and the tests
+# use the same ones.
 # ------------------------------------------------------------------------------
-REPO_NAME="toktickit"
-SQL_INSTANCE="toktickit-pg"
-DB_NAME="toktickit"
-DB_USER="toktickit"
-SERVICE_NAME="toktickit"
-MIGRATE_JOB_NAME="toktickit-migrate"
-SA_NAME="toktickit-runner"
+REPO_NAME="slotbook"
+SQL_INSTANCE="slotbook-pg"
+DB_NAME="slotbook"
+DB_USER="slotbook"
+SERVICE_NAME="slotbook"
+MIGRATE_JOB_NAME="slotbook-migrate"
+SA_NAME="slotbook-runner"
 SA_EMAIL="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 SQL_CONN_NAME="${PROJECT_ID}:${REGION}:${SQL_INSTANCE}"
 IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${SERVICE_NAME}:latest"
 
 # Secret Manager secret names (values are never stored in this repo).
-SECRET_DB_URL="toktickit-database-url"
-SECRET_ADMIN_PASS="toktickit-admin-password"
-SECRET_DEMO_PASS="toktickit-demo-password"
-
-GENERATED_ADMIN_PASSWORD=""
-GENERATED_DEMO_PASSWORD=""
+SECRET_DB_URL="slotbook-database-url"
+SECRET_SESSION="slotbook-session-secret"
+SECRET_SEED_PASS="slotbook-seed-password"
 
 echo "=================================================================="
-echo "TokTickIT Cloud Run Deployment"
+echo "SlotBook Cloud Run Deployment"
 echo "Project : ${PROJECT_ID}"
 echo "Region  : ${REGION}"
 echo "Demo    : ${SEED_DEMO_DATA}"
@@ -151,13 +146,13 @@ run_cmd gcloud services enable \
 # ==============================================================================
 if [ "$DRY_RUN" = "1" ]; then
   run_cmd gcloud artifacts repositories describe "$REPO_NAME" --location "$REGION" --project "$PROJECT_ID"
-  run_cmd gcloud artifacts repositories create "$REPO_NAME" --repository-format=docker --location "$REGION" --description="TokTickIT container repository" --project "$PROJECT_ID"
+  run_cmd gcloud artifacts repositories create "$REPO_NAME" --repository-format=docker --location "$REGION" --description="SlotBook container repository" --project "$PROJECT_ID"
 else
   if ! gcloud artifacts repositories describe "$REPO_NAME" --location "$REGION" --project "$PROJECT_ID" >/dev/null 2>&1; then
     run_cmd gcloud artifacts repositories create "$REPO_NAME" \
       --repository-format=docker \
       --location "$REGION" \
-      --description="TokTickIT container repository" \
+      --description="SlotBook container repository" \
       --project "$PROJECT_ID"
   fi
 fi
@@ -172,7 +167,7 @@ fi
 # ==============================================================================
 if [ "$DRY_RUN" = "1" ]; then
   run_cmd gcloud sql instances describe "$SQL_INSTANCE" --project "$PROJECT_ID"
-  run_cmd gcloud sql instances create "$SQL_INSTANCE" --database-version=POSTGRES_16 --edition=enterprise --tier=db-f1-micro --region="$REGION" --storage-size=10GB --storage-type=SSD --backup-start-time=03:00 --project "$PROJECT_ID"
+  run_cmd gcloud sql instances create "$SQL_INSTANCE" --database-version=POSTGRES_16 --edition=enterprise --tier=db-f1-micro --region="$REGION" --storage-size=10GB --storage-type=SSD --no-storage-auto-increase --backup-start-time=03:00 --project "$PROJECT_ID"
 else
   if ! gcloud sql instances describe "$SQL_INSTANCE" --project "$PROJECT_ID" >/dev/null 2>&1; then
     run_cmd gcloud sql instances create "$SQL_INSTANCE" \
@@ -182,6 +177,7 @@ else
       --region="$REGION" \
       --storage-size=10GB \
       --storage-type=SSD \
+      --no-storage-auto-increase \
       --backup-start-time=03:00 \
       --project "$PROJECT_ID"
   fi
@@ -207,11 +203,11 @@ fi
 # ==============================================================================
 if [ "$DRY_RUN" = "1" ]; then
   run_cmd gcloud iam service-accounts describe "$SA_EMAIL" --project "$PROJECT_ID"
-  run_cmd gcloud iam service-accounts create "$SA_NAME" --display-name="TokTickIT Cloud Run Service Account" --project "$PROJECT_ID"
+  run_cmd gcloud iam service-accounts create "$SA_NAME" --display-name="SlotBook Cloud Run Service Account" --project "$PROJECT_ID"
 else
   if ! gcloud iam service-accounts describe "$SA_EMAIL" --project "$PROJECT_ID" >/dev/null 2>&1; then
     run_cmd gcloud iam service-accounts create "$SA_NAME" \
-      --display-name="TokTickIT Cloud Run Service Account" \
+      --display-name="SlotBook Cloud Run Service Account" \
       --project "$PROJECT_ID"
   fi
 fi
@@ -250,52 +246,44 @@ else
 fi
 
 # ==============================================================================
-# 7. Create ADMIN_PASSWORD in Secret Manager (only if secret does not exist yet)
-#    Read it later with: gcloud secrets versions access latest --secret=<name>
+# 7. SESSION_SECRET in Secret Manager (only if the secret does not exist yet)
+#    48 random hex characters (the server refuses < 32). Read by the service only.
 # ==============================================================================
 if [ "$DRY_RUN" = "1" ]; then
-  run_cmd gcloud secrets describe "$SECRET_ADMIN_PASS" --project "$PROJECT_ID"
-  run_cmd gcloud secrets create "$SECRET_ADMIN_PASS" --replication-policy="automatic" --project "$PROJECT_ID"
-  run_cmd gcloud secrets versions add "$SECRET_ADMIN_PASS" --data-file=- --project "$PROJECT_ID"
+  run_cmd gcloud secrets describe "$SECRET_SESSION" --project "$PROJECT_ID"
+  run_cmd gcloud secrets create "$SECRET_SESSION" --replication-policy="automatic" --project "$PROJECT_ID"
+  run_cmd gcloud secrets versions add "$SECRET_SESSION" --data-file=- --project "$PROJECT_ID"
 else
-  if ! gcloud secrets describe "$SECRET_ADMIN_PASS" --project "$PROJECT_ID" >/dev/null 2>&1; then
-    GENERATED_ADMIN_PASSWORD="$(openssl rand -base64 16 | tr -d '/+=' | cut -c1-14)Aa1!"
-    run_cmd gcloud secrets create "$SECRET_ADMIN_PASS" --replication-policy="automatic" --project "$PROJECT_ID"
-    printf "%s" "$GENERATED_ADMIN_PASSWORD" | gcloud secrets versions add "$SECRET_ADMIN_PASS" --data-file=- --project "$PROJECT_ID"
+  if ! gcloud secrets describe "$SECRET_SESSION" --project "$PROJECT_ID" >/dev/null 2>&1; then
+    run_cmd gcloud secrets create "$SECRET_SESSION" --replication-policy="automatic" --project "$PROJECT_ID"
+    printf "%s" "$(openssl rand -hex 24)" | gcloud secrets versions add "$SECRET_SESSION" --data-file=- --project "$PROJECT_ID"
   fi
 fi
 
 # ==============================================================================
-# 8. Optional Demo Password in Secret Manager when --demo is passed
-#    Only used to seed demo users (./deploy/deploy.sh --demo).
+# 8. SEED_PASSWORD in Secret Manager (only if the secret does not exist yet)
+#    Password of every demo account. Only the migration job reads it.
+#    Read it later with: gcloud secrets versions access latest --secret=slotbook-seed-password
 # ==============================================================================
-JOB_SECRETS="DATABASE_URL=${SECRET_DB_URL}:latest,ADMIN_PASSWORD=${SECRET_ADMIN_PASS}:latest"
-if [ "$SEED_DEMO_DATA" = "true" ]; then
-  if [ "$DRY_RUN" = "1" ]; then
-    run_cmd gcloud secrets describe "$SECRET_DEMO_PASS" --project "$PROJECT_ID"
-    run_cmd gcloud secrets create "$SECRET_DEMO_PASS" --replication-policy="automatic" --project "$PROJECT_ID"
-    run_cmd gcloud secrets versions add "$SECRET_DEMO_PASS" --data-file=- --project "$PROJECT_ID"
-  else
-    if ! gcloud secrets describe "$SECRET_DEMO_PASS" --project "$PROJECT_ID" >/dev/null 2>&1; then
-      GENERATED_DEMO_PASSWORD="$(openssl rand -base64 16 | tr -d '/+=' | cut -c1-14)Dd1!"
-      run_cmd gcloud secrets create "$SECRET_DEMO_PASS" --replication-policy="automatic" --project "$PROJECT_ID"
-      printf "%s" "$GENERATED_DEMO_PASSWORD" | gcloud secrets versions add "$SECRET_DEMO_PASS" --data-file=- --project "$PROJECT_ID"
-    fi
+if [ "$DRY_RUN" = "1" ]; then
+  run_cmd gcloud secrets describe "$SECRET_SEED_PASS" --project "$PROJECT_ID"
+  run_cmd gcloud secrets create "$SECRET_SEED_PASS" --replication-policy="automatic" --project "$PROJECT_ID"
+  run_cmd gcloud secrets versions add "$SECRET_SEED_PASS" --data-file=- --project "$PROJECT_ID"
+else
+  if ! gcloud secrets describe "$SECRET_SEED_PASS" --project "$PROJECT_ID" >/dev/null 2>&1; then
+    run_cmd gcloud secrets create "$SECRET_SEED_PASS" --replication-policy="automatic" --project "$PROJECT_ID"
+    printf "%s" "$(openssl rand -hex 12)" | gcloud secrets versions add "$SECRET_SEED_PASS" --data-file=- --project "$PROJECT_ID"
   fi
-  JOB_SECRETS="${JOB_SECRETS},DEMO_USER_PASSWORD=${SECRET_DEMO_PASS}:latest"
 fi
 
 # ------------------------------------------------------------------------------
 # Secret access (per secret, NOT project-wide)
 # ⭐ IMPORTANT: test_deploy_stub.sh fails if a project-wide secretAccessor
 #    binding is added — keep access limited to this app's own secrets.
+#    The service and the job both run as slotbook-runner; which secret each one
+#    actually receives is decided by --set-secrets below.
 # ------------------------------------------------------------------------------
-# Grant access only to this app's secrets, after they exist.
-RUNTIME_SECRETS=("$SECRET_DB_URL" "$SECRET_ADMIN_PASS")
-if [ "$SEED_DEMO_DATA" = "true" ]; then
-  RUNTIME_SECRETS+=("$SECRET_DEMO_PASS")
-fi
-for secret in "${RUNTIME_SECRETS[@]}"; do
+for secret in "$SECRET_DB_URL" "$SECRET_SESSION" "$SECRET_SEED_PASS"; do
   run_cmd gcloud secrets add-iam-policy-binding "$secret" \
     --member="serviceAccount:${SA_EMAIL}" \
     --role="roles/secretmanager.secretAccessor" \
@@ -315,19 +303,18 @@ run_cmd gcloud builds submit \
 # 10. Create/Update & Execute Cloud Run Job for Migration + Non-destructive Seed
 #     ⭐ IMPORTANT: if this job fails the script stops BEFORE deploying the
 #        service, so a broken migration never reaches users.
-#     CHANGE ME: `--args` (prisma migrate deploy && npm run prisma:seed) is
-#        Prisma/npm specific — use your stack's migrate/seed command.
-#     deploy.yml / release.sh later re-run this same job (name: toktickit-migrate).
+#     The seed is insert-only in production, so the job is safe on every release.
+#     deploy.yml / release.sh later re-run this same job (name: slotbook-migrate).
 # ==============================================================================
 run_cmd gcloud run jobs deploy "$MIGRATE_JOB_NAME" \
   --image "$IMAGE_URI" \
   --region "$REGION" \
   --service-account "$SA_EMAIL" \
   --set-cloudsql-instances "$SQL_CONN_NAME" \
-  --set-secrets "$JOB_SECRETS" \
-  --set-env-vars "NODE_ENV=production,TZ=Asia/Bangkok,SEED_DEMO_DATA=${SEED_DEMO_DATA}" \
+  --set-secrets "DATABASE_URL=${SECRET_DB_URL}:latest,SEED_PASSWORD=${SECRET_SEED_PASS}:latest" \
+  --set-env-vars "NODE_ENV=production,SEED_DEMO_DATA=${SEED_DEMO_DATA}" \
   --command "sh" \
-  --args "-c,npx prisma migrate deploy && npm run prisma:seed" \
+  --args "-c,npx prisma migrate deploy && npm run db:seed" \
   --max-retries 1 \
   --task-timeout 300s \
   --project "$PROJECT_ID"
@@ -344,8 +331,7 @@ fi
 
 # ==============================================================================
 # 11. Deploy Cloud Run Service
-#     CHANGE ME: --port must equal the port in the Dockerfile (3000); tune
-#                --memory / --cpu / --max-instances for your app.
+#     --port equals the Dockerfile PORT (3000); min 0 / max 2 keeps the cost low.
 #     ⚠️ --allow-unauthenticated makes the service public (needed for the demo).
 # ==============================================================================
 run_cmd gcloud run deploy "$SERVICE_NAME" \
@@ -355,10 +341,10 @@ run_cmd gcloud run deploy "$SERVICE_NAME" \
   --allow-unauthenticated \
   --service-account "$SA_EMAIL" \
   --add-cloudsql-instances "$SQL_CONN_NAME" \
-  --set-secrets "DATABASE_URL=${SECRET_DB_URL}:latest" \
-  --set-env-vars "NODE_ENV=production,TZ=Asia/Bangkok" \
+  --set-secrets "DATABASE_URL=${SECRET_DB_URL}:latest,SESSION_SECRET=${SECRET_SESSION}:latest" \
+  --set-env-vars "NODE_ENV=production" \
   --min-instances 0 \
-  --max-instances 3 \
+  --max-instances 2 \
   --memory 512Mi \
   --cpu 1 \
   --port 3000 \
@@ -379,9 +365,7 @@ printf '%s\n' "Deployment Completed!"
 printf '%s\n' "Service URL    : ${SERVICE_URL}"
 printf '%s\n' "Health Check   : ${SERVICE_URL}/api/health"
 printf '%s\n' "Readiness Check: ${SERVICE_URL}/api/ready"
-printf '%s\n' "Admin Email    : john.smith@example.com (mustChangePassword: true)"
-printf '%s\n' "Admin Password : Stored in Secret Manager: ${SECRET_ADMIN_PASS} (not printed)."
 if [ "$SEED_DEMO_DATA" = "true" ]; then
-  printf '%s\n' "Demo Password  : Stored in Secret Manager: ${SECRET_DEMO_PASS} (not printed)."
+  printf '%s\n' "Demo accounts  : *@slotbook.test (see README); password in Secret Manager: ${SECRET_SEED_PASS} (not printed)."
 fi
 printf '%s\n' "=================================================================="
