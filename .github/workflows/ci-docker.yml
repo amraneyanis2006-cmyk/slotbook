@@ -1,0 +1,160 @@
+# SlotBook CI (Lab 5, R-05/R-06). Adapted from the starter kit's ci-docker.yml.
+#   - On every pull request into staging or main: deploy-script tests, migrate + seed the test
+#     database, server tests, client tests, build, and the production Docker build (not pushed).
+#   - workflow_call: deploy.yml (Issue #25) reuses this workflow so a deploy starts only after it passes.
+# ⚠️ The job id `test-and-docker` is the REQUIRED status check in the rulesets (Issue #24): do not rename it.
+# Every value below is a throw-away CI value for a temporary database, not a real secret.
+name: CI & Docker Build
+
+on:
+  workflow_call:
+  pull_request:
+    branches: [staging, main]
+
+# Least privilege: read the repository only.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# `shell: bash` runs steps with -eo pipefail, so `| tee` never hides a failing command.
+defaults:
+  run:
+    shell: bash
+
+env:
+  DATABASE_URL: postgresql://slotbook:ci-only-password@localhost:5432/slotbook
+  DATABASE_URL_TEST: postgresql://slotbook:ci-only-password@localhost:5432/slotbook_test
+  SESSION_SECRET: ci-only-session-secret-0123456789abcdef
+  SEED_PASSWORD: ci-only-seed-password
+
+jobs:
+  test-and-docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: slotbook
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: slotbook
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      # Third-party actions pinned to full commit SHAs (kit); Dependabot proposes updates.
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+
+      # Python only runs the offline smoke-test unit tests.
+      - name: Setup Python 3.14
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+
+      - name: Check deployment scripts without accessing GCP
+        run: |
+          mkdir -p ci-output
+          {
+            bash -n deploy/deploy.sh deploy/teardown.sh deploy/release.sh
+            bash deploy/tests/test_deploy_stub.sh
+            bash deploy/tests/test_release_stub.sh
+            python3 -m unittest discover -v -s deploy/tests -p 'test_smoke.py'
+          } 2>&1 | tee ci-output/deploy-scripts.txt
+
+      # The npm scripts read ../.env with node --env-file; the env above wins over its placeholders.
+      - name: Install dependencies
+        run: |
+          cp .env.example .env
+          npm run install:all
+
+      - name: Migrate and seed the test database
+        working-directory: server
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL_TEST }}
+        run: npx prisma migrate deploy && npm run db:seed
+
+      - name: Server tests (Vitest + Supertest + PostgreSQL)
+        working-directory: server
+        run: npx vitest run 2>&1 | tee ../ci-output/server-tests.txt
+
+      - name: Client tests (Vitest + jsdom)
+        working-directory: client
+        run: npx vitest run 2>&1 | tee ../ci-output/client-tests.txt
+
+      - name: Build server and client
+        run: npm run build 2>&1 | tee ci-output/build.txt
+
+      - name: Build the production Docker image (not pushed)
+        run: docker build -t "slotbook:${{ github.sha }}" . 2>&1 | tee ci-output/docker-build.txt
+
+      - name: Upload test outputs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ci-output
+          path: ci-output/
+          if-no-files-found: ignore
+
+  # Optional (not a required check): Playwright end-to-end tests against the dev servers.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: slotbook
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: slotbook
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+
+      - name: Install dependencies and the Playwright browser
+        run: |
+          cp .env.example .env
+          npm run install:all
+          npx playwright install --with-deps chromium
+
+      - name: Playwright tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
