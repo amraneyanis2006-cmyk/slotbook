@@ -1,6 +1,6 @@
 # Branch:  build/21-docker
-# Commit:  167bb0c (build(docker): single production image, .dockerignore, docker-compose with migrate/seed job (#21))
-# Date:    2026-11-12 22:18:44 +0700
+# Commit:  5960622 (fix(docker): pre-PR review: graceful SIGTERM (UNIT-08), **/.env* ignored, explicit compose vars + healthcheck, cache order, docs and history (#21))
+# Date:    2026-11-12 23:00:19 +0700
 # Command: (npx playwright test --reporter=line)
 
 
@@ -15,5 +15,5 @@ Running 9 tests using 1 worker
 [7/9] e2e/staff-slots.spec.ts:10:1 › E2E-03: Mali publishes a slot on My Slots and sees it listed; an overlapping slot shows the overlap message
 [8/9] e2e/responsive-a11y.spec.ts:33:1 › E2E-07: /login, /book, /bookings, /staff/slots and /staff/schedule have no horizontal scroll or clipped control at 320, 768 and 1280 px
 [9/9] e2e/responsive-a11y.spec.ts:73:1 › E2E-08: Ken logs in and books a slot with Tab/Shift+Tab/Enter/Esc only, with a visible focus ring
-  9 passed (2.3m)
+  9 passed (2.5m)
 # Exit code: 0

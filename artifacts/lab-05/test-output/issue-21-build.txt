@@ -1,6 +1,6 @@
 # Branch:  build/21-docker
-# Commit:  167bb0c (build(docker): single production image, .dockerignore, docker-compose with migrate/seed job (#21))
-# Date:    2026-11-12 22:17:39 +0700
+# Commit:  5960622 (fix(docker): pre-PR review: graceful SIGTERM (UNIT-08), **/.env* ignored, explicit compose vars + healthcheck, cache order, docs and history (#21))
+# Date:    2026-11-12 22:59:46 +0700
 # Command: (npm run build)
 
 
@@ -23,5 +23,5 @@ computing gzip size...
 dist/index.html                   0.39 kB │ gzip:  0.27 kB
 dist/assets/index-C1ew9YAK.css    6.44 kB │ gzip:  1.86 kB
 dist/assets/index-UB9fol61.js   189.24 kB │ gzip: 60.64 kB
-✓ built in 5.55s
+✓ built in 4.72s
 # Exit code: 0
