@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.3 (2026-11-12, Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.4 (2026-11-12, Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -62,7 +62,12 @@ so logging in needs HTTPS or a proxy that sets `X-Forwarded-Proto: https` (Cloud
 
 ## 4. GCP project and resources
 
-Project ID and the first deployment: *to be filled in Issues #19 and #23*. Region `asia-southeast1`. Every name below
+**Project (Issue #19, guide Episode 1):** project ID `cpe334-slotbook-y` (name "CPE334 SlotBook"), region
+`asia-southeast1` for every resource, linked to the GCP Free Trial billing account (USD 300 credit, until
+11 Feb 2027). Budget **`CPE334-Alert`**: alerts only (no spending cap), 1,700 THB ≈ USD 50, 12 Nov – 15 Dec 2026,
+this project only, e-mail alerts at 10 / 20 / 50 / 90 % of **actual** cost. The teammate has the basic role
+**Writer** (`roles/writer`, the new name of the basic role Editor); the project owner keeps Owner. Evidence:
+`artifacts/lab-05/screenshots/issue-19/`. The first deployment is *to be filled in Issue #23*. Every name below
 is set once in `deploy/deploy.sh` and reused by `deploy/release.sh`, `deploy/teardown.sh` and the offline tests.
 `deploy/deploy.sh` creates billing-relevant resources, IAM bindings, Cloud SQL and secrets, so **a human runs it from
 Cloud Shell** (Issue #23), first with `DRY_RUN=1`; the coding agent never runs it.
