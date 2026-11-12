@@ -98,6 +98,8 @@ run_cmd gcloud artifacts repositories delete "$REPO_NAME" --location "$REGION" -
 run_cmd gcloud secrets delete "$SECRET_DB_URL" --project "$PROJECT_ID" --quiet || true
 run_cmd gcloud secrets delete "$SECRET_SESSION" --project "$PROJECT_ID" --quiet || true
 run_cmd gcloud secrets delete "$SECRET_SEED_PASS" --project "$PROJECT_ID" --quiet || true
+# Remove the project-level binding first, so no "deleted:serviceAccount:" member is left in the IAM policy.
+run_cmd gcloud projects remove-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA_EMAIL}" --role="roles/cloudsql.client" --condition=None --quiet || true
 run_cmd gcloud iam service-accounts delete "$SA_EMAIL" --project "$PROJECT_ID" --quiet || true
 
 echo "Teardown completed."

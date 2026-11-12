@@ -71,7 +71,7 @@ jobs:
         run: |
           mkdir -p ci-output
           {
-            bash -n deploy/deploy.sh deploy/teardown.sh deploy/release.sh
+            for f in deploy/deploy.sh deploy/teardown.sh deploy/release.sh; do bash -n "$f"; done
             bash deploy/tests/test_deploy_stub.sh
             bash deploy/tests/test_release_stub.sh
             python3 -m unittest discover -v -s deploy/tests -p 'test_smoke.py'
@@ -112,7 +112,9 @@ jobs:
           if-no-files-found: ignore
 
   # Optional (not a required check): Playwright end-to-end tests against the dev servers.
+  # Pull requests only: when deploy.yml calls this workflow, e2e must not gate (or slow down) the deploy.
   e2e:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:

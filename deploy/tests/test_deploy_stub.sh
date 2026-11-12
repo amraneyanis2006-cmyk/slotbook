@@ -12,7 +12,7 @@
 #   It also checks: Cloud SQL POSTGRES_16 / db-f1-micro / `--edition=enterprise` /
 #   storage auto-increase off, no project-wide secretAccessor role, DB password ==
 #   password inside DATABASE_URL, a 48-character session secret, the service gets
-#   DATABASE_URL + SESSION_SECRET only (never SEED_PASSWORD), the migration job gets
+#   DATABASE_URL + SESSION_SECRET mounted (never SEED_PASSWORD), the migration job gets
 #   DATABASE_URL + SEED_PASSWORD and runs migrate deploy + db:seed, port 3000,
 #   min 0 / max 2 instances, and that no secret value leaks into the output.
 #   Finally DRY_RUN=1 must make zero gcloud calls.
@@ -23,6 +23,7 @@
 #
 # SlotBook names (RULES 5): secrets slotbook-database-url, slotbook-session-secret,
 # slotbook-seed-password; DB user slotbook; service slotbook; job slotbook-migrate.
+# Also runs deploy/teardown.sh with DRY_RUN=1 (no gcloud call).
 # ==============================================================================
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

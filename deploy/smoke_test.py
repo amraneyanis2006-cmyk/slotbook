@@ -84,8 +84,12 @@ def check(base):
     except (urllib.error.URLError, TimeoutError, ValueError, KeyError):
         raise RuntimeError('Login smoke check failed') from None
     finally:
-        request(base, '/api/auth/logout', data={}, opener=opener)
-        print('PASS logout')
+        # Always end the session, without hiding an error raised above.
+        try:
+            status, _ = request(base, '/api/auth/logout', data={}, opener=opener)
+            print('PASS logout' if status == 204 else 'WARN logout returned %d' % status)
+        except (urllib.error.URLError, TimeoutError):
+            print('WARN logout failed')
 
 
 if __name__ == '__main__':
