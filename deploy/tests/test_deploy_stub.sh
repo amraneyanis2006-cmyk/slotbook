@@ -134,6 +134,7 @@ for MODE in first_run rerun partial job-fail demo; do
   case "$job" in *'DATABASE_URL=slotbook-database-url:latest'*'SEED_PASSWORD=slotbook-seed-password:latest'*) ;; *) echo 'FAIL: job secrets'; exit 1 ;; esac
   want_seed=false; [ "$MODE" != demo ] || want_seed=true
   case "$job" in *"SEED_DEMO_DATA=${want_seed}"*) ;; *) echo "FAIL: job SEED_DEMO_DATA is not ${want_seed}"; exit 1 ;; esac
+  grep -q '^run jobs execute slotbook-migrate .*--wait' "$GCLOUD_LOG" || { echo 'FAIL: migration job not awaited'; exit 1; }
   # Service: DATABASE_URL + SESSION_SECRET only; port 3000, min 0, max 2.
   if [ "$MODE" != job-fail ]; then
     svc="$(grep '^run deploy slotbook ' "$GCLOUD_LOG")"
@@ -150,7 +151,7 @@ for MODE in first_run rerun partial job-fail demo; do
       [ -s "$TEST_STATE_DIR/payload-slotbook-seed-password" ] || { echo 'FAIL: seed password not created'; exit 1; } ;;
     partial) grep -q '^sql users set-password ' "$GCLOUD_LOG" ;;
     rerun)
-      if grep -Eq '^(secrets create|sql users (create|set-password)) ' "$GCLOUD_LOG"; then
+      if grep -Eq '^(secrets create|secrets versions add|sql users (create|set-password)) ' "$GCLOUD_LOG"; then
         echo 'FAIL: rerun replaced existing credentials'; exit 1
       fi ;;
   esac
@@ -181,3 +182,17 @@ if [ -f "$GCLOUD_LOG" ]; then
   echo 'FAIL: dry run called gcloud'; exit 1
 fi
 echo 'PASS: dry run makes no gcloud calls'
+
+# --- Teardown dry run: no gcloud call, every SlotBook resource listed, IAM binding removed before the SA ---
+export GCLOUD_LOG="$TEST_STATE_DIR/teardown-calls"
+DRY_RUN=1 bash "${SCRIPT_DIR}/../teardown.sh" > "$TEST_STATE_DIR/teardown-output"
+if [ -f "$GCLOUD_LOG" ]; then echo 'FAIL: teardown dry run called gcloud'; exit 1; fi
+for secret in slotbook-database-url slotbook-session-secret slotbook-seed-password; do
+  grep -q "secrets delete $secret " "$TEST_STATE_DIR/teardown-output" || { echo "FAIL: teardown keeps $secret"; exit 1; }
+done
+binding=$(grep -n 'remove-iam-policy-binding .*roles/cloudsql.client' "$TEST_STATE_DIR/teardown-output" | cut -d: -f1)
+sa=$(grep -n 'service-accounts delete slotbook-runner@' "$TEST_STATE_DIR/teardown-output" | cut -d: -f1)
+if [ -z "$binding" ] || [ -z "$sa" ] || [ "$binding" -gt "$sa" ]; then
+  echo 'FAIL: teardown must remove the cloudsql.client binding before deleting the service account'; exit 1
+fi
+echo 'PASS: teardown dry run (no gcloud calls, all resources, binding removed before the service account)'
