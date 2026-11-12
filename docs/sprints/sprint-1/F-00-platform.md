@@ -5,7 +5,7 @@
 | Linked requirements | NFR-07 (reproducible setup), NFR-10 (UTC storage), NFR-12 (deployable design), NFR-06 (safe errors — handler skeleton) |
 | Issue / owner / reviewer | Issue #2 — Yanis Amrane (author), Simeon Audouit (reviewer) |
 | Depends on | Contract PR (Issue #1) |
-| Contract version | 1.2 (2026-11-11, Lab 5 Issue #20: §2 seed in production, §3 `/api/ready` and production serving, §6 AC-33..AC-37, §7) |
+| Contract version | 1.3 (2026-11-12, Lab 5 Issue #21: §3 graceful shutdown, §6 AC-38; 1.2 2026-11-11, Lab 5 Issue #20: §2 seed in production, §3 `/api/ready` and production serving, §6 AC-33..AC-37, §7) |
 
 ## 1. Behavior and Workflow
 
@@ -62,7 +62,8 @@ bookings (DB-02). Tests that need a slot starting within the next hour create it
 Secure cookie is set); Express serves the built SPA from `CLIENT_DIST` (default `client/dist` of the repository) and
 returns `index.html` for every non-`/api` GET route; unknown `/api` routes stay the JSON 404. The server refuses to
 start (message on stderr, exit 1) when `SESSION_SECRET` is missing, or in production shorter than 32 characters or
-still the `.env.example` placeholder (`change-me…`).
+still the `.env.example` placeholder (`change-me…`). On SIGTERM (Cloud Run stop, `docker stop`) it closes the
+server and exits 0.
 
 Also provided as skeleton for every later feature: `app.ts` (JSON body limit 100 kB, session middleware,
 routes, 404 JSON handler, error handler that maps `AppError(status, code, message, fields?)` and hides
@@ -95,6 +96,7 @@ No domain screen.
 | AC-35 | In production the server exits with code 1 and a clear message, without listening, when `SESSION_SECRET` is missing, shorter than 32 characters or the `.env.example` placeholder. |
 | AC-36 | In production the seed writes nothing unless `SEED_DEMO_DATA=true` and `SEED_PASSWORD` is set; with both it seeds; the password is never printed. |
 | AC-37 | In production a rerun of the seed is insert-only: it changes no existing user, service, slot or booking (a changed password hash, a closed slot and a UAT booking stay as they are) and creates no booking when the database already has slots. |
+| AC-38 | On SIGTERM the running server closes and exits with code 0 within seconds (it is PID 1 in the container, where SIGTERM has no default action). |
 
 ## 7. Failure / Boundary Cases
 

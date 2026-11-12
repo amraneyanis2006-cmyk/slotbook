@@ -96,6 +96,7 @@ commit them only when you mean to replace the evidence, otherwise restore them w
 | :--- | :--- |
 | `npm run db:generate` | Regenerate the Prisma client in `server/` (after a change to `schema.prisma`) |
 | `npm run build` | Compile the server (`server/dist`) and build the client (`client/dist`) |
+| `docker compose up --build -d` | Production-like run in Docker (PostgreSQL 16, migrate + seed, app on `localhost:3000`); see [`deployment.md` §5](docs/labs/lab-05/deployment.md) |
 | `npm run db:migrate:dev` | Create a new migration from `server/prisma/schema.prisma` (development) |
 | `npm run db:reset` | Drop, re-migrate and re-seed the development database |
 | `npm run demo:readback -- <reference>` | Print one booking joined with its slot, service, staff and customer, straight from PostgreSQL (`DATABASE_URL`) |

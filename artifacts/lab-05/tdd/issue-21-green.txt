@@ -1,0 +1,18 @@
+# Branch:  build/21-docker
+# Commit:  5960622 (fix(docker): pre-PR review: graceful SIGTERM (UNIT-08), **/.env* ignored, explicit compose vars + healthcheck, cache order, docs and history (#21))
+# Date:    2026-11-12 22:56:48 +0700
+# Command: (cd server && npx vitest run --reporter=verbose tests/unit/sessionConfig.test.ts)
+
+
+ RUN  v3.2.7 <repo>/server
+
+ ✓ tests/unit/sessionConfig.test.ts > sessionOptions (F-01) > UNIT-06: production cookie is Secure, HttpOnly, SameSite=Lax, 8 h rolling; development is not Secure 11ms
+ ✓ tests/unit/sessionConfig.test.ts > server startup (F-00, NFR-12) > UNIT-07: in production the server refuses to start (exit 1, clear message) when SESSION_SECRET is missing, shorter than 32 characters or the .env.example placeholder 9663ms
+ ✓ tests/unit/sessionConfig.test.ts > graceful shutdown (F-00, NFR-12) > UNIT-08: on SIGTERM (Cloud Run stop, docker stop) the running server closes and exits 0 instead of waiting for SIGKILL 3173ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  22:56:57
+   Duration  23.63s (transform 368ms, setup 0ms, collect 98ms, tests 12.86s, environment 1ms, prepare 357ms)
+
+# Exit code: 0

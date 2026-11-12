@@ -1,0 +1,101 @@
+# Branch:  build/21-docker
+# Commit:  167bb0c (build(docker): single production image, .dockerignore, docker-compose with migrate/seed job (#21))
+# Date:    2026-11-12 22:16:16 +0700
+# Command: (cd client && npx vitest run)
+
+
+ RUN  v3.2.7 <repo>/client
+
+stderr | tests/BookSlotPage.test.tsx > BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ tests/BookSlotPage.test.tsx (2 tests | 1 failed) 8515ms
+   × BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state 6729ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ✓ BookSlotPage (F-04) > UI-03: a failed load shows the error callout with Retry  1778ms
+stderr | tests/MyBookingsPage.test.tsx > MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+stderr | tests/LoginPage.test.tsx > LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ tests/LoginPage.test.tsx (1 test | 1 failed) 8067ms
+   × LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home 8048ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/MySlotsPage.test.tsx (1 test | 1 failed) 8036ms
+   × MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list 8028ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/MyBookingsPage.test.tsx (3 tests | 1 failed) 12256ms
+   × MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled 8537ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04: a refused cancel (409) closes the dialog, shows the server message on the page, focuses the heading and reloads the status  2944ms
+   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04: empty list, load error with Retry, and "Booking not found." for a foreign reference  768ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/BookSlotPage.test.tsx > BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/BookSlotPage.test.tsx:20:3
+     18| 
+     19| describe('BookSlotPage (F-04)', () => {
+     20|   it('UI-03: dialog with focus trap and Esc, busy confirm, reference o…
+       |   ^
+     21|     const listUrls: string[] = [];
+     22|     let releaseBooking: (r: Response) => void = () => {};
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/LoginPage.test.tsx > LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/LoginPage.test.tsx:26:3
+     24| 
+     25| describe('LoginPage (F-01)', () => {
+     26|   it('UI-01: labelled form, busy button, 401 keeps e-mail and clears p…
+       |   ^
+     27|     let finishLogin: (r: Response) => void = () => {};
+     28|     const fetchMock = vi.fn((url: string) => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/MyBookingsPage.test.tsx > MyBookingsPage / BookingDetailPage (F-05) > UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/MyBookingsPage.test.tsx:39:3
+     37| 
+     38| describe('MyBookingsPage / BookingDetailPage (F-05)', () => {
+     39|   it('UI-04: two sections with badges; Cancel only for the cancellable…
+       |   ^
+     40|     let cancelled = false;
+     41|     const cancelCalls: string[] = [];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/MySlotsPage.test.tsx > MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/MySlotsPage.test.tsx:17:3
+     15| 
+     16| describe('MySlotsPage (F-03)', () => {
+     17|   it('UI-02: skeleton while loading, empty state, field error under St…
+       |   ^
+     18|     let releaseFirstList: (r: Response) => void = () => {};
+     19|     let listCalls = 0;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  4 failed | 3 passed (7)
+   Start at  22:16:25
+   Duration  63.49s (transform 2.19s, setup 37.66s, collect 16.15s, tests 36.87s, environment 78.42s, prepare 46.43s)
+
+# Exit code: 1
