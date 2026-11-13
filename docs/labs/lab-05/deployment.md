@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.7 (2026-11-13, Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.8 (2026-11-13, Issue #24: Workload Identity and merge gate in §11; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -83,7 +83,7 @@ Cloud Shell** (Issue #23), first with `DRY_RUN=1`; the coding agent never runs i
 | Secret `slotbook-seed-password` | `SEED_PASSWORD` | step 8 | password of the demo accounts; mounted in the migration job only (`--set-secrets`). The service and the job share `slotbook-runner`, which can read all three secrets |
 | Cloud Run job | `slotbook-migrate` | step 10 | `sh -c "npx prisma migrate deploy && npm run db:seed"`, `NODE_ENV=production`, `SEED_DEMO_DATA=true` with `--demo`; runs before every service update |
 | Cloud Run service | `slotbook` | step 11 | public, `--port 3000`, min 0 / max 2 instances, 512 MiB, `NODE_ENV=production` |
-| Deployer service account | `slotbook-deployer` | Issue #24 (Workload Identity) | used by GitHub Actions only; no JSON key |
+| Deployer service account | `slotbook-deployer` | Issue #24 (Workload Identity, §11) | used by GitHub Actions only; no JSON key |
 
 **First deployment (Issue #23, guide Episode 5), 2026-11-13, run by Yanis Amrane (project owner) from Cloud Shell
 in project `cpe334-slotbook-y`; source: fresh clone of `main` at `3845f83` = Lab 5 Release 1 (Merge pull request #32),
@@ -190,7 +190,7 @@ failed (no test database before Playwright's web servers), fixed in PR #30.
 
 ## 7. Release procedure
 
-*To be filled in Issues #24 and #25.*
+*To be filled in Issue #25.* The merge gate and the keyless GitHub → GCP identity it will use are in §11 (Issue #24).
 
 ## 8. How to find the running commit
 
@@ -214,3 +214,72 @@ Settings that keep the cost low (they apply from the first deployment, Issue #23
 
 Cloud SQL is billed for every hour it exists, even when the app is idle: pause it when not needed and tear everything
 down after the course (`deploy/teardown.sh`, guide Episodes 9 and 10; to be documented when used).
+
+## 11. Workload Identity and merge gate
+
+Issue #24, guide Episode 6. The GCP part was run by Yanis Amrane (project owner) in Cloud Shell on 2026-11-13
+(`artifacts/lab-05/deploy/wif-setup.sh`, output `wif-setup.txt`). The GitHub part (environment and rulesets) was set
+with `gh api` by the coding agent at the owner's request. In this file and in the evidence the project number is
+written `<PROJECT_NUMBER>`.
+
+**Deployer service account `slotbook-deployer`** (GitHub Actions only). It has 0 user-managed keys: GitHub gets a
+short-lived token through Workload Identity Federation, so no JSON key exists to leak.
+
+| Role | Granted on | Why |
+| :--- | :--- | :--- |
+| `roles/run.developer` | project `cpe334-slotbook-y` | deploy new revisions of the `slotbook` service and update/execute the `slotbook-migrate` job; it cannot change IAM. Project-wide, so it could deploy any Cloud Run service in this project (the project holds only SlotBook) |
+| `roles/artifactregistry.writer` | repository `slotbook` only | push the image built by `deploy.yml`; no access to other repositories |
+| `roles/iam.serviceAccountUser` | service account `slotbook-runner` only | deploy the service and job *as* `slotbook-runner` (the runtime identity that reads the secrets); it cannot act as any other service account |
+
+The deployer has no Secret Manager or Cloud SQL role: the secrets are read at run time by `slotbook-runner`, not by
+the deployer. It also has no Cloud Build role and cannot change the service's IAM policy, so `deploy.yml` (Issue #25)
+builds and pushes the image with `docker` on the runner and does not pass `--allow-unauthenticated` (the service is
+already public since Issue #23), unlike `deploy/deploy.sh`.
+
+**Pool and provider:** pool `github-actions` (global), OIDC provider `github-main`, state ACTIVE, issuer
+`https://token.actions.githubusercontent.com/`, attribute mapping `google.subject=assertion.sub`,
+`attribute.repository_id=assertion.repository_id`. Full name (the value of `WIF_PROVIDER`):
+`projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-actions/providers/github-main`.
+
+**Attribute condition** (Google rejects every token that does not match it):
+
+```
+assertion.repository_id == '1449165803'
+&& assertion.repository_owner_id == '281914725'
+&& assertion.ref == 'refs/heads/main'
+&& assertion.workflow_ref == 'amraneyanis2006-cmyk/slotbook/.github/workflows/deploy.yml@refs/heads/main'
+&& (assertion.sub == 'repo:amraneyanis2006-cmyk@281914725/slotbook@1449165803:environment:demo'
+    || assertion.sub == 'repo:amraneyanis2006-cmyk/slotbook:environment:demo')
+```
+
+- The numeric repository and owner IDs do not change if the repository or account is renamed, so a new repository
+  that reuses the name cannot match.
+- Only `deploy.yml` running on `main` in the `demo` environment can get a token: a pull request, another branch or
+  another workflow cannot.
+- Both subject formats are accepted: GitHub's immutable format (with IDs) and the classic one.
+
+`roles/iam.workloadIdentityUser` on `slotbook-deployer` is granted to
+`principalSet://iam.googleapis.com/projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-actions/attribute.repository_id/1449165803`
+(this repository only).
+
+**GitHub environment `demo`:**
+- Deployment branches: **selected branches, only `main`**.
+- No required reviewer and no wait timer.
+- 4 environment **variables** (not secrets, because none of them is a credential): `GCP_PROJECT_ID`, `GCP_REGION`,
+  `WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT`.
+- No environment secrets.
+
+**Branch rulesets (merge gate, R-06):** `protect-main` (target `main`) and `protect-staging` (target `staging`), both
+**Active** with an **empty bypass list**, so they apply to the repository admin too.
+
+| Rule | Setting |
+| :--- | :--- |
+| Restrict deletions | on |
+| Block force pushes | on |
+| Require a pull request before merging | 1 required approval; merge commit, squash and rebase allowed (the team uses merge commits); GitHub's default `require_extra_approval_for_unattributed_changes: true` kept |
+| Require status checks to pass | required check **`test-and-docker`** from GitHub Actions (integration id 15368), "Require branches to be up to date before merging" on |
+
+The job id `test-and-docker` in `.github/workflows/ci-docker.yml` must not be renamed: a renamed job would never
+report the required check, and every merge would be blocked. The optional `e2e` job is not required.
+
+*Still to do in Issue #24: C-02, a pull request with a failing test that the gate must block (Simeon Audouit).*

@@ -1,0 +1,33 @@
+# Issue #24 - Workload Identity setup output
+# Run by: Yanis Amrane (project owner), Cloud Shell, project cpe334-slotbook-y, 2026-11-13
+# Command: bash ~/wif.sh 2>&1 | tee ~/wif-setup.txt   (script: artifacts/lab-05/deploy/wif-setup.sh)
+# Redaction: the project number is replaced by <PROJECT_NUMBER>. The hex strings after each IAM update are policy etags.
+# Long lines were wrapped by the Cloud Shell terminal (inside the attribute condition).
+# Exit code: not printed; the script runs with `set -euo pipefail`, so reaching the last line (WIF_DONE) means exit 0.
+$ bash ~/wif.sh 2>&1 | tee ~/wif-setup.txt
+== 6.2 APIs + deployer SA (<PROJECT_NUMBER>)
+Operation "operations/acat.p2-<PROJECT_NUMBER>-70e91fd8-61f4-4624-99a9-e43af97e81d6" finished successfully.
+Created service account [slotbook-deployer].
+Service account email: slotbook-deployer@cpe334-slotbook-y.iam.gserviceaccount.com
+Updated IAM policy for project [cpe334-slotbook-y].
+BwZgIGHqnt0=
+Updated IAM policy for repository [slotbook].
+BwZgIGIL8nk=
+Updated IAM policy for serviceAccount [slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com].
+BwZgIGJMKcg=
+== 6.3 WIF pool + provider
+Created workload identity pool [github-actions].
+Created workload identity pool provider [github-main].
+Updated IAM policy for serviceAccount [slotbook-deployer@cpe334-slotbook-y.iam.gserviceaccount.com].
+BwZgIGMSqjU=
+== CHECK
+projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-actions/providers/github-main       ACTIVE  assertion.repository_id == '1449165803' && assertion.repository_owner_id == '281914725' && assert
+ion.ref == 'refs/heads/main' && assertion.workflow_ref == 'amraneyanis2006-cmyk/slotbook/.github/workflows/deploy.yml@refs/heads/main' && (assertion.sub == 'repo:amraneyanis2006-cmyk@281914725/slotbook@1449165
+803:environment:demo' || assertion.sub == 'repo:amraneyanis2006-cmyk/slotbook:environment:demo')
+deployer keys (user-managed, must be empty):
+Listed 0 items.
+deployer project roles:
+roles/run.developer
+WIF_PROVIDER=projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-actions/providers/github-main
+WIF_SERVICE_ACCOUNT=slotbook-deployer@cpe334-slotbook-y.iam.gserviceaccount.com
+WIF_DONE
