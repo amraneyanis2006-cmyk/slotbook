@@ -6,7 +6,7 @@ Demo    : true
 Dry Run : 0
 ==================================================================
 + gcloud services enable run.googleapis.com sqladmin.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com iam.googleapis.com --project cpe334-slotbook-y 
-Operation "operations/acf.p2-320205618114-a2b47f81-be72-45c9-a7cd-edea0215dca2" finished successfully.
+Operation "operations/acf.p2-<PROJECT_NUMBER>-a2b47f81-be72-45c9-a7cd-edea0215dca2" finished successfully.
 + gcloud artifacts repositories create slotbook --repository-format=docker --location asia-southeast1 --description=SlotBook\ container\ repository --project cpe334-slotbook-y 
 Create request issued for: [slotbook]
 Waiting for operation [projects/cpe334-slotbook-y/locations/asia-southeast1/operations/2d7e20de-a9a1-416b-a930-043dc37784b0] to complete...
@@ -37,31 +37,31 @@ Service account email: slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com
 Updated IAM policy for project [cpe334-slotbook-y].
 bindings:
 - members:
-  - serviceAccount:service-320205618114@gcp-sa-artifactregistry.iam.gserviceaccount.com
+  - serviceAccount:service-<PROJECT_NUMBER>@gcp-sa-artifactregistry.iam.gserviceaccount.com
   role: roles/artifactregistry.serviceAgent
 - members:
-  - serviceAccount:320205618114@cloudbuild.gserviceaccount.com
+  - serviceAccount:<PROJECT_NUMBER>@cloudbuild.gserviceaccount.com
   role: roles/cloudbuild.builds.builder
 - members:
-  - serviceAccount:service-320205618114@gcp-sa-cloudbuild.iam.gserviceaccount.com
+  - serviceAccount:service-<PROJECT_NUMBER>@gcp-sa-cloudbuild.iam.gserviceaccount.com
   role: roles/cloudbuild.serviceAgent
 - members:
   - serviceAccount:slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com
   role: roles/cloudsql.client
 - members:
-  - serviceAccount:service-320205618114@containerregistry.iam.gserviceaccount.com
+  - serviceAccount:service-<PROJECT_NUMBER>@containerregistry.iam.gserviceaccount.com
   role: roles/containerregistry.ServiceAgent
 - members:
-  - serviceAccount:320205618114-compute@developer.gserviceaccount.com
+  - serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com
   role: roles/editor
 - members:
   - user:<owner>
   role: roles/owner
 - members:
-  - serviceAccount:service-320205618114@gcp-sa-pubsub.iam.gserviceaccount.com
+  - serviceAccount:service-<PROJECT_NUMBER>@gcp-sa-pubsub.iam.gserviceaccount.com
   role: roles/pubsub.serviceAgent
 - members:
-  - serviceAccount:service-320205618114@serverless-robot-prod.iam.gserviceaccount.com
+  - serviceAccount:service-<PROJECT_NUMBER>@serverless-robot-prod.iam.gserviceaccount.com
   role: roles/run.serviceAgent
 - members:
   - user:<teammate>
@@ -115,7 +115,7 @@ more).
 
 Uploading tarball of [.] to [gs://cpe334-slotbook-y_cloudbuild/source/1794507277.160318-0ef551cefd5a4589ab420d6c14827239.tgz]
 Created [https://cloudbuild.googleapis.com/v1/projects/cpe334-slotbook-y/locations/global/builds/35520304-a032-47d5-b7e2-465457893033].
-Logs are available at [ https://console.cloud.google.com/cloud-build/builds/35520304-a032-47d5-b7e2-465457893033?project=320205618114 ].
+Logs are available at [ https://console.cloud.google.com/cloud-build/builds/35520304-a032-47d5-b7e2-465457893033?project=<PROJECT_NUMBER> ].
 Waiting for build to complete. Polling interval: 1 second(s).
 ----------------------------------------------------------------------------------------------- REMOTE BUILD OUTPUT -----------------------------------------------------------------------------------------------
 starting build "35520304-a032-47d5-b7e2-465457893033" using release legacy
@@ -443,7 +443,7 @@ Execution [[1mslotbook-migrate-8ccgl[m] has successfully completed.
 View details about this execution by running:
 gcloud run jobs executions describe slotbook-migrate-8ccgl
 
-Or visit https://console.cloud.google.com/run/jobs/executions/details/asia-southeast1/slotbook-migrate-8ccgl?project=320205618114
+Or visit https://console.cloud.google.com/run/jobs/executions/details/asia-southeast1/slotbook-migrate-8ccgl?project=<PROJECT_NUMBER>
 + gcloud run deploy slotbook --image asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook:latest --region asia-southeast1 --platform managed --allow-unauthenticated --service-account slotbook-runner@cpe334-slotbook-y.iam.gserviceaccount.com --add-cloudsql-instances cpe334-slotbook-y:asia-southeast1:slotbook-pg --set-secrets DATABASE_URL=slotbook-database-url:latest\,SESSION_SECRET=slotbook-session-secret:latest --set-env-vars NODE_ENV=production --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --port 3000 --project cpe334-slotbook-y 
 Deploying container to Cloud Run service [[1mslotbook[m] in project [[1mcpe334-slotbook-y[m] region [[1masia-southeast1[m]
 Deploying new service...
@@ -452,7 +452,7 @@ Creating Revision.........................................................done
 Routing traffic.....done
 Done.
 Service [[1mslotbook[m] revision [[1mslotbook-00001-jcd[m] has been deployed and is serving [1m100[m percent of traffic.
-Service URL: [1mhttps://slotbook-320205618114.asia-southeast1.run.app[m
+Service URL: [1mhttps://slotbook-<PROJECT_NUMBER>.asia-southeast1.run.app[m
 
 ==================================================================
 Deployment Completed!
