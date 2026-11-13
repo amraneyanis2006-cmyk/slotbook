@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.7 (2026-11-13, Issue #23: first deployment in §4, cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.7 (2026-11-13, Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -86,7 +86,8 @@ Cloud Shell** (Issue #23), first with `DRY_RUN=1`; the coding agent never runs i
 | Deployer service account | `slotbook-deployer` | Issue #24 (Workload Identity) | used by GitHub Actions only; no JSON key |
 
 **First deployment (Issue #23, guide Episode 5), 2026-11-13, run by Yanis Amrane (project owner) from Cloud Shell
-in project `cpe334-slotbook-y`:**
+in project `cpe334-slotbook-y`; source: fresh clone of `main` at `3845f83` = Lab 5 Release 1 (Merge pull request #32),
+checked with `git log --oneline -1` before the dry run, nothing changed before `deploy.sh` ran:**
 
 | Step | Command | Result | Evidence |
 | :--- | :--- | :--- | :--- |
