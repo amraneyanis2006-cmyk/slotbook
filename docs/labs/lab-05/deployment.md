@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.8 (2026-11-13, Issue #24: Workload Identity and merge gate in §11; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.8 (2026-11-13, Issue #24: Workload Identity and merge gate in §11, project number redacted from the evidence and §4; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -95,10 +95,9 @@ checked with `git log --oneline -1` before the dry run, nothing changed before `
 | Deploy | `./deploy/deploy.sh --demo` | `DEPLOY_EXIT=0`: Cloud Build image `slotbook:latest`, job execution `slotbook-migrate-8ccgl` succeeded (migrations + demo seed), revision **`slotbook-00001-jcd`** serving 100 % of traffic | `artifacts/lab-05/deploy/deploy-first-run.txt` |
 | Smoke test | `python3 deploy/smoke_test.py https://slotbook-mivepbjoza-as.a.run.app` | 4 PASS (`/api/health`, `/api/ready`, `/`, `/api/services` 401), sign-in SKIP (no smoke credentials), `SMOKE_EXIT=0` | `artifacts/lab-05/deploy/smoke-first-deploy.txt`, `artifacts/lab-05/screenshots/issue-23/3-smoke-test.jpg` |
 
-**Service URL: https://slotbook-mivepbjoza-as.a.run.app** (`gcloud run deploy` also prints the equivalent
-deterministic URL `https://slotbook-320205618114.asia-southeast1.run.app`; both reach the same service). The first image
+**Service URL: https://slotbook-mivepbjoza-as.a.run.app**. The first image
 is tagged `latest` by `deploy.sh`; from Issue #25 on, `deploy.yml` deploys images tagged with the full commit SHA.
-In the logs, user e-mails in the printed IAM policy are replaced by `<owner>` / `<teammate>` and the database password
+In the logs, the project number is replaced by `<PROJECT_NUMBER>` (§11), user e-mails in the printed IAM policy by `<owner>` / `<teammate>`, and the database password
 by `<REDACTED>` (by `deploy.sh` itself); no secret value appears.
 
 `DRY_RUN=1` without `PROJECT_ID` prints the placeholder project `example-gcp-project` **by design**: a dry run never
@@ -281,5 +280,11 @@ assertion.repository_id == '1449165803'
 
 The job id `test-and-docker` in `.github/workflows/ci-docker.yml` must not be renamed: a renamed job would never
 report the required check, and every merge would be blocked. The optional `e2e` job is not required.
+
+**Project number in public files:** the evidence and this file write it as `<PROJECT_NUMBER>` (Issue #24 also redacted
+it in `artifacts/lab-05/deploy/deploy-first-run.txt` and removed the deterministic Cloud Run URL from §4). The number
+is an identifier, not a credential: it grants no access, which is controlled by IAM and the attribute condition above.
+Commits made before this redaction (Issue #23, PR #33) still contain it, because history is never rewritten (R-10). It
+also appears in the `WIF_PROVIDER` environment variable, which is not committed but may be printed in Actions logs.
 
 *Still to do in Issue #24: C-02, a pull request with a failing test that the gate must block (Simeon Audouit).*
