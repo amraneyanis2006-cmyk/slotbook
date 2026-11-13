@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.6 (2026-11-13, C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.7 (2026-11-13, Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -67,7 +67,7 @@ so logging in needs HTTPS or a proxy that sets `X-Forwarded-Proto: https` (Cloud
 11 Feb 2027). Budget **`CPE334-Alert`**: alerts only (no spending cap), 1,700 THB ≈ USD 50, 12 Nov – 15 Dec 2026,
 this project only, e-mail alerts at 10 / 20 / 50 / 90 % of **actual** cost. The teammate has the basic role
 **Writer** (`roles/writer`, the new name of the basic role Editor); the project owner keeps Owner. Evidence:
-`artifacts/lab-05/screenshots/issue-19/`. The first deployment is *to be filled in Issue #23*. Every name below
+`artifacts/lab-05/screenshots/issue-19/`. The first deployment is below the resource table. Every name below
 is set once in `deploy/deploy.sh` and reused by `deploy/release.sh`, `deploy/teardown.sh` and the offline tests.
 `deploy/deploy.sh` creates billing-relevant resources, IAM bindings, Cloud SQL and secrets, so **a human runs it from
 Cloud Shell** (Issue #23), first with `DRY_RUN=1`; the coding agent never runs it.
@@ -84,6 +84,25 @@ Cloud Shell** (Issue #23), first with `DRY_RUN=1`; the coding agent never runs i
 | Cloud Run job | `slotbook-migrate` | step 10 | `sh -c "npx prisma migrate deploy && npm run db:seed"`, `NODE_ENV=production`, `SEED_DEMO_DATA=true` with `--demo`; runs before every service update |
 | Cloud Run service | `slotbook` | step 11 | public, `--port 3000`, min 0 / max 2 instances, 512 MiB, `NODE_ENV=production` |
 | Deployer service account | `slotbook-deployer` | Issue #24 (Workload Identity) | used by GitHub Actions only; no JSON key |
+
+**First deployment (Issue #23, guide Episode 5), 2026-11-13, run by Yanis Amrane (project owner) from Cloud Shell
+in project `cpe334-slotbook-y`; source: fresh clone of `main` at `3845f83` = Lab 5 Release 1 (Merge pull request #32),
+checked with `git log --oneline -1` before the dry run, nothing changed before `deploy.sh` ran:**
+
+| Step | Command | Result | Evidence |
+| :--- | :--- | :--- | :--- |
+| Preview | `PROJECT_ID=cpe334-slotbook-y DRY_RUN=1 ./deploy/deploy.sh --demo` | exit 0, 28 commands printed, no gcloud call | `artifacts/lab-05/deploy/deploy-dry-run.txt`, `artifacts/lab-05/screenshots/issue-23/1-dry-run.jpg` |
+| Deploy | `./deploy/deploy.sh --demo` | `DEPLOY_EXIT=0`: Cloud Build image `slotbook:latest`, job execution `slotbook-migrate-8ccgl` succeeded (migrations + demo seed), revision **`slotbook-00001-jcd`** serving 100 % of traffic | `artifacts/lab-05/deploy/deploy-first-run.txt` |
+| Smoke test | `python3 deploy/smoke_test.py https://slotbook-mivepbjoza-as.a.run.app` | 4 PASS (`/api/health`, `/api/ready`, `/`, `/api/services` 401), sign-in SKIP (no smoke credentials), `SMOKE_EXIT=0` | `artifacts/lab-05/deploy/smoke-first-deploy.txt`, `artifacts/lab-05/screenshots/issue-23/3-smoke-test.jpg` |
+
+**Service URL: https://slotbook-mivepbjoza-as.a.run.app** (`gcloud run deploy` also prints the equivalent
+deterministic URL `https://slotbook-320205618114.asia-southeast1.run.app`; both reach the same service). The first image
+is tagged `latest` by `deploy.sh`; from Issue #25 on, `deploy.yml` deploys images tagged with the full commit SHA.
+In the logs, user e-mails in the printed IAM policy are replaced by `<owner>` / `<teammate>` and the database password
+by `<REDACTED>` (by `deploy.sh` itself); no secret value appears.
+
+`DRY_RUN=1` without `PROJECT_ID` prints the placeholder project `example-gcp-project` **by design**: a dry run never
+calls `gcloud`, not even to read the active project. Set `PROJECT_ID` to preview the real names.
 
 Read a secret when needed (never paste it anywhere): `gcloud secrets versions access latest --secret=slotbook-seed-password`.
 Changes from the kit: `slotbook*` names; session and seed secrets instead of the kit's admin/demo passwords; storage
@@ -183,4 +202,15 @@ failed (no test database before Playwright's web servers), fixed in PR #30.
 
 ## 10. Cost control
 
-*To be filled in Issues #19 and #23* (budget alert, Cloud Run min 0 / max 2, smallest Cloud SQL tier, pause when idle).
+Settings that keep the cost low (they apply from the first deployment, Issue #23):
+
+| What | Setting | Where |
+| :--- | :--- | :--- |
+| Cloud SQL `slotbook-pg` | smallest tier `db-f1-micro` (`--edition=enterprise`), 10 GB SSD, **storage auto-increase off** (`--no-storage-auto-increase`) | `deploy/deploy.sh` step 3 |
+| Cloud Run `slotbook` | **min 0 / max 2** instances (no instance runs when nobody uses the app), 1 CPU, 512 MiB | step 11 |
+| Cloud Run job `slotbook-migrate` | runs only during a deployment (max 1 retry, 300 s timeout) | step 10 |
+| Budget `CPE334-Alert` | alerts only (no cap): **1,700 THB ≈ USD 50**, 12 Nov – 15 Dec 2026, e-mail at 10 / 20 / 50 / 90 % of actual cost, project `cpe334-slotbook-y` only | Billing (Issue #19) |
+| Credit | GCP Free Trial, USD 300 (10,132.96 THB), until 11 Feb 2027; nobody clicks Upgrade or pays a prepayment | Billing (Issue #19) |
+
+Cloud SQL is billed for every hour it exists, even when the app is idle: pause it when not needed and tear everything
+down after the course (`deploy/teardown.sh`, guide Episodes 9 and 10; to be documented when used).
