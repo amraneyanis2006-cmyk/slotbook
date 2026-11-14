@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.11 (2026-11-14, Issue #25: C-06 Release 2 record in §7; 0.10 Issue #24: C-02 evidence in §11; 0.9 Issue #25: `deploy.yml` (§6), release procedure (§7), running commit (§8), rollback with `image_tag` (§9), `APP_COMMIT` / `K_REVISION` (§2); 0.8 2026-11-13, Issue #24: Workload Identity and merge gate in §11, project number redacted from the evidence and §4; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.12 (2026-11-14, Issue #26: rollback procedure and C-05 evidence in §9; 0.11 Issue #25: C-06 Release 2 record in §7; 0.10 Issue #24: C-02 evidence in §11; 0.9 Issue #25: `deploy.yml` (§6), release procedure (§7), running commit (§8), rollback with `image_tag` (§9), `APP_COMMIT` / `K_REVISION` (§2); 0.8 2026-11-13, Issue #24: Workload Identity and merge gate in §11, project number redacted from the evidence and §4; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -253,7 +253,23 @@ the build are skipped, `release.sh` skips the migration, resolves the tag to its
 `image_tag` tests, rebuilds and deploys current `main` instead). A rollback changes only the image, never the
 database: migrations stay additive (expand, then contract). List the available tags (read-only):
 `gcloud artifacts docker images list asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook --include-tags`.
-The persistence check, rollback and roll-forward evidence (Issue #26) will be recorded here.
+
+**Procedure (done for C-05 on 2026-11-14):**
+1. List the tags (command above) and choose the target: a full SHA, or `latest` for Release 1.
+2. Note the serving revision and `GET /api/version`.
+3. Run the workflow with `image_tag` = the target and watch it (`gh run watch <run> --exit-status`). It must
+   finish green, with the smoke test PASS.
+4. Check the result. A SHA image reports that commit in `/api/version` and in the footer "Release <7 chars>". The
+   Release 1 image answers 404 on `/api/version` and shows no Release line.
+5. Roll forward the same way with the newer SHA. Check `/api/version` again.
+
+**C-05 evidence (Issue #26, R-04):** booking BK-2026-000006 (seeded Customer) was still listed after:
+- a restart: `gcloud run services update ... --update-env-vars RESTARTED_AT=...`, revision `slotbook-00003-np2`;
+- a redeploy of `82bc8b7`: run 43579388131, revision `slotbook-00004-dpc`;
+- a rollback to `latest`: run 43579900715, revision `slotbook-00005-srt`, `/api/version` 404, no footer line;
+- a roll forward to `82bc8b7`: run 43580291684, revision `slotbook-00006-vkw`, `/api/version` reports the commit.
+
+Details and screenshots: `artifacts/lab-05/c05-persistence.md`, `artifacts/lab-05/screenshots/issue-26/`.
 
 ## 10. Cost control
 
