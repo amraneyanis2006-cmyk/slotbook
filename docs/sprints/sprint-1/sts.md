@@ -1,6 +1,6 @@
 # Sprint 1 — Software Test Specification (STS)
 
-Version 1.4 (2026-11-12). Each test name in code **starts with its Test ID** (e.g.
+Version 1.5 (2026-11-14). Each test name in code **starts with its Test ID** (e.g.
 `it('API-15: books a bookable slot …')`). Test databases are reset and seeded before each run; time-based
 rules use `freezeClock()` (server) or slots created relative to the real clock (E2E). The "Result" column
 is filled from the real release run (Part F of the Deliverable 1 submission PDF): the clean-clone run of 2026-11-10 at
@@ -54,6 +54,7 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | API-25 | AC-31 | API | DB up | `GET /api/health` without session | 200 `{ status: "ok", database: "up" }` | `server/tests/api/health.api.test.ts` | Pass |
 | API-26 | AC-33 | API | DB up, then `prisma.$queryRaw` rejected once (DB unreachable) | `GET /api/ready` without session, twice | 200 `{ status: "ready", database: "connected" }`, no cookie; then 503 `{ status: "not_ready" }` | `server/tests/api/health.api.test.ts` | Pass (Lab 5, #20) |
 | API-27 | AC-34 | API | `NODE_ENV=production`, 32-char secret, `CLIENT_DIST` = temporary build; then not production | `GET /`, `/login`, `/bookings/42`, `/assets/app.js`, `/api`, `/api/nope`; `POST /api/auth/login` with `X-Forwarded-Proto: https` | `index.html` for the routes, JS for the asset, JSON 404 `NOT_FOUND` for `/api…`, `sid` cookie with `Secure`; outside production `/bookings/42` is 404 | `server/tests/api/production.api.test.ts` | Pass (Lab 5, #20) |
+| API-28 | AC-39 | API | `APP_COMMIT` = a 40-char SHA, `K_REVISION` = `slotbook-00002-abc`; then both unset | `GET /api/version` without session | 200 `{ commit: <SHA>, revision: "slotbook-00002-abc" }`, no cookie; unset → `{ commit: "local", revision: null }` | `server/tests/api/health.api.test.ts` | Pass (Lab 5, #25) |
 | DB-01 | AC-19 | DB | Free slot | Insert two `BOOKED` bookings for the slot directly with Prisma | Second insert fails with unique violation `P2002` on `booking_one_active_per_slot`; a second `CANCELLED` row is allowed | `server/tests/db/constraints.db.test.ts` | Pass |
 | DB-02 | AC-32 | DB | Fresh test DB, `NODE_ENV=test` | Run the seed twice | Same counts after both runs; seeded e-mails present with roles; every `passwordHash` starts with `$2` and no column equals `SEED_PASSWORD` | `server/tests/db/seed.db.test.ts` | Pass |
 | DB-03 | AC-36 | DB | `NODE_ENV=production`; a Prisma client that fails on any use | Seed with `SEED_DEMO_DATA` unset, `''`, `false`, `1`; then `true` without `SEED_PASSWORD`; then the real `prisma/seed.ts` command with `SEED_DEMO_DATA=false` and `true` on the test DB | `'skipped'` without touching Prisma; error "SEED_PASSWORD is not set" without touching Prisma; command prints "Seed skipped" (exit 0), then on the seeded DB "Seed complete. Created: 0 services, 0 users, 0 slots, 0 bookings. Already present (left unchanged): 4 services, 6 users, 50 slots, 5 bookings." (exit 0); the password is in neither stdout nor stderr | `server/tests/db/seed.db.test.ts` | Pass (Lab 5, #20) |
@@ -67,6 +68,7 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | UI-02 | AC-15 | UI | Mocked services, slots, 422 and 201 responses | Render My Slots, submit invalid then valid | Loading skeleton (`aria-busy`), field error under Start time, success toast and refreshed list; empty state text | `client/tests/MySlotsPage.test.tsx` | Pass |
 | UI-03 | AC-22 | UI | Mocked available slots, 201 and 409 | Open dialog, confirm | Dialog focus trap + Esc; 201 → reference shown; 409 → message in dialog and list re-fetched; empty state text | `client/tests/BookSlotPage.test.tsx` | Pass |
 | UI-04 | AC-27 | UI | Mocked `mine` with upcoming/past, cancel 200 | Render, cancel | Two sections; Cancel only for cancellable booking; after confirm the badge shows Cancelled | `client/tests/MyBookingsPage.test.tsx` | Pass |
+| UI-05 | AC-39 | UI | Mocked `/api/version` 200 with a 40-char commit; then 404 | Render `ReleaseFooter` | 200 → footer (`contentinfo`) "Release <first 7 chars>"; 404 → nothing rendered | `client/tests/ReleaseFooter.test.tsx` | Pass (Lab 5, #25) |
 
 ## 4. End-to-End Tests — `e2e/`
 
@@ -104,6 +106,7 @@ mocked fetch) · **E2E** = Playwright against the running app.
 | AC-33 | API-26 | AC-34 | API-27 |
 | AC-35 | UNIT-07 | AC-36 | DB-03 |
 | AC-37 | DB-04 | AC-38 | UNIT-08 |
+| AC-39 | API-28, UI-05 | | |
 
 **Manual checks** (supplement only, recorded in Part F of the Deliverable 1 submission PDF, never replacing a test above): MAN-01 visual
 review of the five screens against `system-sds.md` §3; MAN-02 clean-clone setup following the README.
@@ -126,3 +129,4 @@ file of their Issue. For E2E-07/08, which are cross-cutting, the red step only c
 | 1.2 | 2026-11-10 | Simeon Audouit | Decisions by Yanis Amrane for Issue #8: UNIT-04 states that the query excludes the past and the rule ignores non-BOOKED bookings; NO_SHOW added to UNIT-05 and API-23 (already tested); E2E-06 dependency on E2E-05 written down; §6 red step for E2E-07/08; "Result" column filled from the release run. |
 | 1.3 | 2026-11-11 | Yanis Amrane | Lab 5 (Issue #20, NFR-12): UNIT-07, API-26, API-27, DB-03, DB-04 added for AC-33..AC-37 (F-00 1.2); DB-02 precondition names `NODE_ENV=test`. |
 | 1.4 | 2026-11-12 | Yanis Amrane | Lab 5 (Issue #21, NFR-12): UNIT-08 added for AC-38 (graceful shutdown on SIGTERM, F-00 1.3). |
+| 1.5 | 2026-11-14 | Simeon Audouit | Lab 5 (Issue #25, NFR-12, R-08): API-28 and UI-05 added for AC-39 (`/api/version` and release footer, F-00 1.4). |

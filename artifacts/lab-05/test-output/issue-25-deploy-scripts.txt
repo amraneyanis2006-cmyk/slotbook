@@ -1,0 +1,64 @@
+# Branch:  ci/25-deploy-pipeline
+# Commit:  41ad951 (ci(lab5): deploy.yml, APP_COMMIT, /api/version and release footer (#25))
+# Date:    2026-11-14 12:05:00 +0700
+# Command: for f in deploy/deploy.sh deploy/teardown.sh deploy/release.sh; do bash -n $f; done && bash deploy/tests/test_deploy_stub.sh && bash deploy/tests/test_release_stub.sh && python -m unittest discover -v -s deploy/tests -p test_smoke.py
+
+PASS: first_run (exit, migration gate, credential handling, secret redaction)
+PASS: rerun (exit, migration gate, credential handling, secret redaction)
+PASS: partial (exit, migration gate, credential handling, secret redaction)
+PASS: job-fail (exit, migration gate, credential handling, secret redaction)
+PASS: demo (exit, migration gate, credential handling, secret redaction)
+PASS: dry run makes no gcloud calls
+PASS: teardown dry run (no gcloud calls, all resources, binding removed before the service account)
+Service URL: https://demo.example.test
+PASS normal release uses digest, waits for migration and sets APP_COMMIT
+Rollback: reuse existing image; skip tests, build, migration and seed.
+Service URL: https://demo.example.test
+PASS rollback reuses image without touching migration job
+PASS image failure blocks service update
+PASS migration failure blocks service update
+Invalid image tag.
+PASS invalid tag rejected before GCP calls
+Rollback: reuse existing image; skip tests, build, migration and seed.
+Service URL: https://demo.example.test
+PASS rollback to latest is resolved by digest without migration
+Invalid image tag.
+PASS latest rejected for a normal release before GCP calls
+test_each_public_check_fails_on_a_wrong_answer (test_smoke.SmokeTests.test_each_public_check_fails_on_a_wrong_answer) ... ok
+test_login_uses_the_session_cookie_then_logs_out (test_smoke.SmokeTests.test_login_uses_the_session_cookie_then_logs_out) ... ok
+test_only_one_credential_is_an_error (test_smoke.SmokeTests.test_only_one_credential_is_an_error) ... ok
+test_password_is_never_printed (test_smoke.SmokeTests.test_password_is_never_printed) ... ok
+test_public_checks_pass_and_skip_optional_login (test_smoke.SmokeTests.test_public_checks_pass_and_skip_optional_login) ... ok
+test_session_is_logged_out_even_if_services_fails (test_smoke.SmokeTests.test_session_is_logged_out_even_if_services_fails) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.086s
+
+OK
+PASS /api/health
+PASS /api/health
+PASS /api/ready
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/services
+PASS sign-in and authenticated /api/services
+PASS logout
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/services
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/services
+SKIP sign-in: optional smoke credentials not configured
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/services
+PASS logout
+# Exit code: 0

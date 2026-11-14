@@ -1,0 +1,128 @@
+# SlotBook — Deploy demo (Lab 5 Issue #25, R-07/R-08). Adapted from the starter kit's deploy.yml.
+#   On every push to `main` (a merged release PR) or a manual run it:
+#     1) runs the CI workflow (ci-docker.yml, job `test-and-docker`) first,
+#     2) signs in to Google Cloud WITHOUT a key file (Workload Identity Federation, deployment.md §11),
+#     3) builds the image with docker ON THE RUNNER and pushes it tagged with the full commit SHA
+#        (the deployer has no Cloud Build role; the `latest` tag is never pushed or moved),
+#     4) runs deploy/release.sh (digest -> migration job -> service update with APP_COMMIT),
+#     5) smoke-tests the public URL (deploy/smoke_test.py), 6) writes a run summary.
+#   MANUAL ROLLBACK: Run workflow on `main` with `image_tag` = the full 40-character SHA of an image that
+#   already exists (or `latest` = the Release 1 image from deploy.sh). Tests, build and migration are skipped.
+#
+# ⚠️ Do not rename: this file (the WIF condition names `deploy.yml@refs/heads/main`), environment `demo`
+#   (the WIF subject ends in `:environment:demo`), the variables GCP_PROJECT_ID, GCP_REGION, WIF_PROVIDER,
+#   WIF_SERVICE_ACCOUNT, and job `test-and-docker` in ci-docker.yml.
+# Nothing secret lives here. Never add --allow-unauthenticated or IAM changes: the deployer cannot do them.
+name: Deploy demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Rollback: full commit SHA of an existing image (or latest). Empty = test, build and deploy current main.'
+        type: string
+        required: false
+        default: ''
+
+# Least privilege by default; the deploy job adds `id-token: write`.
+permissions:
+  contents: read
+
+# Queue releases; never interrupt a running migration or deployment.
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: false
+
+jobs:
+  # Job 1: the CI workflow. Skipped for rollbacks (image_tag set) and outside `main`.
+  test:
+    if: github.ref == 'refs/heads/main' && !inputs.image_tag
+    uses: ./.github/workflows/ci-docker.yml
+
+  # Job 2: build, migrate, deploy, smoke-test. Runs only if the tests passed, or for a manual rollback.
+  deploy:
+    needs: test
+    if: >-
+      always() && !cancelled() && github.ref == 'refs/heads/main' &&
+      (needs.test.result == 'success' ||
+       (github.event_name == 'workflow_dispatch' && inputs.image_tag != '' && needs.test.result == 'skipped'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: demo
+    permissions:
+      contents: read
+      id-token: write # keyless Google Cloud sign-in (WIF)
+    env:
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      REGION: ${{ vars.GCP_REGION }}
+      SERVICE_NAME: slotbook
+      MIGRATE_JOB_NAME: slotbook-migrate
+      IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
+      ROLLBACK: ${{ inputs.image_tag != '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate deployment settings
+        env:
+          WIF_PROVIDER: ${{ vars.WIF_PROVIDER }}
+          WIF_SERVICE_ACCOUNT: ${{ vars.WIF_SERVICE_ACCOUNT }}
+        run: |
+          test -n "$PROJECT_ID" && test -n "$REGION"
+          test -n "$WIF_PROVIDER" && test -n "$WIF_SERVICE_ACCOUNT"
+          [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ || ( "$ROLLBACK" == true && "$IMAGE_TAG" == latest ) ]] || { echo 'Image tag must be a full 40-character commit SHA (or latest for a rollback).'; exit 1; }
+
+      - name: Authenticate to Google Cloud without a key
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      # Docker on the runner, not Cloud Build. Only the commit-SHA tag is pushed.
+      - name: Build and push image
+        if: env.ROLLBACK != 'true'
+        run: |
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/slotbook/slotbook:$IMAGE_TAG"
+          docker build --tag "$IMAGE" .
+          docker push "$IMAGE"
+
+      # Exports SERVICE_URL and DEPLOYED_IMAGE for the next steps.
+      - name: Verify image, migrate and deploy
+        run: bash deploy/release.sh
+
+      - name: Setup Python 3.14
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+
+      - name: Smoke test public URL
+        env:
+          # Optional sign-in check: set BOTH (variable + secret) or neither.
+          SMOKE_EMAIL: ${{ vars.SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+        run: python3 deploy/smoke_test.py "$SERVICE_URL"
+
+      # R-08: the live service must report the commit just deployed. The Release 1 image (`latest`) has no /api/version.
+      - name: Check the running commit
+        if: env.IMAGE_TAG != 'latest'
+        run: |
+          curl -fsS "$SERVICE_URL/api/version" | tee /dev/stderr | grep -q "\"commit\":\"$IMAGE_TAG\""
+
+      - name: Record deployment
+        run: |
+          REVISION="$(gcloud run services describe "$SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION" --format='value(status.latestReadyRevisionName)')"
+          echo "Revision: $REVISION"
+          {
+            echo '### SlotBook demo deployment'
+            echo "- Commit image tag: \`$IMAGE_TAG\`"
+            echo "- Digest: \`$DEPLOYED_IMAGE\`"
+            echo "- Revision: \`$REVISION\`"
+            echo "- Rollback: $ROLLBACK"
+            echo "- URL: $SERVICE_URL"
+            echo '- Smoke test: passed (health, readiness/DB, SPA, access control; sign-in PASS or SKIP); /api/version reports this commit (not checked for `latest`).'
+          } >> "$GITHUB_STEP_SUMMARY"

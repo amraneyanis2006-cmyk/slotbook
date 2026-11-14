@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthProvider';
 import { RequireRole } from './auth/RequireRole';
 import AppShell from './components/AppShell';
+import ReleaseFooter from './components/ReleaseFooter';
 import BookingDetailPage from './pages/BookingDetailPage';
 import BookSlotPage from './pages/BookSlotPage';
 import LoginPage from './pages/LoginPage';
@@ -25,6 +26,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+      <ReleaseFooter />
     </AuthProvider>
   );
 }
