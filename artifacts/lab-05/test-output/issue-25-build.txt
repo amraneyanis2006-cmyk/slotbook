@@ -1,0 +1,21 @@
+# Branch:  ci/25-deploy-pipeline
+# Commit:  41ad951 (ci(lab5): deploy.yml, APP_COMMIT, /api/version and release footer (#25))
+# Date:    2026-11-14 12:04:50 +0700
+# Command: npm run build
+
+npm notice run build
+npm notice run npm run build --prefix server && npm run build --prefix client
+npm notice run build
+npm notice run tsc
+npm notice run build
+npm notice run tsc --noEmit && vite build
+vite v6.4.5 building for production...
+transforming...
+✓ 50 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.41 kB │ gzip:  0.27 kB
+dist/assets/index-DDz8ts5L.css    6.57 kB │ gzip:  1.88 kB
+dist/assets/index-BBMAHCTr.js   189.46 kB │ gzip: 60.70 kB
+✓ built in 860ms
+# Exit code: 0

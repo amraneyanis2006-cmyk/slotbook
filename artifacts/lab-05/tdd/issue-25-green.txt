@@ -1,0 +1,47 @@
+# Branch:  ci/25-deploy-pipeline
+# Commit:  41ad951 (ci(lab5): deploy.yml, APP_COMMIT, /api/version and release footer (#25))
+# Date:    2026-11-14 12:07:07 +0700
+# Command: (cd server && npx vitest run tests/api/health.api.test.ts); (cd client && npx vitest run tests/ReleaseFooter.test.tsx); bash deploy/tests/test_release_stub.sh
+
+== server
+npm notice run npx
+npm notice run vitest run tests/api/health.api.test.ts
+
+ RUN  v3.2.7 C:/Users/simeo/projets/slotbook/server
+
+ ✓ tests/api/health.api.test.ts (3 tests) 176ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  12:07:10
+   Duration  5.19s (transform 308ms, setup 0ms, collect 1.20s, tests 176ms, environment 0ms, prepare 118ms)
+
+== client
+npm notice run npx
+npm notice run vitest run tests/ReleaseFooter.test.tsx
+
+ RUN  v3.2.7 C:/Users/simeo/projets/slotbook/client
+
+ ✓ tests/ReleaseFooter.test.tsx (2 tests) 104ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  12:07:19
+   Duration  2.33s (transform 57ms, setup 420ms, collect 51ms, tests 104ms, environment 1.16s, prepare 161ms)
+
+== release stub
+Service URL: https://demo.example.test
+PASS normal release uses digest, waits for migration and sets APP_COMMIT
+Rollback: reuse existing image; skip tests, build, migration and seed.
+Service URL: https://demo.example.test
+PASS rollback reuses image without touching migration job
+PASS image failure blocks service update
+PASS migration failure blocks service update
+Invalid image tag.
+PASS invalid tag rejected before GCP calls
+Rollback: reuse existing image; skip tests, build, migration and seed.
+Service URL: https://demo.example.test
+PASS rollback to latest is resolved by digest without migration
+Invalid image tag.
+PASS latest rejected for a normal release before GCP calls
+# Exit code: 0
