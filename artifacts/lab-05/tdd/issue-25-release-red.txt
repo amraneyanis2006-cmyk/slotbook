@@ -1,0 +1,7 @@
+# Branch:  ci/25-deploy-pipeline
+# Commit:  c70c669 (test(F-00): API-28 /api/version and UI-05 release footer [red] (#25)) + uncommitted deploy/tests/test_release_stub.sh
+# Date:    2026-11-14 12:01:27 +0700
+# Command: bash deploy/tests/test_release_stub.sh
+
+Service URL: https://demo.example.test
+# Exit code: 1

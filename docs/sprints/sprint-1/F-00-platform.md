@@ -5,7 +5,7 @@
 | Linked requirements | NFR-07 (reproducible setup), NFR-10 (UTC storage), NFR-12 (deployable design), NFR-06 (safe errors — handler skeleton) |
 | Issue / owner / reviewer | Issue #2 — Yanis Amrane (author), Simeon Audouit (reviewer) |
 | Depends on | Contract PR (Issue #1) |
-| Contract version | 1.3 (2026-11-12, Lab 5 Issue #21: §3 graceful shutdown, §6 AC-38; 1.2 2026-11-11, Lab 5 Issue #20: §2 seed in production, §3 `/api/ready` and production serving, §6 AC-33..AC-37, §7) |
+| Contract version | 1.4 (2026-11-14, Lab 5 Issue #25: §3 `/api/version`, §4 release footer, §6 AC-39; 1.3 2026-11-12, Lab 5 Issue #21: §3 graceful shutdown, §6 AC-38; 1.2 2026-11-11, Lab 5 Issue #20: §2 seed in production, §3 `/api/ready` and production serving, §6 AC-33..AC-37, §7) |
 
 ## 1. Behavior and Workflow
 
@@ -57,6 +57,7 @@ bookings (DB-02). Tests that need a slot starting within the next hour create it
 | :--- | :--- | :--- | :--- |
 | `GET /api/health` | public | `200 { "status": "ok", "database": "up" }` | `503 { "status": "degraded", "database": "down" }` |
 | `GET /api/ready` | public | `200 { "status": "ready", "database": "connected" }` after `SELECT 1` | `503 { "status": "not_ready" }` |
+| `GET /api/version` | public | `200 { "commit": APP_COMMIT or "local", "revision": K_REVISION or null }` (no database access) | — |
 
 **Production mode** (`NODE_ENV=production`, one container): `trust proxy` is 1 (Cloud Run terminates TLS, so the
 Secure cookie is set); Express serves the built SPA from `CLIENT_DIST` (default `client/dist` of the repository) and
@@ -73,7 +74,8 @@ everything else behind `500 INTERNAL_ERROR`), `utils/clock.ts` (`now()` replacea
 ## 4. UI
 
 App shell only: Vite + React + Router, `theme.css` tokens, a placeholder `/login` route (filled by F-01).
-No domain screen.
+No domain screen. Every page ends with a footer `Release <first 7 characters of the commit>` read from
+`GET /api/version`; no footer when the request fails (an image older than the endpoint).
 
 ## 5. Test Infrastructure
 
@@ -97,6 +99,7 @@ No domain screen.
 | AC-36 | In production the seed writes nothing unless `SEED_DEMO_DATA=true` and `SEED_PASSWORD` is set; with both it seeds; the password is never printed. |
 | AC-37 | In production a rerun of the seed is insert-only: it changes no existing user, service, slot or booking (a changed password hash, a closed slot and a UAT booking stay as they are) and creates no booking when the database already has slots. |
 | AC-38 | On SIGTERM the running server closes and exits with code 0 within seconds (it is PID 1 in the container, where SIGTERM has no default action). |
+| AC-39 | `GET /api/version` returns 200 `{ commit, revision }` without authentication: `APP_COMMIT` and `K_REVISION` when set, otherwise `"local"` and `null`; the footer shows `Release <first 7 characters>` and nothing when the endpoint is missing. |
 
 ## 7. Failure / Boundary Cases
 

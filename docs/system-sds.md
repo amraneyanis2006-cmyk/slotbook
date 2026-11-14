@@ -1,6 +1,6 @@
 # SlotBook — System-Level Software Design Specification (SDS)
 
-Version 1.3 (2026-11-11). Applies to the whole product; Sprint 1 feature contracts in
+Version 1.4 (2026-11-14). Applies to the whole product; Sprint 1 feature contracts in
 `docs/sprints/sprint-1/` give the detailed endpoints and screens.
 
 ---
@@ -178,6 +178,7 @@ any page redirects to `/login`; a page of the other role redirects to the user's
 | :--- | :--- | :--- |
 | `GET /api/health` | Liveness + `SELECT 1` | public |
 | `GET /api/ready` | Readiness for the post-deploy smoke test (`SELECT 1`), Lab 5 | public |
+| `GET /api/version` | Running commit and Cloud Run revision `{ commit, revision }` (F-00 AC-39), Lab 5 | public |
 | `POST /api/auth/login` | Log in | public |
 | `POST /api/auth/logout` | Log out | any authenticated |
 | `GET /api/auth/me` | Current user | any authenticated |
@@ -242,6 +243,7 @@ is never the protection.**
 | `SEED_PASSWORD` | seed | `change-me` | Password of every demo account; never printed; Secret Manager in GCP. |
 | `SEED_DEMO_DATA` | seed | *(commented out)* | Production only: `true` lets the seed write the demo accounts (Lab 6 UAT), insert-only; demo slots and bookings only on an empty database. |
 | `CLIENT_DIST` | server | *(commented out)* | Production only: built SPA folder; default `client/dist`. |
+| `APP_COMMIT` | server | *(commented out)* | Commit returned by `GET /api/version`; set by `deploy/release.sh` on Cloud Run; default `local`. |
 
 - `.env` files are git-ignored; only `.env.example` is committed. The client contains **no secret**
   (it only knows relative `/api` paths).
@@ -263,3 +265,4 @@ is never the protection.**
 | 1.1 | 2026-11-07 | Yanis Amrane | Pre-PR review fixes (seed, health exception, S2/S3 codes, login 422, session options); see PR #9. |
 | 1.2 | 2026-11-10 | Simeon Audouit | Decisions by Yanis Amrane for Issue #8: §3.2 empty-state example now matches the F-04 text; versions unified to "Node 20 or newer (tested with 20 and 24), PostgreSQL 16 or newer (tested with 16 and 18)". |
 | 1.3 | 2026-11-11 | Yanis Amrane | Lab 5 (Issue #20): `GET /api/ready` in §4 (probe exception, 503, endpoint table); §7 variables follow the new `.env.example` (placeholders, `SEED_DEMO_DATA`, `CLIENT_DIST`, production seed opt-in, startup refusal). |
+| 1.4 | 2026-11-14 | Simeon Audouit | Lab 5 (Issue #25): `GET /api/version` in §4.1; `APP_COMMIT` in §7. |

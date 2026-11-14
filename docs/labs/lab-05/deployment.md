@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.8 (2026-11-13, Issue #24: Workload Identity and merge gate in §11, project number redacted from the evidence and §4; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.9 (2026-11-14, Issue #25: `deploy.yml` (§6), release procedure (§7), running commit (§8), rollback with `image_tag` (§9), `APP_COMMIT` / `K_REVISION` (§2); 0.8 2026-11-13, Issue #24: Workload Identity and merge gate in §11, project number redacted from the evidence and §4; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -34,6 +34,8 @@ placeholder. "Secret" values never go in the repository, a log, a screenshot or 
 | `SEED_PASSWORD` | Password of every seeded demo account; never printed | **Yes** | `.env` | Fixed throw-away value in `ci-docker.yml` | Secret Manager `slotbook-seed-password` (migration/seed job) |
 | `SEED_DEMO_DATA` | Production only: `true` lets the seed write demo accounts | No | Not needed | Not needed | `true` on the migration job only if `deploy/deploy.sh --demo` was used (Lab 6 UAT); every release keeps it. Insert-only: creates missing services/users, demo slots and bookings only on an empty database, never changes an existing row; prints counts |
 | `CLIENT_DIST` | Production only: folder of the built SPA | No | Default `client/dist` | Not needed | Not set: the image puts the SPA at `/app/client/dist`, the default |
+| `APP_COMMIT` | Commit (image tag) returned by `GET /api/version` and shown in the footer as "Release <7 chars>"; `local` when unset | No | Not set (`local`) | Not set | Set on every deploy by `deploy/release.sh` (`--update-env-vars APP_COMMIT=<image tag>`) |
+| `K_REVISION` | Cloud Run revision name returned by `GET /api/version`; `null` when unset | No | Not set | Not set | Set by Cloud Run itself |
 | `POSTGRES_PASSWORD` | Docker Compose only: password of the `slotbook` role in the compose database | Yes (local) | `.env` | Not needed | Not used (Cloud SQL) |
 
 ## 3. Local commands
@@ -187,17 +189,63 @@ of PR #30 into `staging`, head commit `7ea5930` (the Docker image is tagged with
 `artifacts/lab-05/test-output/ci-c01/`. The earlier run 43269454819 (PR #29) had `test-and-docker` green but `e2e`
 failed (no test database before Playwright's web servers), fixed in PR #30.
 
+**Deploy workflow `.github/workflows/deploy.yml`** (Issue #25, adapted from the kit; name *Deploy demo*): on push to
+`main` and `workflow_dispatch` (input `image_tag` for a rollback). Job `test` reuses this CI workflow; job `deploy`
+runs only after it passed (or for a rollback, where `test` is skipped). Same pinned action SHAs as the kit
+(checkout v7.0.1, google-github-actions/auth v3, setup-gcloud v3.0.1, setup-python v7.1.0). Stages: §7. Changes from
+the kit: `slotbook` names; the summary also shows the revision; `image_tag=latest` is accepted for a rollback only
+(the Release 1 image has no SHA tag); `release.sh` also sets `APP_COMMIT`.
+
 ## 7. Release procedure
 
-*To be filled in Issue #25.* The merge gate and the keyless GitHub → GCP identity it will use are in §11 (Issue #24).
+Every release reaches the live service the same way (R-07); nobody types a deploy command.
+
+1. **Issue** titled `Lab 5 #<step> - <title>` (or a feature/fix Issue), label `lab5` for Lab 5 work, on the board.
+2. **Branch** from `staging`: `<type>/<issue>-<slug>` (for example `ci/25-deploy-pipeline`).
+3. **PR into `staging`**, label, "Closes #<n>". CI (`ci-docker.yml`) runs `test-and-docker` (deploy-script tests,
+   server and client tests, build, Docker build) and `e2e`. The teammate (not the author) approves with a specific
+   check or finding; `protect-staging` blocks the merge until `test-and-docker` is green, the branch is up to date
+   and 1 approval exists (§11). Merge commit.
+4. **Release PR `staging` → `main`** titled `Lab 5 Release <n> - …`, listing the PRs it contains. Same CI, same
+   gate (`protect-main`), teammate approval, merge commit. Every merge into `main` is a release.
+5. **`deploy.yml` (Deploy demo)** starts on the push to `main`:
+   `test` (reuses `ci-docker.yml`, job `test-and-docker`) → `deploy` (environment `demo`, keyless sign-in as
+   `slotbook-deployer`) → `docker build` **on the runner** and `docker push`
+   `asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook:<full commit SHA>` (no Cloud Build: the deployer
+   has no Cloud Build role; the `latest` tag is never pushed) → `deploy/release.sh`: resolve the tag to its
+   `@sha256` digest, update and run the job `slotbook-migrate` with `--wait` (a failed migration stops the release
+   before the service changes), update the service `slotbook` to the same digest with `APP_COMMIT=<SHA>`, 100 %
+   traffic to the new revision → `deploy/smoke_test.py` on the public URL → run summary (image tag, digest,
+   revision, URL).
+6. **Check:** the run is green, its Summary shows the merged commit, and §8 shows the same SHA on the live URL.
+
+If a deploy step fails, read the failed step's log first (guide Episode 7 table); after fixing a setup problem
+(not code), use *Re-run all jobs*. Concurrency group `deploy-demo` queues releases and never cancels a running one.
+`deploy.yml` never passes `--allow-unauthenticated` and changes no IAM: the service is public since Issue #23.
 
 ## 8. How to find the running commit
 
-*To be filled in Issue #25.*
+| Where | What it shows |
+| :--- | :--- |
+| Footer of every page on the public URL | `Release <first 7 characters of the commit>` (no line = an image older than Issue #25, for example `latest`) |
+| `curl -s https://slotbook-mivepbjoza-as.a.run.app/api/version` | `{ "commit": "<full SHA or latest>", "revision": "<Cloud Run revision>" }` (public, no session) |
+| Actions → Deploy demo → run → Summary | commit image tag, digest, revision, URL |
+| Cloud Run → `slotbook` → Revisions | the revision with 100 % traffic; its image digest and its variable `APP_COMMIT` |
+| Artifact Registry → `slotbook` → `slotbook` | the image tagged with the same full SHA and digest |
+| `gcloud run services describe slotbook --region asia-southeast1 --format='value(status.latestReadyRevisionName,spec.template.spec.containers[0].image)'` | read-only: serving revision and image digest |
 
 ## 9. Rollback
 
-*To be filled in Issue #26.*
+Actions → **Deploy demo** → **Run workflow** → branch `main` → `image_tag` = the full 40-character SHA of an image
+that already exists (copy "Commit image tag" from an earlier green run's Summary), or `latest` for the Release 1
+image built by `deploy.sh` (it has no SHA tag; `latest` is accepted **only** for a rollback, never for a normal
+release). Same from a terminal: `gh workflow run deploy.yml --ref main -f image_tag=<tag>`. The `test` job and
+the build are skipped, `release.sh` skips the migration, resolves the tag to its digest and updates the service
+(`APP_COMMIT=<tag>`), then the smoke test runs. To roll forward, run it again with the newer release's SHA (an empty
+`image_tag` tests, rebuilds and deploys current `main` instead). A rollback changes only the image, never the
+database: migrations stay additive (expand, then contract). List the available tags (read-only):
+`gcloud artifacts docker images list asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook --include-tags`.
+The persistence check, rollback and roll-forward evidence (Issue #26) will be recorded here.
 
 ## 10. Cost control
 

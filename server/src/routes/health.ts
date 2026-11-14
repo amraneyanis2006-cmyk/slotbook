@@ -24,3 +24,10 @@ readyRouter.get('/', async (_req, res) => {
     res.status(503).json({ status: 'not_ready' });
   }
 });
+
+export const versionRouter = Router();
+
+// Which release is running (Lab 5 R-08): release.sh sets APP_COMMIT, Cloud Run sets K_REVISION.
+versionRouter.get('/', (_req, res) => {
+  res.json({ commit: process.env.APP_COMMIT || 'local', revision: process.env.K_REVISION || null });
+});

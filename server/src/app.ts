@@ -10,7 +10,7 @@ import { AppError } from './errors.js';
 import { BOOKING_RULE_MESSAGES } from './rules/bookingRules.js';
 import { authRouter } from './routes/auth.js';
 import { bookingsRouter } from './routes/bookings.js';
-import { healthRouter, readyRouter } from './routes/health.js';
+import { healthRouter, readyRouter, versionRouter } from './routes/health.js';
 import { servicesRouter } from './routes/services.js';
 import { slotsRouter } from './routes/slots.js';
 import { staffScheduleRouter } from './routes/staffSchedule.js';
@@ -40,6 +40,7 @@ export function createApp() {
 
   app.use('/api/health', healthRouter);
   app.use('/api/ready', readyRouter);
+  app.use('/api/version', versionRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/services', servicesRouter);
   app.use('/api/staff/slots', staffSlotsRouter);
