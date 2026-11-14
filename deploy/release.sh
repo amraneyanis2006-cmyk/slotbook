@@ -9,7 +9,9 @@
 #   Rollback       : verify image -> update service (NO migration, NO seed).
 #
 # INPUT (environment variables)
-#   PROJECT_ID, REGION, IMAGE_TAG   required (IMAGE_TAG = full 40-char commit SHA)
+#   PROJECT_ID, REGION, IMAGE_TAG   required (IMAGE_TAG = full 40-char commit SHA;
+#                                   `latest` only with ROLLBACK=true: the Release 1 image
+#                                   built by deploy.sh has no SHA tag)
 #   SERVICE_NAME, MIGRATE_JOB_NAME  optional (default: slotbook, slotbook-migrate)
 #   ROLLBACK                        true | false (default false)
 #   GITHUB_ENV                      when set, SERVICE_URL / DEPLOYED_IMAGE are
@@ -40,8 +42,8 @@ set -euo pipefail
 SERVICE_NAME="${SERVICE_NAME:-slotbook}"
 MIGRATE_JOB_NAME="${MIGRATE_JOB_NAME:-slotbook-migrate}"
 ROLLBACK="${ROLLBACK:-false}"
-[[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]] || { echo 'Invalid image tag.' >&2; exit 1; }
 [[ "$ROLLBACK" == true || "$ROLLBACK" == false ]] || { echo 'Invalid rollback mode.' >&2; exit 1; }
+[[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ || ( "$ROLLBACK" == true && "$IMAGE_TAG" == latest ) ]] || { echo 'Invalid image tag.' >&2; exit 1; }
 
 # ------------------------------------------------------------------------------
 # 2. Find the image and pin it by digest
@@ -66,7 +68,8 @@ fi
 # ------------------------------------------------------------------------------
 # 4. Point the Cloud Run service at the image and send it 100% of traffic
 # ------------------------------------------------------------------------------
-gcloud run services update "$SERVICE_NAME" --image="$DIGEST_IMAGE" --project="$PROJECT_ID" --region="$REGION" --quiet
+# APP_COMMIT = the image tag, returned by GET /api/version so anyone can see which commit is running (R-08).
+gcloud run services update "$SERVICE_NAME" --image="$DIGEST_IMAGE" --update-env-vars="APP_COMMIT=$IMAGE_TAG" --project="$PROJECT_ID" --region="$REGION" --quiet
 # Restore 100% traffic to the new latest revision even if it was previously pinned.
 gcloud run services update-traffic "$SERVICE_NAME" --to-latest --project="$PROJECT_ID" --region="$REGION" --quiet
 

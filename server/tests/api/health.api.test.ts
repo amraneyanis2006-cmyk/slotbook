@@ -28,3 +28,21 @@ describe('GET /api/ready (F-00, NFR-12)', () => {
     expect(down.body).toEqual({ status: 'not_ready' });
   });
 });
+
+describe('GET /api/version (F-00, NFR-12)', () => {
+  afterEach(() => vi.unstubAllEnvs());
+  it('API-28: returns the running commit (APP_COMMIT) and Cloud Run revision (K_REVISION) without a session; "local" and null when unset', async () => {
+    vi.stubEnv('APP_COMMIT', '0123456789abcdef0123456789abcdef01234567');
+    vi.stubEnv('K_REVISION', 'slotbook-00002-abc');
+    const set = await request(createApp()).get('/api/version');
+    expect(set.status).toBe(200);
+    expect(set.body).toEqual({ commit: '0123456789abcdef0123456789abcdef01234567', revision: 'slotbook-00002-abc' });
+    expect(set.headers['set-cookie']).toBeUndefined();
+
+    vi.stubEnv('APP_COMMIT', undefined);
+    vi.stubEnv('K_REVISION', undefined);
+    const unset = await request(createApp()).get('/api/version');
+    expect(unset.status).toBe(200);
+    expect(unset.body).toEqual({ commit: 'local', revision: null });
+  });
+});
