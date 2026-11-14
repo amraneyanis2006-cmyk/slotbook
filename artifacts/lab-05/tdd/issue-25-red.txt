@@ -1,0 +1,82 @@
+# Branch:  ci/25-deploy-pipeline
+# Commit:  7c4e254 (Merge pull request #34 from amraneyanis2006-cmyk/docs/24-merge-gate) + uncommitted tests API-28, UI-05
+# Date:    2026-11-14 12:00:16 +0700
+# Command: (cd server && npx vitest run tests/api/health.api.test.ts); (cd client && npx vitest run tests/ReleaseFooter.test.tsx)
+
+== server
+npm notice run npx
+npm notice run vitest run tests/api/health.api.test.ts
+
+ RUN  v3.2.7 C:/Users/simeo/projets/slotbook/server
+
+ ❯ tests/api/health.api.test.ts (3 tests | 1 failed) 456ms
+   ✓ GET /api/health (F-00) > API-25: returns 200 { status: "ok", database: "up" } without a session  431ms
+   ✓ GET /api/ready (F-00, NFR-12) > API-26: 200 { status: "ready", database: "connected" } without a session; 503 { status: "not_ready" } when the database is unreachable 12ms
+   × GET /api/version (F-00, NFR-12) > API-28: returns the running commit (APP_COMMIT) and Cloud Run revision (K_REVISION) without a session; "local" and null when unset 12ms
+     → expected 404 to be 200 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/health.api.test.ts > GET /api/version (F-00, NFR-12) > API-28: returns the running commit (APP_COMMIT) and Cloud Run revision (K_REVISION) without a session; "local" and null when unset
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/health.api.test.ts:38:24
+     36|     vi.stubEnv('K_REVISION', 'slotbook-00002-abc');
+     37|     const set = await request(createApp()).get('/api/version');
+     38|     expect(set.status).toBe(200);
+       |                        ^
+     39|     expect(set.body).toEqual({ commit: '0123456789abcdef0123456789abcd…
+     40|     expect(set.headers['set-cookie']).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  12:00:18
+   Duration  9.79s (transform 266ms, setup 0ms, collect 4.79s, tests 456ms, environment 0ms, prepare 126ms)
+
+exit 1
+== client
+npm notice run npx
+npm notice run vitest run tests/ReleaseFooter.test.tsx
+
+ RUN  v3.2.7 C:/Users/simeo/projets/slotbook/client
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/ReleaseFooter.test.tsx [ tests/ReleaseFooter.test.tsx ]
+Error: Failed to resolve import "../src/components/ReleaseFooter" from "tests/ReleaseFooter.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: C:/Users/simeo/projets/slotbook/client/tests/ReleaseFooter.test.tsx:3:26
+  2  |  import { render, screen, waitFor } from "@testing-library/react";
+  3  |  import { afterEach, describe, expect, it, vi } from "vitest";
+  4  |  import ReleaseFooter from "../src/components/ReleaseFooter";
+     |                             ^
+  5  |  const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  6  |  afterEach(() => vi.unstubAllGlobals());
+ ❯ TransformPluginContext._formatLog node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42846:41
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42843:16
+ ❯ normalizeUrl node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40820:23
+ ❯ node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40939:37
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40866:7
+ ❯ EnvironmentPluginContainer.transform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42641:18
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:36053:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  12:00:32
+   Duration  5.48s (transform 73ms, setup 1.67s, collect 0ms, tests 0ms, environment 3.07s, prepare 328ms)
+
+exit 1
+# Exit code: 1
