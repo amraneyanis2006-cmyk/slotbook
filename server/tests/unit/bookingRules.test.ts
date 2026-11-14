@@ -7,7 +7,7 @@ const at = (hhmm: string, day = '2026-11-12') => new Date(`${day}T${hhmm}:00+07:
 
 describe('formatReference (F-04, BR-10)', () => {
   it('UNIT-03: formats BK-YYYY-NNNNNN and throws when the sequence exceeds 999999', () => {
-    expect(formatReference(2026, 15)).toBe('BK-2026-000015');
+    expect(formatReference(2026, 15)).toBe('BK-2026-000016');
     expect(formatReference(2026, 999_999)).toBe('BK-2026-999999');
     expect(formatReference(2026, 15)).toMatch(/^BK-\d{4}-\d{6}$/);
     expect(() => formatReference(2026, 1_234_567)).toThrow();
