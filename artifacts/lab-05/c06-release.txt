@@ -8,7 +8,7 @@ C-06 (R-07, R-08): a reviewed change goes from staging into main, is deployed by
 Release PR:        https://github.com/amraneyanis2006-cmyk/slotbook/pull/38 (Lab 5 Release 2, staging -> main, approved by amraneyanis2006-cmyk on 1b28532)
 Contains:          #33 (Issue #23), #34 (#24), #36 (#25: deploy.yml, /api/version, footer), #37 (#24 C-02 evidence), each approved by the teammate
 Merge commit:      82bc8b786d836a8ade7f8b406c6efd7d51c0d113 (main)
-Deploy run:        https://github.com/amraneyanis2006-cmyk/slotbook/actions/runs/43571888289 (event push, jobs: test / test-and-docker success, deploy success)
+Deploy run:        https://github.com/amraneyanis2006-cmyk/slotbook/actions/runs/43571888289 (event push, jobs: test / test-and-docker success, test / e2e skipped (pull requests only), deploy success)
 Image tag:         82bc8b786d836a8ade7f8b406c6efd7d51c0d113
 Image digest:      asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook@sha256:370c2e905d3a99138b24a4d40252cccd87206146e1851ed5e4a0407b75958685
 Migration job:     Execution [slotbook-migrate-z7czl] has successfully completed
