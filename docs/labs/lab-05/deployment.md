@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.9 (2026-11-14, Issue #25: `deploy.yml` (§6), release procedure (§7), running commit (§8), rollback with `image_tag` (§9), `APP_COMMIT` / `K_REVISION` (§2); 0.8 2026-11-13, Issue #24: Workload Identity and merge gate in §11, project number redacted from the evidence and §4; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.10 (2026-11-14, Issue #24: C-02 evidence in §11; 0.9 Issue #25: `deploy.yml` (§6), release procedure (§7), running commit (§8), rollback with `image_tag` (§9), `APP_COMMIT` / `K_REVISION` (§2); 0.8 2026-11-13, Issue #24: Workload Identity and merge gate in §11, project number redacted from the evidence and §4; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -335,4 +335,8 @@ is an identifier, not a credential: it grants no access, which is controlled by 
 Commits made before this redaction (Issue #23, PR #33) still contain it, because history is never rewritten (R-10). It
 also appears in the `WIF_PROVIDER` environment variable, which is not committed but may be printed in Actions logs.
 
-*Still to do in Issue #24: C-02, a pull request with a failing test that the gate must block (Simeon Audouit).*
+**C-02 evidence (R-06), Simeon Audouit, 2026-11-14:** PR [#35](https://github.com/amraneyanis2006-cmyk/slotbook/pull/35)
+into `main` from the temporary branch `test/24-failing-check` with UNIT-03 broken on purpose; run
+[43559205082](https://github.com/amraneyanis2006-cmyk/slotbook/actions/runs/43559205082): `test-and-docker` failed
+(Required), merge blocked, Merge button disabled. Closed without merging, branch kept. Details:
+`artifacts/lab-05/merge-gate.md`, screenshot `artifacts/lab-05/screenshots/issue-24/c02-merge-blocked.png`.
