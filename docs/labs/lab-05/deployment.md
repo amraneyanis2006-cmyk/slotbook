@@ -1,6 +1,6 @@
 # SlotBook — Deployment (Lab 5)
 
-Version 0.10 (2026-11-14, Issue #24: C-02 evidence in §11; 0.9 Issue #25: `deploy.yml` (§6), release procedure (§7), running commit (§8), rollback with `image_tag` (§9), `APP_COMMIT` / `K_REVISION` (§2); 0.8 2026-11-13, Issue #24: Workload Identity and merge gate in §11, project number redacted from the evidence and §4; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
+Version 0.11 (2026-11-14, Issue #25: C-06 Release 2 record in §7; 0.10 Issue #24: C-02 evidence in §11; 0.9 Issue #25: `deploy.yml` (§6), release procedure (§7), running commit (§8), rollback with `image_tag` (§9), `APP_COMMIT` / `K_REVISION` (§2); 0.8 2026-11-13, Issue #24: Workload Identity and merge gate in §11, project number redacted from the evidence and §4; 0.7 Issue #23: first deployment in §4 (source commit `main` `3845f83`), cost control in §10; 0.6 C-01 evidence recorded in §6; 0.5 Issue #22 fix: the CI e2e job migrates the test database before Playwright starts its web servers; 0.4 Issue #19; 0.3 Issue #22; 0.2 Issue #21; 0.1 Issue #20). Sections marked *To be filled* are completed by the later Lab 5 Issues
 (#21–#26). No secret value appears in this file: only variable names and where their values come from.
 
 ## 1. Stack and differences from the reference kit
@@ -222,6 +222,14 @@ Every release reaches the live service the same way (R-07); nobody types a deplo
 If a deploy step fails, read the failed step's log first (guide Episode 7 table); after fixing a setup problem
 (not code), use *Re-run all jobs*. Concurrency group `deploy-demo` queues releases and never cancels a running one.
 `deploy.yml` never passes `--allow-unauthenticated` and changes no IAM: the service is public since Issue #23.
+
+**C-06, Release 2 (2026-11-14), the first release deployed by the pipeline:** release PR
+[#38](https://github.com/amraneyanis2006-cmyk/slotbook/pull/38) (#33, #34, #36, #37), merge commit `82bc8b7`
+(`82bc8b786d836a8ade7f8b406c6efd7d51c0d113`) → Deploy demo run
+[43571888289](https://github.com/amraneyanis2006-cmyk/slotbook/actions/runs/43571888289) started by the push (no manual
+command): `test-and-docker` and `deploy` green, image tag = merge SHA, digest `sha256:370c2e90…`, migration
+`slotbook-migrate-z7czl` succeeded, revision **`slotbook-00002-fmw`** at 100 % traffic, smoke test 4 PASS + sign-in
+SKIP, `/api/version` = `{"commit":"82bc8b7…","revision":"slotbook-00002-fmw"}`. Evidence: `artifacts/lab-05/c06-release.txt`.
 
 ## 8. How to find the running commit
 
