@@ -107,6 +107,12 @@ jobs:
           SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
         run: python3 deploy/smoke_test.py "$SERVICE_URL"
 
+      # R-08: the live service must report the commit just deployed. The Release 1 image (`latest`) has no /api/version.
+      - name: Check the running commit
+        if: env.IMAGE_TAG != 'latest'
+        run: |
+          curl -fsS "$SERVICE_URL/api/version" | tee /dev/stderr | grep -q "\"commit\":\"$IMAGE_TAG\""
+
       - name: Record deployment
         run: |
           REVISION="$(gcloud run services describe "$SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION" --format='value(status.latestReadyRevisionName)')"
@@ -118,5 +124,5 @@ jobs:
             echo "- Revision: \`$REVISION\`"
             echo "- Rollback: $ROLLBACK"
             echo "- URL: $SERVICE_URL"
-            echo '- Smoke test: passed (health, readiness/DB, SPA, access control; sign-in PASS or SKIP).'
+            echo '- Smoke test: passed (health, readiness/DB, SPA, access control; sign-in PASS or SKIP); /api/version reports this commit (not checked for `latest`).'
           } >> "$GITHUB_STEP_SUMMARY"

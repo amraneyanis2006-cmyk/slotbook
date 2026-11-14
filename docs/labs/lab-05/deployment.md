@@ -215,7 +215,7 @@ Every release reaches the live service the same way (R-07); nobody types a deplo
    has no Cloud Build role; the `latest` tag is never pushed) → `deploy/release.sh`: resolve the tag to its
    `@sha256` digest, update and run the job `slotbook-migrate` with `--wait` (a failed migration stops the release
    before the service changes), update the service `slotbook` to the same digest with `APP_COMMIT=<SHA>`, 100 %
-   traffic to the new revision → `deploy/smoke_test.py` on the public URL → run summary (image tag, digest,
+   traffic to the new revision → `deploy/smoke_test.py` on the public URL → `GET /api/version` must return the deployed SHA (skipped for `latest`) → run summary (image tag, digest,
    revision, URL).
 6. **Check:** the run is green, its Summary shows the merged commit, and §8 shows the same SHA on the live URL.
 
