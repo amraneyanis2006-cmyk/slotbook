@@ -1,0 +1,35 @@
+# Branch:  docs/25-c06-evidence
+# Commit:  1b28532 (Merge pull request #37 from amraneyanis2006-cmyk/docs/24-c02-evidence)
+# Date:    2026-11-14 14:40:54 +0700
+# Command: gh run view 43571888289 --log (deploy job, excerpt); curl -s https://slotbook-mivepbjoza-as.a.run.app/api/version
+
+C-06 (R-07, R-08): a reviewed change goes from staging into main, is deployed by the pipeline, and the running revision matches its commit.
+
+Release PR:        https://github.com/amraneyanis2006-cmyk/slotbook/pull/38 (Lab 5 Release 2, staging -> main, approved by amraneyanis2006-cmyk on 1b28532)
+Contains:          #33 (Issue #23), #34 (#24), #36 (#25: deploy.yml, /api/version, footer), #37 (#24 C-02 evidence), each approved by the teammate
+Merge commit:      82bc8b786d836a8ade7f8b406c6efd7d51c0d113 (main)
+Deploy run:        https://github.com/amraneyanis2006-cmyk/slotbook/actions/runs/43571888289 (event push, jobs: test / test-and-docker success, test / e2e skipped (pull requests only), deploy success)
+Image tag:         82bc8b786d836a8ade7f8b406c6efd7d51c0d113
+Image digest:      asia-southeast1-docker.pkg.dev/cpe334-slotbook-y/slotbook/slotbook@sha256:370c2e905d3a99138b24a4d40252cccd87206146e1851ed5e4a0407b75958685
+Migration job:     Execution [slotbook-migrate-z7czl] has successfully completed
+Cloud Run revision: revision [slotbook-00002-fmw] has been deployed and is serving 100 percent of traffic
+Public URL:        https://slotbook-mivepbjoza-as.a.run.app
+
+--- Deploy job log excerpt (timestamps UTC; project number replaced by <PROJECT_NUMBER>) ---
+2026-11-14T07:39:25.0688673Z Execution [slotbook-migrate-z7czl] has successfully completed.
+2026-11-14T07:39:39.4153951Z Service [slotbook] revision [slotbook-00002-fmw] has been deployed and is serving 100 percent of traffic.
+2026-11-14T07:39:39.4155228Z Service URL: https://slotbook-<PROJECT_NUMBER>.asia-southeast1.run.app
+2026-11-14T07:39:43.2143232Z Service URL: https://slotbook-mivepbjoza-as.a.run.app
+2026-11-14T07:39:46.0989446Z PASS /api/health
+2026-11-14T07:39:46.0989993Z PASS /api/ready
+2026-11-14T07:39:46.0990270Z PASS /
+2026-11-14T07:39:46.0990518Z PASS /api/services
+2026-11-14T07:39:46.0991545Z SKIP sign-in: optional smoke credentials not configured
+2026-11-14T07:39:46.6334506Z {"commit":"82bc8b786d836a8ade7f8b406c6efd7d51c0d113","revision":"slotbook-00002-fmw"}
+2026-11-14T07:39:48.5538638Z Revision: slotbook-00002-fmw
+
+--- curl -s https://slotbook-mivepbjoza-as.a.run.app/api/version (run locally after the deploy) ---
+{"commit":"82bc8b786d836a8ade7f8b406c6efd7d51c0d113","revision":"slotbook-00002-fmw"}
+
+Result: /api/version commit == merge commit == image tag; revision == the revision deployed by the run. PASS
+# Exit code: 0
