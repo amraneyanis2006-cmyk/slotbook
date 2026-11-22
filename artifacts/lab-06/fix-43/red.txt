@@ -1,0 +1,464 @@
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/client
+
+stderr | tests/BookSlotPage.test.tsx > BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ tests/BookSlotPage.test.tsx (3 tests | 1 failed) 1916ms
+   ✓ BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state  784ms
+   ✓ BookSlotPage (F-04) > UI-03: a failed load shows the error callout with Retry 40ms
+   × BookSlotPage - Lab 6 UAT defect #43 > UI-09 (#43): clearing the date removes the previous day's slots and asks for a date (no Book button left) 1090ms
+     → Unable to find an element with the text: Choose a date to see its slots.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<h1>[39m
+      [0mBook a Slot[0m
+    [36m</h1>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"filters"[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"date"[39m
+        [36m>[39m
+          [0mDate[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mid[39m=[32m"date"[39m
+          [33mmin[39m=[32m"2026-11-22"[39m
+          [33mtype[39m=[32m"date"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"serviceId"[39m
+        [36m>[39m
+          [0mService[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33mid[39m=[32m"serviceId"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mAll services[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"1"[39m
+          [36m>[39m
+            [0mAcademic advising[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"available-title"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"available-title"[39m
+        [33mtabindex[39m=[32m"-1"[39m
+      [36m>[39m
+        [0mAvailable slots[0m
+      [36m</h2>[39m
+      [36m<ul[39m
+        [33mclass[39m=[32m"slot-list"[39m
+      [36m>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"slot-card"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"slot-time"[39m
+          [36m>[39m
+            [0m09:30–10:00[0m
+          [36m</p>[39m
+          [36m<p>[39m
+            [0mAcademic advising[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"muted"[39m
+          [36m>[39m
+            [0mAnan Wong[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Book 09:30 Academic advising with Anan Wong"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mBook[0m
+          [36m</button>[39m
+        [36m</li>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"slot-card"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"slot-time"[39m
+          [36m>[39m
+            [0m14:00–14:30[0m
+          [36m</p>[39m
+          [36m<p>[39m
+            [0mAcademic advising[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"muted"[39m
+          [36m>[39m
+            [0mMali Srisuk[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Book 14:00 Academic advising with Mali Srisuk"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mBook[0m
+          [36m</button>[39m
+        [36m</li>[39m
+      [36m</ul>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<h1>[39m
+      [0mBook a Slot[0m
+    [36m</h1>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"filters"[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"date"[39m
+        [36m>[39m
+          [0mDate[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mid[39m=[32m"date"[39m
+          [33mmin[39m=[32m"2026-11-22"[39m
+          [33mtype[39m=[32m"date"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"serviceId"[39m
+        [36m>[39m
+          [0mService[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33mid[39m=[32m"serviceId"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mAll services[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"1"[39m
+          [36m>[39m
+            [0mAcademic advising[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"available-title"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"available-title"[39m
+        [33mtabindex[39m=[32m"-1"[39m
+      [36m>[39m
+        [0mAvailable slots[0m
+      [36m</h2>[39m
+      [36m<ul[39m
+        [33mclass[39m=[32m"slot-list"[39m
+      [36m>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"slot-card"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"slot-time"[39m
+          [36m>[39m
+            [0m09:30–10:00[0m
+          [36m</p>[39m
+          [36m<p>[39m
+            [0mAcademic advising[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"muted"[39m
+          [36m>[39m
+            [0mAnan Wong[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Book 09:30 Academic advising with Anan Wong"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mBook[0m
+          [36m</button>[39m
+        [36m</li>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"slot-card"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"slot-time"[39m
+          [36m>[39m
+            [0m14:00–14:30[0m
+          [36m</p>[39m
+          [36m<p>[39m
+            [0mAcademic advising[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"muted"[39m
+          [36m>[39m
+            [0mMali Srisuk[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Book 14:00 Academic advising with Mali Srisuk"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mBook[0m
+          [36m</button>[39m
+        [36m</li>[39m
+      [36m</ul>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/BookSlotPage.test.tsx > BookSlotPage - Lab 6 UAT defect #43 > UI-09 (#43): clearing the date removes the previous day's slots and asks for a date (no Book button left)
+TestingLibraryElementError: Unable to find an element with the text: Choose a date to see its slots.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<h1>[39m
+      [0mBook a Slot[0m
+    [36m</h1>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"filters"[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"date"[39m
+        [36m>[39m
+          [0mDate[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mid[39m=[32m"date"[39m
+          [33mmin[39m=[32m"2026-11-22"[39m
+          [33mtype[39m=[32m"date"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"serviceId"[39m
+        [36m>[39m
+          [0mService[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33mid[39m=[32m"serviceId"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mAll services[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"1"[39m
+          [36m>[39m
+            [0mAcademic advising[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"available-title"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"available-title"[39m
+        [33mtabindex[39m=[32m"-1"[39m
+      [36m>[39m
+        [0mAvailable slots[0m
+      [36m</h2>[39m
+      [36m<ul[39m
+        [33mclass[39m=[32m"slot-list"[39m
+      [36m>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"slot-card"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"slot-time"[39m
+          [36m>[39m
+            [0m09:30–10:00[0m
+          [36m</p>[39m
+          [36m<p>[39m
+            [0mAcademic advising[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"muted"[39m
+          [36m>[39m
+            [0mAnan Wong[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Book 09:30 Academic advising with Anan Wong"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mBook[0m
+          [36m</button>[39m
+        [36m</li>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"slot-card"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"slot-time"[39m
+          [36m>[39m
+            [0m14:00–14:30[0m
+          [36m</p>[39m
+          [36m<p>[39m
+            [0mAcademic advising[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"muted"[39m
+          [36m>[39m
+            [0mMali Srisuk[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Book 14:00 Academic advising with Mali Srisuk"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mBook[0m
+          [36m</button>[39m
+        [36m</li>[39m
+      [36m</ul>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<h1>[39m
+      [0mBook a Slot[0m
+    [36m</h1>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"filters"[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"date"[39m
+        [36m>[39m
+          [0mDate[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mid[39m=[32m"date"[39m
+          [33mmin[39m=[32m"2026-11-22"[39m
+          [33mtype[39m=[32m"date"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"serviceId"[39m
+        [36m>[39m
+          [0mService[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33mid[39m=[32m"serviceId"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mAll services[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"1"[39m
+          [36m>[39m
+            [0mAcademic advising[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"available-title"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"available-title"[39m
+        [33mtabindex[39m=[32m"-1"[39m
+      [36m>[39m
+        [0mAvailable slots[0m
+      [36m</h2>[39m
+      [36m<ul[39m
+        [33mclass[39m=[32m"slot-list"[39m
+      [36m>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"slot-card"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"slot-time"[39m
+          [36m>[39m
+            [0m09:30–10:00[0m
+          [36m</p>[39m
+          [36m<p>[39m
+            [0mAcademic advising[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"muted"[39m
+          [36m>[39m
+            [0mAnan Wong[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Book 09:30 Academic advising with Anan Wong"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mBook[0m
+          [36m</button>[39m
+        [36m</li>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"slot-card"[39m
+        [36m>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"slot-time"[39m
+          [36m>[39m
+            [0m14:00–14:30[0m
+          [36m</p>[39m
+          [36m<p>[39m
+            [0mAcademic advising[0m
+          [36m</p>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"muted"[39m
+          [36m>[39m
+            [0mMali Srisuk[0m
+          [36m</p>[39m
+          [36m<button[39m
+            [33maria-label[39m=[32m"Book 14:00 Academic advising with Mali Srisuk"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0mBook[0m
+          [36m</button>[39m
+        [36m</li>[39m
+      [36m</ul>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ tests/BookSlotPage.test.tsx:138:25
+    136|     await user.clear(screen.getByLabelText('Date'));
+    137|     expect(screen.getByLabelText('Date')).toHaveValue('');
+    138|     expect(await screen.findByText('Choose a date to see its slots.'))…
+       |                         ^
+    139|     expect(screen.queryByRole('button', { name: /^Book / })).toBeNull(…
+    140|     expect(screen.queryByText('Anan Wong')).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  11:41:42
+   Duration  4.89s (transform 133ms, setup 378ms, collect 289ms, tests 1.92s, environment 1.21s, prepare 402ms)
+
+exit=1

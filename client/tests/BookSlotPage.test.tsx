@@ -118,3 +118,25 @@ describe('BookSlotPage (F-04)', () => {
     expect(await screen.findByRole('button', { name: /^Book 09:30/ })).toBeInTheDocument();
   });
 });
+
+describe('BookSlotPage - Lab 6 UAT defect #43', () => {
+  it('UI-09 (#43): clearing the date removes the previous day\'s slots and asks for a date (no Book button left)', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url === '/api/services') return Promise.resolve(json(200, { services: [{ id: 1, name: 'Academic advising', durationMin: 30 }] }));
+      const slots = url.includes('date=2030-02-06') ? [FIRST, SECOND] : [];
+      return Promise.resolve(json(200, { slots }));
+    }));
+    const user = userEvent.setup();
+    render(<MemoryRouter><BookSlotPage /></MemoryRouter>);
+
+    await user.clear(screen.getByLabelText('Date'));
+    await user.type(screen.getByLabelText('Date'), '2030-02-06');
+    expect(await screen.findByRole('button', { name: /^Book 09:30/ })).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Date'));
+    expect(screen.getByLabelText('Date')).toHaveValue('');
+    expect(await screen.findByText('Choose a date to see its slots.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Book / })).toBeNull();
+    expect(screen.queryByText('Anan Wong')).toBeNull();
+  });
+});
