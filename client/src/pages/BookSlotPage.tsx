@@ -36,7 +36,7 @@ export default function BookSlotPage() {
   /** Loads the list; a refresh after a booking attempt keeps the current list on screen (no skeleton). */
   const loadSlots = useCallback(async (refresh = false) => {
     const request = ++latest.current;
-    if (!date) return; // the date input is being edited
+    if (!date) { setSlots(null); return; } // the date input is being edited
     setLoadError(null);
     if (!refresh) setSlots(null);
     const query = new URLSearchParams({ date, ...(serviceId && { serviceId }) });
@@ -94,7 +94,8 @@ export default function BookSlotPage() {
 
       <section aria-labelledby="available-title">
         <h2 id="available-title" ref={listHeading} tabIndex={-1}>Available slots{date && ` · ${formatDay(`${date}T12:00:00+07:00`)}`}</h2>
-        {loadError ? <Callout tone="error" onRetry={() => loadSlots()}>{loadError}</Callout>
+        {!date ? <p className="muted">Choose a date to see its slots.</p>
+          : loadError ? <Callout tone="error" onRetry={() => loadSlots()}>{loadError}</Callout>
           : slots === null ? <Skeleton label="Loading available slots" />
             : slots.length === 0 ? <EmptyState message="No available slots on this day. Try another date." />
               : (
