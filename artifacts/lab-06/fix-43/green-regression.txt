@@ -1,0 +1,15 @@
+GREEN + regression for #43 - branch fix/43-empty-date-stale-slots at f602a35 (fix f602a35 on staging 5afcaa2), 22/11/2026, local run
+
+== Server API tests (cd server && npx vitest run; slotbook_test reset + seeded by tests/setup.ts) - exit 0
+ Test Files  13 passed (13)
+      Tests  64 passed (64)
+
+== Client tests (cd client && npx vitest run) - exit 0
+ Test Files  5 passed (5)
+      Tests  10 passed (10)
+
+== Client type check (cd client && npx tsc --noEmit -p .) - exit 0
+
+== E2E (npx playwright test --grep-invert SHOT-01; API on slotbook_test) - exit 0
+   SHOT-01 (demo-evidence.spec.ts) excluded: it rewrites the committed demo screenshots.
+  8 passed (38.2s)
