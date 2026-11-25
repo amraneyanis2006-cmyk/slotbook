@@ -1,20 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { apiLogIn, bangkokDatePlus, expectNoOverflow, switchUser } from './helpers';
+import { expectNoOverflow, seedReference, switchUser } from './helpers';
 import { VIEWPORTS } from './viewports';
 
 // AC-68 (NFR-08, NFR-09): the new or changed Sprint 2 screens at 320, 768 and 1280 px; new dialogs by keyboard.
 type Screen = { email: string; path: (page: Page) => Promise<string>; ready: (page: Page) => Locator; open?: (page: Page) => Promise<void> };
-
-/** Reference of the seed booking of `customer` on `staff`'s slot at `time`, `days` from today (via the staff schedule API). */
-async function seedReference(page: Page, staffEmail: string, days: number, time: string) {
-  await apiLogIn(page, staffEmail);
-  const res = await page.request.get(`/api/staff/schedule?date=${bangkokDatePlus(days)}`);
-  const slots: { startAt: string; booking: { reference: string } | null }[] = (await res.json()).slots;
-  const hhmm = (iso: string) => new Date(Date.parse(iso) + 7 * 3_600_000).toISOString().slice(11, 16);
-  const slot = slots.find((s) => hhmm(s.startAt) === time && s.booking);
-  if (!slot) throw new Error(`No booked ${staffEmail} slot at today+${days} ${time}`);
-  return slot.booking!.reference;
-}
 
 const SCREENS: Screen[] = [
   { email: 'staff.anan@slotbook.test', path: async () => '/staff/services', ready: (p) => p.getByRole('button', { name: 'Add service' }) },

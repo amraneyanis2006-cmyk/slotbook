@@ -67,3 +67,14 @@ export async function expectNoOverflow(page: Page, label: string) {
   expect(clipped, `${label}: clipped controls`).toEqual([]);
 }
 
+
+/** Reference of the seed booking of `customer` on `staff`'s slot at `time`, `days` from today (via the staff schedule API). */
+export async function seedReference(page: Page, staffEmail: string, days: number, time: string) {
+  await apiLogIn(page, staffEmail);
+  const res = await page.request.get(`/api/staff/schedule?date=${bangkokDatePlus(days)}`);
+  const slots: { startAt: string; booking: { reference: string } | null }[] = (await res.json()).slots;
+  const hhmm = (iso: string) => new Date(Date.parse(iso) + 7 * 3_600_000).toISOString().slice(11, 16);
+  const slot = slots.find((s) => hhmm(s.startAt) === time && s.booking);
+  if (!slot) throw new Error(`No booked ${staffEmail} slot at today+${days} ${time}`);
+  return slot.booking!.reference;
+}

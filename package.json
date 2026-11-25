@@ -20,6 +20,7 @@
     "test:perf": "npm run test:perf --prefix server"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.1",
     "@playwright/test": "1.62.1",
     "@types/node": "^20.19.0",
     "concurrently": "^9.2.1"
