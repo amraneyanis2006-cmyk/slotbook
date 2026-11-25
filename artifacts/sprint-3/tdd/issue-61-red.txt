@@ -1,0 +1,139 @@
+# Issue:   #61
+# Branch:  feature/61-accounts-no-show
+# Commit:  f604979 (test(F-17): accounts and no-show policy tests, red (#61))
+# Date:    2026-11-26 00:19:02 +0700
+# Env:     Node v22.23.4, PostgreSQL 16 local slotbook_test (reset + seeded by server/tests/setup.ts), Chrome for Playwright
+
+===== $ cd server && npx vitest run tests/unit/bookingRules.test.ts tests/api/noShowPolicy.api.test.ts tests/api/accounts.api.test.ts (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/server
+
+ ❯ tests/api/accounts.api.test.ts (2 tests | 2 failed) 1129ms
+   × accounts (F-17) > API-56: deactivating cancels future BOOKED bookings with "account deactivated" and history, ends the session; reactivating restores login only 48ms
+     → expected 404 to be 200 // Object.is equality
+   × accounts (F-17) > API-57: customers only, by name, with computed columns and a name filter; Customer → 403; a staff or unknown id → 404 8ms
+     → expected 404 to be 200 // Object.is equality
+ ❯ tests/api/noShowPolicy.api.test.ts (1 test | 1 failed) 579ms
+   × no-show policy (F-17 §1 step 3, BR-19) > API-55: 3 no-shows recorded in 30 days → 409 BOOKING_SUSPENDED on book and reschedule until third + 7 days; BR-02/BR-01 still first; allowed afterwards 98ms
+     → expected 201 to be 409 // Object.is equality
+ ❯ tests/unit/bookingRules.test.ts (6 tests | 1 failed) 18ms
+   ✓ formatReference (F-04, BR-10) > UNIT-03: formats BK-YYYY-NNNNNN and throws when the sequence exceeds 999999 3ms
+   ✓ isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04) > UNIT-04: +60 min is bookable; +59 min, CLOSED/CANCELLED and inactive service are not; 3 active → limit; past/cancelled not counted; overlap vs back-to-back 2ms
+   ✓ canCustomerCancel (F-05, BR-05, BR-13) > UNIT-05 (CR-01): +1440 min → allowed; +1439, +180 and +120 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first 1ms
+   ✓ canRecordOutcome (F-09 §2, BR-15, BR-13) > UNIT-12: before the start → OUTCOME_TOO_EARLY; at the start and later → null; non-BOOKED → BOOKING_NOT_ACTIVE, checked first 1ms
+   ✓ checkRescheduleTarget (F-08 §2) > UNIT-13: same slot → "Choose a different slot."; other service → same-service message; valid target → null 1ms
+   × suspendedUntil (F-17 §2, BR-19) > UNIT-18: third no-show within 30 days + 7 days while that is after now; only the last 30 days count; null otherwise 8ms
+     → suspendedUntil is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/accounts.api.test.ts > accounts (F-17) > API-56: deactivating cancels future BOOKED bookings with "account deactivated" and history, ends the session; reactivating restores login only
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/accounts.api.test.ts:44:24
+     42| 
+     43|     const res = await agents.anan.post(`/api/staff/users/${ids.gone}/d…
+     44|     expect(res.status).toBe(200);
+       |                        ^
+     45|     expect(res.body.user).toMatchObject({ id: ids.gone, isActive: fals…
+     46|     expect([...res.body.cancelledBookings].sort()).toEqual([f1.referen…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/api/accounts.api.test.ts > accounts (F-17) > API-57: customers only, by name, with computed columns and a name filter; Customer → 403; a staff or unknown id → 404
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/accounts.api.test.ts:67:24
+     65|     await booking('2031-03-25', '09:00');
+     66|     const res = await agents.anan.get('/api/staff/users');
+     67|     expect(res.status).toBe(200);
+       |                        ^
+     68|     const users = res.body.users as { name: string; email: string }[];
+     69|     expect(users.every((u) => !u.email.startsWith('staff.'))).toBe(tru…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/api/noShowPolicy.api.test.ts > no-show policy (F-17 §1 step 3, BR-19) > API-55: 3 no-shows recorded in 30 days → 409 BOOKING_SUSPENDED on book and reschedule until third + 7 days; BR-02/BR-01 still first; allowed afterwards
+AssertionError: expected 201 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 201
+
+ ❯ tests/api/noShowPolicy.api.test.ts:49:28
+     47| 
+     48|     const refused = await customer.post('/api/bookings').send({ slotId…
+     49|     expect(refused.status).toBe(409);
+       |                            ^
+     50|     expect(refused.body).toEqual({ error: 'BOOKING_SUSPENDED', message…
+     51|     const moved = await customer.post(`/api/bookings/${existing.refere…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/unit/bookingRules.test.ts > suspendedUntil (F-17 §2, BR-19) > UNIT-18: third no-show within 30 days + 7 days while that is after now; only the last 30 days count; null otherwise
+TypeError: suspendedUntil is not a function
+ ❯ tests/unit/bookingRules.test.ts:103:12
+    101|     const ago = (minutes: number) => plus(-minutes);
+    102|     // three in the last 30 days, third 2 days ago → suspended until t…
+    103|     expect(suspendedUntil([ago(20 * day), ago(10 * day), ago(2 * day)]…
+       |            ^
+    104|     expect(suspendedUntil([ago(2 * day), ago(20 * day), ago(10 * day)]…
+    105|     expect(suspendedUntil([ago(10 * day), ago(2 * day)], NOW)).toBeNul…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  4 failed | 5 passed (9)
+   Start at  00:19:03
+   Duration  6.04s (transform 386ms, setup 0ms, collect 1.41s, tests 1.73s, environment 1ms, prepare 223ms)
+
+
+===== $ cd client && npx vitest run tests/AccountsPage.test.tsx (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/client
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/AccountsPage.test.tsx [ tests/AccountsPage.test.tsx ]
+Error: Failed to resolve import "../src/pages/AccountsPage" from "tests/AccountsPage.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/claude/wt/client/tests/AccountsPage.test.tsx:4:25
+  3  |  import userEvent from "@testing-library/user-event";
+  4  |  import { afterEach, describe, expect, it, vi } from "vitest";
+  5  |  import AccountsPage from "../src/pages/AccountsPage";
+     |                            ^
+  6  |  const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  7  |  const user = (o) => ({
+ ❯ TransformPluginContext._formatLog ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42846:41
+ ❯ TransformPluginContext.error ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42843:16
+ ❯ normalizeUrl ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40820:23
+ ❯ ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40939:37
+ ❯ TransformPluginContext.transform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40866:7
+ ❯ EnvironmentPluginContainer.transform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42641:18
+ ❯ loadAndTransform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:36053:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  00:19:10
+   Duration  969ms (transform 51ms, setup 147ms, collect 0ms, tests 0ms, environment 467ms, prepare 82ms)
+
+
