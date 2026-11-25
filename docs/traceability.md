@@ -26,10 +26,10 @@ now and receive AC/tests in their own sprint contracts.
 | FR-16 Booking history | F-10 History | Sprint 2 (contract 2.0, Issue #49); AC-40, AC-41, AC-43 / UNIT-09, API-29, API-30, UI-06, E2E-09 |
 | FR-17 Service catalogue | F-11 Services | Sprint 2 (contract 2.0, Issue #49); AC-44, AC-45, AC-46, AC-48 / UNIT-10, API-31, API-32, API-33, DB-07, UI-07, E2E-10 |
 | FR-18 Slot search | F-12 Search | Sprint 2 (contract 2.0, Issue #49); AC-64, AC-65, AC-67 / UNIT-14, API-47, API-48, API-49, UI-11, E2E-14 |
-| FR-19 Availability templates | F-14 Templates | Sprint 3 |
-| FR-20 Staff dashboard | F-15 Dashboard | Sprint 3 |
-| FR-21 In-app notifications | F-16 Notifications | Sprint 3 |
-| FR-22 Account overview / deactivate | F-17 Accounts | Sprint 3 |
+| FR-19 Availability templates | F-14 Templates | Sprint 3 (contract 3.0, Issue #57); AC-72..AC-75 / UNIT-16, API-51, API-52, UI-13, E2E-17 (planned, #59) |
+| FR-20 Staff dashboard | F-15 Dashboard | Sprint 3 (contract 3.0, Issue #57); AC-69..AC-71 / UNIT-15, API-50, UI-12, E2E-16 (implemented in Deliverable 2, #58) |
+| FR-21 In-app notifications | F-16 Notifications | Sprint 3 (contract 3.0, Issue #57); AC-76..AC-78 / UNIT-17, API-53, API-54, UI-14, E2E-18 (planned, #60) |
+| FR-22 Account overview / deactivate | F-17 Accounts | Sprint 3 (contract 3.0, Issue #57); AC-81..AC-83 / API-56, API-57, UI-15, E2E-19 (planned, #61) |
 
 ## 2. Business Rules
 
@@ -52,8 +52,8 @@ now and receive AC/tests in their own sprint contracts.
 | BR-15 Outcome after start | F-09 | Sprint 2 (contract 2.0, Issue #49); AC-55, AC-56 / UNIT-12, API-40, API-41 |
 | BR-16 Atomic reschedule | F-08 | Sprint 2 (contract 2.0, Issue #49); AC-60, AC-61 / API-44, API-45 |
 | BR-17 Append-only history | F-10 (+ writers F-04, F-05, F-07, F-08, F-09) | Sprint 2 (contract 2.0, Issue #49); AC-40, AC-42 / UNIT-09, API-29, DB-05, DB-06; history rows also asserted in API-38, API-40, API-43 |
-| BR-18 Template generation skips | F-14 | Sprint 3 |
-| BR-19 No-show suspension | F-17 | Sprint 3 |
+| BR-18 Template generation skips | F-14 | Sprint 3 (contract 3.0, Issue #57); AC-72, AC-73 / UNIT-16, API-51 (planned) |
+| BR-19 No-show suspension | F-17 | Sprint 3 (contract 3.0, Issue #57); AC-79, AC-80 / UNIT-18, API-55 (planned) |
 
 ## 3. Non-Functional Requirements
 
@@ -94,3 +94,6 @@ now and receive AC/tests in their own sprint contracts.
   DB-05..07, UI-06..11, E2E-09..15, PERF-01), DoD; SRS 1.4 (A-04 resolved, A-05, A-06, D-07); SDS 1.5. Sprint 1 tests
   changed by Sprint 2 are listed in `sprints/sprint-2/sts.md` §7. Written by Yanis Amrane, reviewed by Simeon Audouit
   before any Sprint 2 implementation.
+- **Sprint 3 contracts 3.0 (2026-11-25), Issue #57:** F-14..F-18 and STS (AC-69..AC-87); F-15 is implemented in
+  Deliverable 2 (#58), the rest is planned in `sprints/sprint-3/README.md`. Written by Yanis Amrane, reviewed by
+  Simeon Audouit.
