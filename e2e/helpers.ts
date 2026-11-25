@@ -10,7 +10,7 @@ if (!PASSWORD) throw new Error('SEED_PASSWORD is not set (copy .env.example to .
 //         again, after E2E-05 freed it → at most 3.
 //   Ken:  seed today+3 Anan 10:00; E2E-08 books today+6 Anan 09:00; E2E-09 books (then cancels) today+6 Anan 13:00;
 //         E2E-11 books today+7 Mali 09:30 (then Mali cancels the slot); E2E-13 books today+5 Anan 09:00, moves it to
-//         Mali 09:30 and cancels it → at most 3.
+//         Mali 09:30 and cancels it; E2E-14 books (then cancels) one Anan Career counselling slot → at most 3.
 //   Nina: SHOT-01 books today+4 Anan 09:00, today+4 Mali 14:00, today+5 Anan 13:00 → 3 (then the 4th is refused).
 
 /** Asia/Bangkok date `YYYY-MM-DD`, `days` from today (E2E data is relative to the real clock). */
