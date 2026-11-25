@@ -10,6 +10,7 @@ import MyBookingsPage from './pages/MyBookingsPage';
 import MySlotsPage from './pages/MySlotsPage';
 import ReschedulePage from './pages/ReschedulePage';
 import SchedulePage from './pages/SchedulePage';
+import SearchPage from './pages/SearchPage';
 import ServicesPage from './pages/ServicesPage';
 import StaffBookingPage from './pages/StaffBookingPage';
 
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireRole role="CUSTOMER"><AppShell /></RequireRole>}>
           <Route path="/book" element={<BookSlotPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/bookings" element={<MyBookingsPage />} />
           <Route path="/bookings/:reference" element={<BookingDetailPage />} />
           <Route path="/bookings/:reference/reschedule" element={<ReschedulePage />} />

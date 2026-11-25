@@ -2,7 +2,9 @@
   "name": "slotbook",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20.12" },
+  "engines": {
+    "node": ">=20.12"
+  },
   "scripts": {
     "install:all": "npm install && npm install --prefix server && npm install --prefix client && npm run db:generate",
     "db:generate": "npm run prisma --prefix server -- generate",
@@ -14,7 +16,8 @@
     "db:migrate:dev": "npm run prisma --prefix server -- migrate dev",
     "db:seed": "npm run prisma --prefix server -- db seed",
     "db:reset": "npm run prisma --prefix server -- migrate reset",
-    "demo:readback": "node --env-file=.env server/node_modules/tsx/dist/cli.mjs scripts/db-readback.ts"
+    "demo:readback": "node --env-file=.env server/node_modules/tsx/dist/cli.mjs scripts/db-readback.ts",
+    "test:perf": "npm run test:perf --prefix server"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",

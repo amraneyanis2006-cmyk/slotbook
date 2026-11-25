@@ -14,6 +14,7 @@ import { healthRouter, readyRouter, versionRouter } from './routes/health.js';
 import { servicesRouter } from './routes/services.js';
 import { slotsRouter } from './routes/slots.js';
 import { staffBookingsRouter } from './routes/staffBookings.js';
+import { staffMembersRouter } from './routes/staffMembers.js';
 import { staffScheduleRouter } from './routes/staffSchedule.js';
 import { staffServicesRouter } from './routes/staffServices.js';
 import { staffSlotsRouter } from './routes/staffSlots.js';
@@ -50,6 +51,7 @@ export function createApp() {
   app.use('/api/staff/bookings', staffBookingsRouter);
   app.use('/api/staff/services', staffServicesRouter);
   app.use('/api/slots', slotsRouter);
+  app.use('/api/staff-members', staffMembersRouter);
   app.use('/api/bookings', bookingsRouter);
   if (process.env.NODE_ENV === 'test') app.use('/api/__test__', testOnlyRouter);
 
