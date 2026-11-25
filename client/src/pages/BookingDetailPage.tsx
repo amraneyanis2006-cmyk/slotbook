@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { canCancel, staffCancellation, type BookingView, type HistoryEntry } from '../api/bookings';
 import { http } from '../api/http';
 import { Callout } from '../components/Callout';
@@ -21,7 +21,9 @@ export default function BookingDetailPage() {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+  // A reschedule (F-08) lands here with its toast in the navigation state.
+  const arrival = (useLocation().state as { toast?: string } | null)?.toast;
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(arrival ? { id: Date.now(), message: arrival } : null);
   const heading = useRef<HTMLHeadingElement>(null);
   // After a cancellation attempt the Cancel button may be gone: focus the page heading instead of losing it.
   useEffect(() => { if (toast || pageError) heading.current?.focus(); }, [toast, pageError]);
@@ -74,7 +76,12 @@ export default function BookingDetailPage() {
           {booking.cancelledAt && <><dt>Cancelled on</dt><dd>{at(booking.cancelledAt)}</dd></>}
         </dl>
         {canCancel(booking)
-          ? <button type="button" onClick={() => { setPageError(null); setConfirming(true); }}>Cancel booking</button>
+          ? (
+            <div className="row-actions">
+              <button type="button" onClick={() => { setPageError(null); setConfirming(true); }}>Cancel booking</button>
+              <Link className="button secondary" to={`${path}/reschedule`}>Reschedule</Link>
+            </div>
+          )
           : booking.status === 'BOOKED' && <p className="hint">Cancellation closes 24 hours before the start.</p>}
       </div>
       <HistoryList history={history} />

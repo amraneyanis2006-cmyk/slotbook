@@ -49,6 +49,12 @@ export function canRecordOutcome(booking: { status: BookingStatus }, slot: { sta
   return now >= slot.startAt ? null : 'OUTCOME_TOO_EARLY';
 }
 
+/** F-08 §2: the target must be another slot of the same service (422 on `slotId`). */
+export function checkRescheduleTarget(oldSlot: { id: number; serviceId: number }, newSlot: { id: number; serviceId: number }): null | { slotId: string } {
+  if (newSlot.id === oldSlot.id) return { slotId: 'Choose a different slot.' };
+  return newSlot.serviceId === oldSlot.serviceId ? null : { slotId: 'Choose a slot of the same service.' };
+}
+
 /** BR-10 booking reference: BK-<Bangkok year>-<6-digit sequence>; throws above 999999. */
 export const formatReference = (year: number, seq: number): string => {
   if (!Number.isInteger(seq) || seq < 1 || seq > 999_999) throw new RangeError(`Booking sequence out of range: ${seq}`);

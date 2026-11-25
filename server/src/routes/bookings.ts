@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { requireRole } from '../middleware/requireRole.js';
-import { book, cancel, getMine, listMine } from '../services/bookingService.js';
+import { book, cancel, getMine, listMine, reschedule } from '../services/bookingService.js';
 import { parse } from '../utils/validate.js';
 
 export const bookingsRouter = Router();
@@ -46,6 +46,21 @@ bookingsRouter.get('/:reference', async (req, res, next) => {
 bookingsRouter.post('/:reference/cancel', async (req, res, next) => {
   try {
     res.json({ booking: await cancel(req.user!.id, req.params.reference) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const rescheduleSchema = z.object({
+  slotId: z.number({ required_error: 'Choose a slot.', invalid_type_error: 'Choose a slot.' })
+    .int('Choose a slot.').positive('Choose a slot.').max(2_147_483_647, 'Choose a slot.'),
+});
+
+// F-08 §3: atomic move of the caller's booking to another slot of the same service (BR-16).
+bookingsRouter.post('/:reference/reschedule', async (req, res, next) => {
+  try {
+    const { slotId } = parse(rescheduleSchema, req.body);
+    res.status(201).json(await reschedule(req.user!.id, req.params.reference, slotId));
   } catch (err) {
     next(err);
   }

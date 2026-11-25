@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../db.js';
 import { AppError } from '../errors.js';
-import { BOOKING_LEAD_MIN, BOOKING_RULE_MESSAGES, canCustomerCancel, canRecordOutcome, checkCustomerLimits, formatReference, isBookable } from '../rules/bookingRules.js';
+import { BOOKING_LEAD_MIN, BOOKING_RULE_MESSAGES, canCustomerCancel, canRecordOutcome, checkCustomerLimits, checkRescheduleTarget, formatReference, isBookable } from '../rules/bookingRules.js';
 import { now } from '../utils/clock.js';
 import { getHistory, recordStatusChange } from './historyService.js';
 import { addDays, bangkokDate, bangkokToUtc } from '../utils/time.js';
@@ -42,38 +42,71 @@ export function listAvailable(date: string, serviceId?: number) {
 }
 
 /**
- * Books slotId for customerId (from the session) in one transaction, in the binding order of F-04 §1 step 4.
+ * Books slotId for customerId (from the session) inside `tx`, in the binding order of F-04 §1 step 4, and appends the
+ * creation history row (F-10). Shared by F-04 (book) and F-08 (reschedule), so both apply the same rules.
  * A race lost on the partial unique index (P2002) is answered 409 SLOT_ALREADY_BOOKED by the error handler.
  */
+async function bookInTx(tx: Prisma.TransactionClient, customerId: number, slotId: number, note: string | null, at: Date, reason: string | null = null) {
+  const locked = await tx.$queryRaw<{ id: number }[]>`SELECT id FROM "Slot" WHERE id = ${slotId} FOR UPDATE`;
+  if (!locked.length) throw new AppError(404, 'NOT_FOUND', 'Slot not found.');
+  await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${customerId} FOR UPDATE`;
+
+  const slot = await tx.slot.findUniqueOrThrow({
+    where: { id: slotId },
+    include: { service: true, bookings: { where: { status: 'BOOKED' }, select: { id: true } } },
+  });
+  if (isBookable(slot, at)) throw reject('SLOT_NOT_BOOKABLE');
+  if (slot.bookings.length) throw reject('SLOT_ALREADY_BOOKED');
+
+  // Not yet ended (A-04): a booking that has started still counts for BR-04, not for BR-03 (checkCustomerLimits).
+  const notEnded = await tx.booking.findMany({
+    where: { customerId, status: 'BOOKED', slot: { endAt: { gt: at } } },
+    select: { status: true, slot: { select: { startAt: true, endAt: true } } },
+  });
+  const limit = checkCustomerLimits(notEnded, slot, at);
+  if (limit) throw reject(limit);
+
+  const [{ seq }] = await tx.$queryRaw<{ seq: bigint }[]>`SELECT nextval('booking_ref_seq') AS seq`;
+  const booking = await tx.booking.create({
+    data: { slotId, customerId, note, createdAt: at, reference: formatReference(Number(bangkokDate(at).slice(0, 4)), Number(seq)) },
+    select: { id: true, ...BOOKING_VIEW_SELECT },
+  });
+  await recordStatusChange(tx, { bookingId: booking.id, from: null, to: 'BOOKED', actorId: customerId, reason, at });
+  return booking;
+}
+
+/** F-04: books a slot for the session customer in one transaction. */
 export function book(customerId: number, slotId: number, note: string | null) {
+  return prisma.$transaction(async (tx) => withoutId(await bookInTx(tx, customerId, slotId, note, now())));
+}
+
+/**
+ * F-08 §1 step 3, one transaction (BR-16): lock the caller's booking (404), BR-13 and BR-05 on it, check the target
+ * (404 / 422), cancel the old booking, then book the target with the F-04 rules (the old booking, already cancelled,
+ * is excluded from BR-03/BR-04). Any refusal rolls everything back.
+ */
+export function reschedule(customerId: number, reference: string, slotId: number) {
   return prisma.$transaction(async (tx) => {
-    const locked = await tx.$queryRaw<{ id: number }[]>`SELECT id FROM "Slot" WHERE id = ${slotId} FOR UPDATE`;
-    if (!locked.length) throw new AppError(404, 'NOT_FOUND', 'Slot not found.');
-    await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${customerId} FOR UPDATE`;
-
+    const [locked] = await tx.$queryRaw<{ id: number }[]>`
+      SELECT id FROM "Booking" WHERE reference = ${reference.toUpperCase()} AND "customerId" = ${customerId} FOR UPDATE`;
+    if (!locked) throw bookingNotFound();
     const at = now();
-    const slot = await tx.slot.findUniqueOrThrow({
-      where: { id: slotId },
-      include: { service: true, bookings: { where: { status: 'BOOKED' }, select: { id: true } } },
+    const old = await tx.booking.findUniqueOrThrow({
+      where: { id: locked.id }, select: { reference: true, status: true, note: true, slot: { select: { id: true, serviceId: true, startAt: true } } },
     });
-    if (isBookable(slot, at)) throw reject('SLOT_NOT_BOOKABLE');
-    if (slot.bookings.length) throw reject('SLOT_ALREADY_BOOKED');
+    const refusal = canCustomerCancel(old, old.slot, at);
+    if (refusal) throw reject(refusal);
+    const target = await tx.slot.findUnique({ where: { id: slotId }, select: { id: true, serviceId: true } });
+    if (!target) throw new AppError(404, 'NOT_FOUND', 'Slot not found.');
+    const wrongTarget = checkRescheduleTarget(old.slot, target);
+    if (wrongTarget) throw new AppError(422, 'VALIDATION_ERROR', 'Please correct the highlighted fields.', wrongTarget);
 
-    // Not yet ended (A-04): a booking that has started still counts for BR-04, not for BR-03 (checkCustomerLimits).
-    const notEnded = await tx.booking.findMany({
-      where: { customerId, status: 'BOOKED', slot: { endAt: { gt: at } } },
-      select: { status: true, slot: { select: { startAt: true, endAt: true } } },
+    await tx.booking.update({ where: { id: locked.id }, data: { status: 'CANCELLED', cancelledAt: at, cancelledById: customerId } });
+    const fresh = await bookInTx(tx, customerId, slotId, old.note, at, `Rescheduled from ${old.reference}`);
+    await recordStatusChange(tx, {
+      bookingId: locked.id, from: 'BOOKED', to: 'CANCELLED', actorId: customerId, reason: `Rescheduled to ${fresh.reference}`, at,
     });
-    const limit = checkCustomerLimits(notEnded, slot, at);
-    if (limit) throw reject(limit);
-
-    const [{ seq }] = await tx.$queryRaw<{ seq: bigint }[]>`SELECT nextval('booking_ref_seq') AS seq`;
-    const booking = await tx.booking.create({
-      data: { slotId, customerId, note, createdAt: at, reference: formatReference(Number(bangkokDate(at).slice(0, 4)), Number(seq)) },
-      select: { id: true, ...BOOKING_VIEW_SELECT },
-    });
-    await recordStatusChange(tx, { bookingId: booking.id, from: null, to: 'BOOKED', actorId: customerId, at });
-    return withoutId(booking);
+    return { booking: withoutId(fresh), previous: old.reference };
   });
 }
 
