@@ -27,26 +27,28 @@ enum BookingStatus {
 }
 
 model User {
-  id                Int                   @id @default(autoincrement())
-  email             String                @unique
+  id                Int                    @id @default(autoincrement())
+  email             String                 @unique
   name              String
   passwordHash      String
   role              Role
-  isActive          Boolean               @default(true)
-  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime              @updatedAt @db.Timestamptz(3)
-  slots             Slot[]                @relation("StaffSlots")
-  bookings          Booking[]             @relation("CustomerBookings")
-  cancelledBookings Booking[]             @relation("CancelledBy")
+  isActive          Boolean                @default(true)
+  createdAt         DateTime               @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime               @updatedAt @db.Timestamptz(3)
+  slots             Slot[]                 @relation("StaffSlots")
+  bookings          Booking[]              @relation("CustomerBookings")
+  cancelledBookings Booking[]              @relation("CancelledBy")
   historyActions    BookingStatusChange[]
+  templates         AvailabilityTemplate[]
 }
 
 model Service {
-  id          Int     @id @default(autoincrement())
-  name        String  @unique
-  durationMin Int
-  isActive    Boolean @default(true)
-  slots       Slot[]
+  id              Int             @id @default(autoincrement())
+  name            String          @unique
+  durationMin     Int
+  isActive        Boolean         @default(true)
+  slots           Slot[]
+  templateEntries TemplateEntry[]
 }
 
 model Slot {
@@ -108,4 +110,28 @@ model Session {
 
   @@index([expire], map: "IDX_session_expire")
   @@map("session")
+}
+
+// Weekly availability templates (F-14): generating slots never changes the template, deleting it keeps the slots.
+model AvailabilityTemplate {
+  id        Int             @id @default(autoincrement())
+  staffId   Int
+  staff     User            @relation(fields: [staffId], references: [id])
+  name      String          @db.VarChar(60)
+  createdAt DateTime        @default(now()) @db.Timestamptz(3)
+  entries   TemplateEntry[]
+
+  @@index([staffId])
+}
+
+model TemplateEntry {
+  id         Int                  @id @default(autoincrement())
+  templateId Int
+  template   AvailabilityTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  weekday    Int                  @db.SmallInt
+  startTime  String               @db.Char(5)
+  serviceId  Int
+  service    Service              @relation(fields: [serviceId], references: [id])
+
+  @@unique([templateId, weekday, startTime])
 }
