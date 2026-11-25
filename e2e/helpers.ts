@@ -49,3 +49,21 @@ export async function apiBook(page: Page, date: string, startTime: string, staff
   expect(res.status()).toBe(201);
   return (await res.json()).booking.reference as string;
 }
+
+/** No horizontal page scroll, and every visible control lies fully inside the viewport width. */
+export async function expectNoOverflow(page: Page, label: string) {
+  const { scrollWidth, clientWidth, clipped } = await page.evaluate(() => {
+    const width = document.documentElement.clientWidth;
+    const controls = [...document.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea')]
+      .filter((el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: width,
+      clipped: controls.filter((el) => { const r = el.getBoundingClientRect(); return r.left < 0 || r.right > width + 0.5; })
+        .map((el) => el.outerHTML.slice(0, 80)),
+    };
+  });
+  expect(scrollWidth, `${label}: horizontal page scroll`).toBeLessThanOrEqual(clientWidth);
+  expect(clipped, `${label}: clipped controls`).toEqual([]);
+}
+
