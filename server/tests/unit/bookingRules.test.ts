@@ -84,3 +84,13 @@ describe('canRecordOutcome (F-09 §2, BR-15, BR-13)', () => {
   });
 });
 
+describe('checkRescheduleTarget (F-08 §2)', () => {
+  it('UNIT-13: same slot → "Choose a different slot."; other service → same-service message; valid target → null', async () => {
+    const { checkRescheduleTarget } = await import('../../src/rules/bookingRules.js');
+    const old = { id: 10, serviceId: 1 };
+    expect(checkRescheduleTarget(old, { id: 10, serviceId: 1 })).toEqual({ slotId: 'Choose a different slot.' });
+    expect(checkRescheduleTarget(old, { id: 11, serviceId: 2 })).toEqual({ slotId: 'Choose a slot of the same service.' });
+    expect(checkRescheduleTarget(old, { id: 11, serviceId: 1 })).toBeNull();
+  });
+});
+
