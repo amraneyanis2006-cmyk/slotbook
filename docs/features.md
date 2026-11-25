@@ -28,3 +28,23 @@ reviews it. Later-sprint owners are planned and may change through the sprint pl
 **Cross-cutting responsibilities.** NFR-01/02/06 are established by F-02 and re-verified by the API tests
 of every later feature. NFR-08/09 are established on the Sprint 1 screens (F-03..F-06) and audited in F-18.
 NFR-13 is a release-check responsibility of every sprint (see `traceability.md`).
+
+## Status at Deliverable 2 (release `v0.2.0-sprint2` = `ce25d4f`, deployed revision `slotbook-00011-xjg`)
+
+| ID | Status | Delivered in (Issue → PR) | Verification (all passed unless stated) |
+| :--- | :--- | :--- | :--- |
+| F-00 … F-06 | Accepted (Sprint 1, UAT accepted in Lab 6) | #1–#8 → #9–#17; tag `v0.1.0-sprint1` | Sprint 1 STS; re-run in every Sprint 2 CI run |
+| F-05 (CR-01) | Changed and accepted (Lab 7) | #45 → #46, #47, #48 | UNIT-05, API-22, API-23, UI-04 |
+| F-13 | Accepted (Lab 5) | #19–#26 → #27–#41 | AC-33..AC-39, C-01..C-06 |
+| F-07 | Implemented, reviewed, released | #52 → #67 (author Simeon, reviewer Yanis) | AC-49..AC-54 |
+| F-08 | Implemented, reviewed, released | #54 → #69 (author Yanis, reviewer Simeon) | AC-59..AC-63 |
+| F-09 | Implemented, reviewed, released | #53 → #68 (author Simeon, reviewer Yanis) | AC-55..AC-58 |
+| F-10 | Implemented, reviewed, released | #50 → #65 (author Yanis, reviewer Simeon) | AC-40..AC-43 |
+| F-11 | Implemented, reviewed, released | #51 → #66 (author Yanis, reviewer Simeon) | AC-44..AC-48 |
+| F-12 | Implemented, reviewed, released | #55 → #70 (author Simeon, reviewer Yanis) | AC-64..AC-67 (PERF-01 local run) |
+| F-15 | Implemented early (Sprint 3), reviewed, released | #58 → #72 (author Yanis, reviewer Simeon) | AC-69..AC-71 |
+| F-14, F-16, F-17 | Contract and STS approved (#57 → #71); not implemented | planned #59, #60, #61 | tests specified, not run |
+| F-18 | Contract approved; planned last | planned #62 | — |
+
+Sprint 2 release: Issue #56 → PRs #73 (preparation) and #74 (`staging` → `main`), tag `v0.2.0-sprint2`, Deploy run
+45649617286. Owners above follow the agreed split; see `contributions.md` and `ai-use.md`.

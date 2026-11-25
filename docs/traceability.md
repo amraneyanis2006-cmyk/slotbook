@@ -90,6 +90,9 @@ now and receive AC/tests in their own sprint contracts.
   `SEED_DEMO_DATA=true` (was: refuses production) and is then insert-only, demo slots only on an empty database; `/api/ready`, production SPA serving, trust proxy and startup
   refusal added as AC-33..AC-37 (SDS 1.3 §4/§7 follow) with UNIT-07, API-26, API-27, DB-03, DB-04. Reason: Lab 5 cloud deployment and Lab 6 UAT
   demo accounts. Made in the Issue #20 PR.
+- **CR-01 (2026-11-25), Lab 7, Issue #45:** BR-05 cancellation cutoff 2 h → 24 h (SRS 1.3, F-05 1.2, STS 1.6:
+  UNIT-05, API-22, API-23, UI-04). Approved per the TA's e-mail of 25 Nov; contract PR #46, implementation PR #47,
+  release PR #48.
 - **Sprint 2 contracts 2.0 (2026-11-25), Issue #49:** F-07..F-12, STS (AC-40..AC-68, UNIT-09..14, API-29..49,
   DB-05..07, UI-06..11, E2E-09..15, PERF-01), DoD; SRS 1.4 (A-04 resolved, A-05, A-06, D-07); SDS 1.5. Sprint 1 tests
   changed by Sprint 2 are listed in `sprints/sprint-2/sts.md` §7. Written by Yanis Amrane, reviewed by Simeon Audouit
@@ -97,3 +100,116 @@ now and receive AC/tests in their own sprint contracts.
 - **Sprint 3 contracts 3.0 (2026-11-25), Issue #57:** F-14..F-18 and STS (AC-69..AC-87); F-15 is implemented in
   Deliverable 2 (#58), the rest is planned in `sprints/sprint-3/README.md`. Written by Yanis Amrane, reviewed by
   Simeon Audouit.
+
+## 5. Requirement Status at Deliverable 2 (`v0.2.0-sprint2`) and Planned Final Verification
+
+| Status | Requirements |
+| :--- | :--- |
+| Implemented and verified (tests run and passed, §6) | FR-01..FR-18, FR-20; BR-01..BR-17; NFR-01..NFR-06, NFR-10, NFR-11 (PERF-01 local run), NFR-12 |
+| Verified for the current screens, final audit planned | NFR-08, NFR-09 (E2E-07, E2E-08, E2E-15 passed; full axe-core audit E2E-20 and Sprint 3 screens E2E-21 planned in F-18, #62) |
+| Release-level checks | NFR-07 (CI clean install + seed every run; MAN-02 clean-clone check at the final release), NFR-13 (STS Result columns filled from CI; scripted check MAN-03 planned in F-18) |
+| Not implemented yet — Sprint 3 | FR-19, BR-18 (F-14, #59); FR-21 (F-16, #60); FR-22, BR-19, Q-03 (F-17, #61). Their AC and tests are specified (Sprint 3 STS) and **not run**; they are not counted as covered. |
+
+No requirement is without an owning feature or responsibility. No AC of an implemented feature is without an
+executed test (§6).
+
+
+## 6. AC Verification Results Matrix (Deliverable 2, `v0.2.0-sprint2` = `ce25d4f`)
+
+Generated on 2026-11-25 from the STS tables (Sprint 1 1.6, Sprint 2 1.2, Sprint 3 1.0) and §1–§3 above: every AC with its
+requirements, feature, sprint, test IDs, test files, whether it is implemented, whether its verification has run
+and passed, and the version that passed. "Pass" comes from the STS Result column (CI run or recorded run); a
+planned test is never counted as coverage. The whole suite of `v0.2.0-sprint2` ran in the CI of release PR #74
+(run 45645986011: server 97 passed, client 17 passed, Playwright 17 passed, 0 failed, 0 skipped).
+
+| AC | Requirements | Feature | Sprint | Tests | Files | Implemented | Verification status | Passed in |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| AC-01 | FR-01, NFR-03, NFR-05 | F-01 | 1 | UNIT-06, API-01 | `server/tests/api/auth.api.test.ts`<br>`server/tests/unit/sessionConfig.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-02 | FR-01, BR-12 | F-01 | 1 | API-02, API-03 | `server/tests/api/auth.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-03 | FR-03 | F-01 | 1 | API-04 | `server/tests/api/auth.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-04 | FR-02, NFR-05 | F-01 | 1 | API-05, E2E-01 | `e2e/auth.spec.ts`<br>`server/tests/api/auth.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-05 | FR-01, FR-04, NFR-09 | F-01 | 1 | UI-01, E2E-01 | `client/tests/LoginPage.test.tsx`<br>`e2e/auth.spec.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-06 | NFR-01 | F-02 | 1 | API-06 | `server/tests/api/access.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-07 | NFR-02 | F-02 | 1 | API-07 | `server/tests/api/access.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-08 | BR-08 | F-02 | 1 | API-08 | `server/tests/api/access.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-09 | NFR-06 | F-02 | 1 | API-09 | `server/tests/api/access.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-10 | FR-04 | F-03 | 1 | E2E-02 | `e2e/auth.spec.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-11 | FR-05 | F-03 | 1 | API-10 | `server/tests/api/slots.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-12 | FR-05, BR-06, NFR-10 | F-03 | 1 | UNIT-01, API-11 | `server/tests/api/slots.api.test.ts`<br>`server/tests/unit/slotRules.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-13 | BR-07 | F-03 | 1 | UNIT-02, API-12 | `server/tests/api/slots.api.test.ts`<br>`server/tests/unit/slotRules.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-14 | FR-06, BR-09 | F-03 | 1 | API-13 | `server/tests/api/slots.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-15 | FR-05, NFR-09 | F-04 | 1 | UI-02, E2E-03 | `client/tests/MySlotsPage.test.tsx`<br>`e2e/staff-slots.spec.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-16 | FR-07 | F-04 | 1 | API-14 | `server/tests/api/bookings.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-17 | FR-08, BR-10 | F-04 | 1 | UNIT-03, API-15, E2E-04 | `e2e/booking-journey.spec.ts`<br>`server/tests/api/bookings.api.test.ts`<br>`server/tests/unit/bookingRules.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-18 | BR-01 | F-04 | 1 | API-16 | `server/tests/api/bookings.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-19 | BR-01, NFR-04 | F-04 | 1 | API-17, DB-01 | `server/tests/api/bookings.api.test.ts`<br>`server/tests/db/constraints.db.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-20 | BR-02, NFR-10 | F-04 | 1 | UNIT-04, API-18 | `server/tests/api/bookings.api.test.ts`<br>`server/tests/unit/bookingRules.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-21 | BR-03, BR-04 | F-04 | 1 | UNIT-04, API-19 | `server/tests/api/bookings.api.test.ts`<br>`server/tests/unit/bookingRules.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-22 | FR-08, NFR-09 | F-04 | 1 | UI-03, E2E-04 | `client/tests/BookSlotPage.test.tsx`<br>`e2e/booking-journey.spec.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-23 | FR-09 | F-05 | 1 | API-20, E2E-05 | `e2e/booking-journey.spec.ts`<br>`server/tests/api/my-bookings.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-24 | BR-09, NFR-02 | F-05 | 1 | API-21 | `server/tests/api/my-bookings.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-25 | FR-10, BR-05, BR-11 | F-05 | 1 | UNIT-05, API-22, E2E-05 | `e2e/booking-journey.spec.ts`<br>`server/tests/api/my-bookings.api.test.ts`<br>`server/tests/unit/bookingRules.test.ts` | Yes | Implemented; verification run and passed | Lab 7 d6491a7; S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-26 | FR-10, BR-05, BR-13, NFR-10 | F-05 | 1 | UNIT-05, API-23 | `server/tests/api/my-bookings.api.test.ts`<br>`server/tests/unit/bookingRules.test.ts` | Yes | Implemented; verification run and passed | Lab 7 d6491a7; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-27 | FR-09, BR-05, NFR-09 | F-05 | 1 | UI-04, E2E-05 | `client/tests/MyBookingsPage.test.tsx`<br>`e2e/booking-journey.spec.ts` | Yes | Implemented; verification run and passed | Lab 7 d6491a7; S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-28 | FR-11, BR-09, NFR-02 | F-06 | 1 | API-24 | `server/tests/api/schedule.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-29 | FR-11 | F-06 | 1 | E2E-06 | `e2e/schedule.spec.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-30 | NFR-08, NFR-09 | F-06 | 1 | E2E-07, E2E-08 | `e2e/responsive-a11y.spec.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-31 | NFR-12 | F-00 | 1 | API-25 | `server/tests/api/health.api.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-32 | NFR-03, NFR-07 | F-00 | 1 | DB-02 | `server/tests/db/seed.db.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-33 | NFR-12 | F-13 | Lab 5 | API-26 | `server/tests/api/health.api.test.ts` | Yes | Implemented; verification run and passed | Lab 5; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-34 | NFR-12 | F-13 | Lab 5 | API-27 | `server/tests/api/production.api.test.ts` | Yes | Implemented; verification run and passed | Lab 5; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-35 | NFR-12 | F-13 | Lab 5 | UNIT-07 | `server/tests/unit/sessionConfig.test.ts` | Yes | Implemented; verification run and passed | Lab 5; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-36 | NFR-12 | F-13 | Lab 5 | DB-03 | `server/tests/db/seed.db.test.ts` | Yes | Implemented; verification run and passed | Lab 5; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-37 | NFR-12 | F-13 | Lab 5 | DB-04 | `server/tests/db/seed.db.test.ts` | Yes | Implemented; verification run and passed | Lab 5; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-38 | NFR-12 | F-13 | Lab 5 | UNIT-08 | `server/tests/unit/sessionConfig.test.ts` | Yes | Implemented; verification run and passed | Lab 5; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-39 | NFR-12 | F-13 | Lab 5 | API-28, UI-05 | `client/tests/ReleaseFooter.test.tsx`<br>`server/tests/api/health.api.test.ts` | Yes | Implemented; verification run and passed | Lab 5; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-40 | FR-16, BR-17 | F-10 | 2 | UNIT-09, API-29 | `server/tests/api/history.api.test.ts`<br>`server/tests/unit/historyRules.test.ts` | Yes | Implemented; verification run and passed | PR #65; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-41 | FR-16 | F-10 | 2 | UNIT-09, API-30 | `server/tests/api/history.api.test.ts`<br>`server/tests/unit/historyRules.test.ts` | Yes | Implemented; verification run and passed | PR #65; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-42 | BR-17 | F-10 | 2 | DB-05, DB-06 | `server/tests/db/history.db.test.ts` | Yes | Implemented; verification run and passed | PR #65; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-43 | FR-16 | F-10 | 2 | UI-06, E2E-09 | `client/tests/BookingDetailPage.test.tsx`<br>`e2e/sprint2-history.spec.ts` | Yes | Implemented; verification run and passed | PR #65; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-44 | FR-17 | F-11 | 2 | API-31 | `server/tests/api/services.api.test.ts` | Yes | Implemented; verification run and passed | PR #66; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-45 | FR-17 | F-11 | 2 | UNIT-10, API-32, DB-07 | `server/tests/api/services.api.test.ts`<br>`server/tests/db/services.db.test.ts`<br>`server/tests/unit/serviceRules.test.ts` | Yes | Implemented; verification run and passed | PR #66; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-46 | FR-17 | F-11 | 2 | API-33 | `server/tests/api/services.api.test.ts` | Yes | Implemented; verification run and passed | PR #66; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-47 | BR-04 | F-11 | 2 | API-34 | `server/tests/api/bookings.api.test.ts` | Yes | Implemented; verification run and passed | PR #66; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-48 | FR-17 | F-11 | 2 | UI-07, E2E-10 | `client/tests/ServicesPage.test.tsx`<br>`e2e/sprint2-services.spec.ts` | Yes | Implemented; verification run and passed | PR #66; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-49 | FR-12 | F-07 | 2 | UNIT-11, API-35 | `server/tests/api/slotMaintenance.api.test.ts`<br>`server/tests/unit/slotRules.test.ts` | Yes | Implemented; verification run and passed | PR #67; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-50 | FR-12 | F-07 | 2 | UNIT-11, API-36 | `server/tests/api/slotMaintenance.api.test.ts`<br>`server/tests/unit/slotRules.test.ts` | Yes | Implemented; verification run and passed | PR #67; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-51 | BR-14 | F-07 | 2 | UNIT-11, API-37 | `server/tests/api/slotMaintenance.api.test.ts`<br>`server/tests/unit/slotRules.test.ts` | Yes | Implemented; verification run and passed | PR #67; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-52 | FR-13, BR-14 | F-07 | 2 | UNIT-11, API-38 | `server/tests/api/slotMaintenance.api.test.ts`<br>`server/tests/unit/slotRules.test.ts` | Yes | Implemented; verification run and passed | PR #67; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-53 | FR-12 | F-07 | 2 | UNIT-11, API-39 | `server/tests/api/slotMaintenance.api.test.ts`<br>`server/tests/unit/slotRules.test.ts` | Yes | Implemented; verification run and passed | PR #67; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-54 | FR-12, FR-13 | F-07 | 2 | UI-08, E2E-11 | `client/tests/MySlotsPage.test.tsx`<br>`e2e/sprint2-slot-maintenance.spec.ts` | Yes | Implemented; verification run and passed | PR #67; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-55 | FR-15, BR-15 | F-09 | 2 | UNIT-12, API-40 | `server/tests/api/attendance.api.test.ts`<br>`server/tests/unit/bookingRules.test.ts` | Yes | Implemented; verification run and passed | PR #68; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-56 | BR-15 | F-09 | 2 | UNIT-12, API-41 | `server/tests/api/attendance.api.test.ts`<br>`server/tests/unit/bookingRules.test.ts` | Yes | Implemented; verification run and passed | PR #68; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-57 | FR-15 | F-09 | 2 | API-42 | `server/tests/api/attendance.api.test.ts` | Yes | Implemented; verification run and passed | PR #68; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-58 | FR-15 | F-09 | 2 | UI-09, E2E-12 | `client/tests/SchedulePage.test.tsx`<br>`e2e/sprint2-attendance.spec.ts` | Yes | Implemented; verification run and passed | PR #68; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-59 | FR-14 | F-08 | 2 | API-43 | `server/tests/api/reschedule.api.test.ts` | Yes | Implemented; verification run and passed | PR #69; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-60 | BR-16 | F-08 | 2 | API-44 | `server/tests/api/reschedule.api.test.ts` | Yes | Implemented; verification run and passed | PR #69; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-61 | BR-16 | F-08 | 2 | API-45 | `server/tests/api/reschedule.api.test.ts` | Yes | Implemented; verification run and passed | PR #69; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-62 | FR-14 | F-08 | 2 | UNIT-13, API-46 | `server/tests/api/reschedule.api.test.ts`<br>`server/tests/unit/bookingRules.test.ts` | Yes | Implemented; verification run and passed | PR #69; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-63 | FR-14 | F-08 | 2 | UI-10, E2E-13 | `client/tests/ReschedulePage.test.tsx`<br>`e2e/sprint2-reschedule.spec.ts` | Yes | Implemented; verification run and passed | PR #69; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-64 | FR-18 | F-12 | 2 | API-47, API-49 | `server/tests/api/search.api.test.ts` | Yes | Implemented; verification run and passed | PR #70; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-65 | FR-18 | F-12 | 2 | UNIT-14, API-48 | `server/tests/api/search.api.test.ts`<br>`server/tests/unit/searchRules.test.ts` | Yes | Implemented; verification run and passed | PR #70; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-66 | NFR-11 | F-12 | 2 | PERF-01 | `server/tests/perf/perf.test.ts` | Yes | Implemented; verification run and passed | S1 release; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-67 | FR-18 | F-12 | 2 | UI-11, E2E-14 | `client/tests/SearchPage.test.tsx`<br>`e2e/sprint2-search.spec.ts` | Yes | Implemented; verification run and passed | PR #70; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-68 | NFR-08, NFR-09 | NFR-08/09 (Sprint 2 screens) | 2 | E2E-15 | `e2e/sprint2-responsive.spec.ts` | Yes | Implemented; verification run and passed | PR #73; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-69 | FR-20 | F-15 | 3 | UNIT-15 | `server/tests/unit/dashboardRules.test.ts` | Yes | Implemented; verification run and passed | PR #72; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-70 | FR-20 | F-15 | 3 | API-50 | `server/tests/api/dashboard.api.test.ts` | Yes | Implemented; verification run and passed | PR #72; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-71 | FR-20 | F-15 | 3 | UI-12, E2E-16 | `client/tests/DashboardPage.test.tsx`<br>`e2e/sprint3-dashboard.spec.ts` | Yes | Implemented; verification run and passed | PR #72; all in v0.2.0-sprint2 (PR #74 CI run 45645986011) |
+| AC-72 | FR-19, BR-18 | F-14 | 3 | UNIT-16 | `server/tests/unit/templateRules.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-73 | FR-19, BR-18 | F-14 | 3 | API-51 | `server/tests/api/templates.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-74 | FR-19 | F-14 | 3 | API-52 | `server/tests/api/templates.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-75 | FR-19 | F-14 | 3 | UI-13 / E2E-17 | `client/tests/TemplatesPage.test.tsx` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-76 | FR-21 | F-16 | 3 | UNIT-17, API-53 | `server/tests/api/notifications.api.test.ts`<br>`server/tests/unit/notificationRules.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-77 | FR-21 | F-16 | 3 | API-54 | `server/tests/api/notifications.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-78 | FR-21 | F-16 | 3 | UI-14 / E2E-18 | `client/tests/NotificationsPage.test.tsx` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-79 | BR-19 | F-17 | 3 | UNIT-18 | `server/tests/unit/bookingRules.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-80 | BR-19 | F-17 | 3 | API-55 | `server/tests/api/noShowPolicy.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-81 | FR-22 | F-17 | 3 | API-56 | `server/tests/api/accounts.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-82 | FR-22 | F-17 | 3 | API-57 | `server/tests/api/accounts.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-83 | FR-22 | F-17 | 3 | UI-15 / E2E-19 | `client/tests/AccountsPage.test.tsx` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-84 | — | F-18 | 3 | E2E-20 | `e2e/a11y-audit.spec.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-85 | — | F-18 | 3 | E2E-21 | `e2e/sprint3-responsive.spec.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-86 | — | F-18 | 3 | PERF-02 | `server/tests/perf/perf.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-87 | — | F-18 | 3 | MAN-03 | `scripts/release-check.sh` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+
+**Summary:** 71 AC: Implemented; verification run and passed; 16 AC: Planned (Sprint 3); tests specified, not run.
