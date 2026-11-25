@@ -2,7 +2,8 @@
 // Pass the API enum value; unknown values are shown as-is.
 const LABELS: Record<string, string> = {
   OPEN: 'Open', BOOKED: 'Booked', CLOSED: 'Closed', CANCELLED: 'Cancelled', COMPLETED: 'Completed', NO_SHOW: 'No-show',
-  ACTIVE: 'Active', INACTIVE: 'Inactive', // services (F-11)
+  ACTIVE: 'Active', INACTIVE: 'Inactive', // services (F-11), accounts (F-17)
+  SUSPENDED: 'Suspended',
 };
 
 export function StatusBadge({ status }: { status: string }) {

@@ -45,3 +45,4 @@ AC-69 … AC-87; UNIT-15..18, API-50..57, UI-12..15, E2E-16..21, PERF-02, MAN-03
 | Version | Date | File(s) | Author | Change and reason |
 | :--- | :--- | :--- | :--- | :--- |
 | 3.0 | 2026-11-25 | all Sprint 3 files; ../../traceability.md | Yanis Amrane | Initial Sprint 3 contracts and STS, recorded before any Sprint 3 code (Issue #57). Reviewed by Simeon Audouit. |
+| 3.1 | 2026-11-26 | F-17-accounts-no-show.md 1.1 | Yanis Amrane | `activeBookingRefs` and the 409 date format (Issue #61). |
