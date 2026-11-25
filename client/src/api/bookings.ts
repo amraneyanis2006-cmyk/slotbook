@@ -7,7 +7,7 @@ export type BookingView = {
   reference: string; status: string; note: string | null; createdAt: string; cancelledAt: string | null; slot: SlotView;
 };
 
-const CANCEL_WINDOW_MS = 120 * 60_000; // BR-05
+const CANCEL_WINDOW_MS = 24 * 60 * 60_000; // BR-05 v2 (CR-01): 24 h
 
 /** Comfort check mirroring BR-13/BR-05 with the browser clock; the server decides. */
 export const canCancel = (booking: BookingView) =>

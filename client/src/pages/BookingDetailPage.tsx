@@ -70,7 +70,7 @@ export default function BookingDetailPage() {
         </dl>
         {canCancel(booking)
           ? <button type="button" onClick={() => { setPageError(null); setConfirming(true); }}>Cancel booking</button>
-          : booking.status === 'BOOKED' && <p className="hint">Cancellation closes 2 hours before the start.</p>}
+          : booking.status === 'BOOKED' && <p className="hint">Cancellation closes 24 hours before the start.</p>}
       </div>
       {back}
 

@@ -1,0 +1,12 @@
+SHOT-01 run for CR-01 (#45) - branch feat/cr01-cancel-cutoff-24h at commit 1ff124113263c8183b477b7ed619ef5c9f45b348
+(docs(CR-01): address implementation review (PR #47), demo booking at D+2), 25/11/2026 16:01 Bangkok, local run, API on slotbook_test
+
+$ npx playwright test e2e/demo-evidence.spec.ts   - exit 0
+Running 1 test using 1 worker
+  ✓  1 e2e/demo-evidence.spec.ts:17:1 › SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, staff, access control, responsive) (32.6s)
+  1 passed (46.0s)
+
+Result: 1 passed. Shot 11: booking starting in 75-90 min, no Cancel button, hint "Cancellation closes 24 hours before the start."
+Shot 12: Ploy cancels her D+2 14:00 booking (BK-2026-000006, Fri 27 Nov 2026) at 16:01 on 25 Nov, >= 24 h ahead -> Cancelled + toast.
+Copied here: 11-late-cancel-no-button.png, 12-cancellation-success.png. The run rewrote artifacts/sprint-1/screenshots/*.png;
+those were restored with 'git restore artifacts/sprint-1/screenshots' (Deliverable 1 evidence unchanged).

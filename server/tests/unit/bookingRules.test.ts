@@ -50,10 +50,13 @@ describe('isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04)', () => {
 describe('canCustomerCancel (F-05, BR-05, BR-13)', () => {
   const slotIn = (min: number) => ({ startAt: plus(min) });
 
-  it('UNIT-05: +120 min → allowed; +119 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first', () => {
-    expect(CANCEL_WINDOW_MIN).toBe(120);
-    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(120), NOW)).toBeNull();
-    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(24 * 60), NOW)).toBeNull();
+  it('UNIT-05 (CR-01): +1440 min → allowed; +1439, +180 and +120 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first', () => {
+    expect(CANCEL_WINDOW_MIN).toBe(24 * 60);
+    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(24 * 60), NOW)).toBeNull(); // exactly 24 h: allowed
+    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(72 * 60), NOW)).toBeNull();
+    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(24 * 60 - 1), NOW)).toBe('CANCELLATION_WINDOW_CLOSED'); // 23 h 59 min
+    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(180), NOW)).toBe('CANCELLATION_WINDOW_CLOSED'); // allowed before CR-01
+    expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(120), NOW)).toBe('CANCELLATION_WINDOW_CLOSED'); // old boundary
     expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(119), NOW)).toBe('CANCELLATION_WINDOW_CLOSED');
     expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(-30), NOW)).toBe('CANCELLATION_WINDOW_CLOSED');
     for (const status of ['CANCELLED', 'COMPLETED', 'NO_SHOW'] as const) {

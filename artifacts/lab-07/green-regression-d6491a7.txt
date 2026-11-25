@@ -1,0 +1,46 @@
+GREEN + regression for CR-01 (#45) - branch feat/cr01-cancel-cutoff-24h at commit G = d6491a744239fc4a2c2373dc2582c3134843270d
+(feat(CR-01): GREEN, on RED T = ee5ccea7c8831dd89898615d2d6d2767f778a5d6, on staging M1 = 026f34b), 25/11/2026 12:00 Bangkok, local run
+
+== Targeted CR-01 tests (same commands as RED) - exit 0
+$ cd server && npx vitest run --reporter=verbose tests/unit/bookingRules.test.ts tests/api/my-bookings.api.test.ts
+$ cd client && npx vitest run --reporter=verbose tests/MyBookingsPage.test.tsx
+ ✓ tests/api/my-bookings.api.test.ts > GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-20: only the caller's bookings, split into upcoming (BOOKED, start ≥ now, ascending) and past (newest first); detail by reference; same data after a new login 798ms
+ ✓ tests/api/my-bookings.api.test.ts > GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-21: reading or cancelling Ken's booking as Ploy → 404 NOT_FOUND without booking data; Ken's booking still BOOKED 38ms
+ ✓ tests/api/my-bookings.api.test.ts > POST /api/bookings/:reference/cancel (F-05) > API-22 (CR-01): cancelling at +25 h (and exactly +24 h) → 200 CANCELLED with cancelledAt; the slot is available again and Nina books it 58ms
+ ✓ tests/api/my-bookings.api.test.ts > POST /api/bookings/:reference/cancel (F-05) > API-23 (CR-01): inside 24 h → 409 CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW (or a second cancel) → 409 BOOKING_NOT_ACTIVE; rows unchanged 108ms
+ ✓ tests/unit/bookingRules.test.ts > formatReference (F-04, BR-10) > UNIT-03: formats BK-YYYY-NNNNNN and throws when the sequence exceeds 999999 3ms
+ ✓ tests/unit/bookingRules.test.ts > isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04) > UNIT-04: +60 min is bookable; +59 min, CLOSED/CANCELLED and inactive service are not; 3 active → limit; past/cancelled not counted; overlap vs back-to-back 1ms
+ ✓ tests/unit/bookingRules.test.ts > canCustomerCancel (F-05, BR-05, BR-13) > UNIT-05 (CR-01): +1440 min → allowed; +1439, +180 and +120 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first 1ms
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+ ✓ tests/MyBookingsPage.test.tsx > MyBookingsPage / BookingDetailPage (F-05) > UI-04 (CR-01): two sections with badges; Cancel only for the booking ≥ 24 h ahead; after confirming, the badge shows Cancelled 378ms
+ ✓ tests/MyBookingsPage.test.tsx > MyBookingsPage / BookingDetailPage (F-05) > UI-04: a refused cancel (409) closes the dialog, shows the server message on the page, focuses the heading and reloads the status 54ms
+ ✓ tests/MyBookingsPage.test.tsx > MyBookingsPage / BookingDetailPage (F-05) > UI-04: empty list, load error with Retry, and "Booking not found." for a foreign reference 39ms
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+
+== Server tests (cd server && npx vitest run; slotbook_test reset + seeded by tests/setup.ts) - exit 0
+ Test Files  13 passed (13)
+      Tests  64 passed (64)
+   Duration  27.13s (transform 229ms, setup 0ms, collect 4.53s, tests 17.19s, environment 3ms, prepare 954ms)
+
+== Client tests (cd client && npx vitest run) - exit 0
+ Test Files  5 passed (5)
+      Tests  10 passed (10)
+   Duration  2.62s (transform 341ms, setup 908ms, collect 962ms, tests 2.70s, environment 3.23s, prepare 1.05s)
+
+== Client type check (cd client && npx tsc --noEmit -p .) - exit 0, no output
+
+== E2E (npx playwright test --grep-invert SHOT-01; API on slotbook_test) - exit 0
+   SHOT-01 (demo-evidence.spec.ts) excluded: it rewrites the committed demo screenshots.
+  ✓  1 e2e/auth.spec.ts:13:1 › E2E-01: each role lands on its home with name and role in the header; logout and wrong password (4.1s)
+  ✓  2 e2e/auth.spec.ts:41:1 › E2E-02: protected pages redirect anonymous users to /login and other roles to their own home (3.1s)
+  ✓  3 e2e/booking-journey.spec.ts:9:3 › Customer booking journey (F-04, F-05) › E2E-04: Ploy filters the date and service, books the Mali slot with a note, sees the reference and the slot leaves the list (1.7s)
+  ✓  4 e2e/booking-journey.spec.ts:32:3 › Customer booking journey (F-04, F-05) › E2E-05: the booking survives a reload and a new login; Ploy opens the detail, cancels it, sees Cancelled and the slot is bookable again (3.3s)
+  ✓  5 e2e/schedule.spec.ts:7:1 › E2E-06: after Ploy books the Mali slot, Mali sees the reference and "Ploy Chai" on Schedule for that day; Anan does not (3.4s)
+  ✓  6 e2e/staff-slots.spec.ts:10:1 › E2E-03: Mali publishes a slot on My Slots and sees it listed; an overlapping slot shows the overlap message (1.7s)
+  ✓  7 e2e/responsive-a11y.spec.ts:33:1 › E2E-07: /login, /book, /bookings, /staff/slots and /staff/schedule have no horizontal scroll or clipped control at 320, 768 and 1280 px (6.6s)
+  ✓  8 e2e/responsive-a11y.spec.ts:73:1 › E2E-08: Ken logs in and books a slot with Tab/Shift+Tab/Enter/Esc only, with a visible focus ring (2.2s)
+  8 passed (33.6s)
+
+Summary: server 64 passed / 0 failed / 0 skipped; client 10 passed / 0 failed / 0 skipped; tsc clean; E2E 8 passed / 0 failed / 0 skipped (SHOT-01 excluded).
