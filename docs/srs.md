@@ -158,4 +158,4 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | 1.0 | 2026-11-07 | Yanis Amrane (AI use is declared in docs/ai-use.md, added in Issue #8) | Baseline SRS for Deliverable 1, reviewed by Simeon Audouit in the contract PR. |
 | 1.1 | 2026-11-07 | Yanis Amrane | Pre-PR review fixes (BR-02 active service, BR-10 Bangkok year, A-03 services, NFR-05 verification); see PR #9. |
 | 1.2 | 2026-11-10 | Simeon Audouit | A-04 added (BR-04 compares only against future bookings), decided by Yanis Amrane for Issue #8. |
-| 1.3 | 2026-11-25 | Yanis Amrane | CR-01 (Lab 7 maintenance, approved change): BR-05 cancellation cutoff 2 h → 24 h; exactly 24 h allowed. Reviewed by Simeon Audouit before implementation. |
+| 1.3 | 2026-11-25 | Yanis Amrane | CR-01 (Lab 7 maintenance change, Issue #45; TA/instructor approval requested 2026-11-25, recorded in the Issue before implementation): BR-05 cancellation cutoff 2 h → 24 h; exactly 24 h allowed. Reviewed by Simeon Audouit before implementation. |
