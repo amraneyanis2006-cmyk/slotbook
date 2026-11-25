@@ -39,7 +39,7 @@ now and receive AC/tests in their own sprint contracts.
 | BR-02 Bookable only ≥ 60 min ahead | F-04 | Sprint 1; AC-20 / UNIT-04, API-18 |
 | BR-03 Max 3 active bookings | F-04 | Sprint 1; AC-21 / UNIT-04, API-19 |
 | BR-04 No overlapping own bookings | F-04 | Sprint 1; AC-21 / UNIT-04, API-19 |
-| BR-05 Cancellation window 2 h | F-05 | Sprint 1; AC-26 / UNIT-05, API-23 |
+| BR-05 Cancellation window 24 h (v2, CR-01 Lab 7; 2 h in Sprint 1) | F-05 | Sprint 1, changed by CR-01; AC-25, AC-26, AC-27 / UNIT-05, API-22, API-23, UI-04 |
 | BR-06 Valid slot (future, 15 min, opening hours, active service) | F-03 | Sprint 1; AC-12 / UNIT-01, API-11 |
 | BR-07 No overlapping staff slots | F-03 | Sprint 1; AC-13 / UNIT-02, API-12 |
 | BR-08 Server-side identity | F-02 (system responsibility, re-checked in F-03/F-04) | Sprint 1; AC-08 / API-08 |

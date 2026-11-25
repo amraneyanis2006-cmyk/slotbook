@@ -6,7 +6,7 @@
 | Team | EN-036 "Y Que Fue" — Yanis Amrane (69540460041), Simeon Audouit (65540460046) |
 | Theme | 1 — Appointment and Scheduling System (Sprint 1 roles: Customer / Staff) |
 | Product | **SlotBook** |
-| Version | 1.2 (Deliverable 1 baseline + pre-review fixes + A-04) — history in §8 |
+| Version | 1.3 (Deliverable 1 baseline + pre-review fixes + A-04 + CR-01) — history in §8 |
 
 ---
 
@@ -99,7 +99,7 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | BR-02 | **Bookable only in the future.** A slot can be booked only if it is `OPEN`, its service is active and its start time is at least 60 minutes after the current time. | 409 `SLOT_NOT_BOOKABLE` | 1 |
 | BR-03 | **Booking limit.** A Customer may hold at most 3 active future bookings at the same time. | 409 `BOOKING_LIMIT_REACHED` | 1 |
 | BR-04 | **No overlapping bookings.** A Customer cannot hold two active bookings whose time ranges overlap. | 409 `BOOKING_OVERLAP` | 1 |
-| BR-05 | **Cancellation window.** A Customer can cancel an active booking only until 2 hours before its start. | 409 `CANCELLATION_WINDOW_CLOSED` | 1 |
+| BR-05 | **Cancellation window.** A Customer can cancel an active booking only until 24 hours before its start (exactly 24 h before is allowed). *(v2, CR-01 Lab 7; v1 in Sprint 1: 2 hours.)* | 409 `CANCELLATION_WINDOW_CLOSED` | 1 (changed by CR-01) |
 | BR-06 | **Valid slot.** A slot's start is in the future, aligned to 15 minutes, and the whole slot lies inside opening hours 08:00–18:00 Asia/Bangkok on the same day; its service must be active. | 422 `VALIDATION_ERROR` (with `fields`) | 1 |
 | BR-07 | **No overlapping slots per staff.** Two non-cancelled slots of the same Staff member cannot overlap in time. | 409 `SLOT_OVERLAP` | 1 |
 | BR-08 | **Server-side identity.** The acting user, their role, the slot owner (`staffId`) and the booking owner (`customerId`) are always taken from the server session, never from the request body or query. | ignored / 403 | 1 |
@@ -158,3 +158,4 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | 1.0 | 2026-11-07 | Yanis Amrane (AI use is declared in docs/ai-use.md, added in Issue #8) | Baseline SRS for Deliverable 1, reviewed by Simeon Audouit in the contract PR. |
 | 1.1 | 2026-11-07 | Yanis Amrane | Pre-PR review fixes (BR-02 active service, BR-10 Bangkok year, A-03 services, NFR-05 verification); see PR #9. |
 | 1.2 | 2026-11-10 | Simeon Audouit | A-04 added (BR-04 compares only against future bookings), decided by Yanis Amrane for Issue #8. |
+| 1.3 | 2026-11-25 | Yanis Amrane | CR-01 (Lab 7 maintenance, approved change): BR-05 cancellation cutoff 2 h → 24 h; exactly 24 h allowed. Reviewed by Simeon Audouit before implementation. |
