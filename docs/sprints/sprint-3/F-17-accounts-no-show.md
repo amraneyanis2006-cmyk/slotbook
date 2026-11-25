@@ -68,4 +68,4 @@ already inactive account (200, nothing cancelled), a booking that started 10 min
 | Version | Date | Author | Change |
 | :--- | :--- | :--- | :--- |
 | 1.0 | 2026-11-25 | Yanis Amrane | Sprint 3 contract drafted for Simeon Audouit's Issue (Issue #57); reviewed by Simeon Audouit, the implementer. |
-| 1.1 | 2026-11-26 | Yanis Amrane | Issue #61: `activeBookingRefs` added to the list (the §4 dialog names the bookings to be cancelled); suspension date in the 409 message formatted as “Sat 22 Feb 2031, 10:00” (Asia/Bangkok). Found while implementing; reviewed in the #61 PR. |
+| 1.1 | 2026-11-26 | Simeon Audouit | Issue #61: `activeBookingRefs` added to the list (the §4 dialog names the bookings to be cancelled); suspension date in the 409 message formatted as “Sat 22 Feb 2031, 10:00” (Asia/Bangkok). Found while implementing; reviewed in the #61 PR. |

@@ -1,7 +1,7 @@
 # SlotBook — System-Level Software Design Specification (SDS)
 
-Version 1.5 (2026-11-25). Applies to the whole product; the feature contracts in `docs/sprints/sprint-1/` and
-`docs/sprints/sprint-2/` give the detailed endpoints and screens.
+Version 1.6 (2026-11-26). Applies to the whole product; the feature contracts in `docs/sprints/sprint-1/` to
+`docs/sprints/sprint-3/` give the detailed endpoints and screens.
 
 ---
 
@@ -64,6 +64,11 @@ erDiagram
   Slot ||--o{ Booking : "has (max 1 BOOKED)"
   Booking ||--o{ BookingStatusChange : "history (append-only)"
   User ||--o{ BookingStatusChange : "acts (actorId)"
+  User ||--o{ AvailabilityTemplate : "owns (staffId)"
+  AvailabilityTemplate ||--o{ TemplateEntry : "weekly entries"
+  Service ||--o{ TemplateEntry : "is used in"
+  User ||--o{ Notification : "receives (userId)"
+  Booking ||--o{ Notification : "is about"
   User { int id PK
          string email UK
          string name
@@ -95,6 +100,21 @@ erDiagram
             int actorId FK
             string reason
             datetime createdAt }
+  AvailabilityTemplate { int id PK
+            int staffId FK
+            string name
+            datetime createdAt }
+  TemplateEntry { int id PK
+            int templateId FK
+            int weekday
+            string startTime
+            int serviceId FK }
+  Notification { int id PK
+            int userId FK
+            int bookingId FK
+            string message
+            datetime createdAt
+            datetime readAt }
 ```
 
 | Entity | Important fields and constraints | Ownership |
@@ -106,7 +126,10 @@ erDiagram
 | `session` | `sid` PK, `sess` json, `expire` timestamptz (+ index) — table used by `connect-pg-simple`, created by a Prisma migration so the schema stays reproducible. | System. |
 | `BookingStatusChange` (Sprint 2, F-10) | `bookingId` → Booking (`ON DELETE CASCADE`, never used by the app); `fromStatus` nullable (creation); `toStatus`; `actorId` → User; `reason` ≤ 200 chars; `createdAt`; index `(bookingId, createdAt)`. Written only by `historyService.recordStatusChange` in the transaction of the change; trigger `booking_history_append_only` refuses direct UPDATE/DELETE (BR-17, D-07). The migration backfills existing bookings. | Readable by the booking's Customer and the slot's Staff member. |
 | `Service` (Sprint 2, F-11) | Adds unique index `service_name_ci` on `lower(name)`; services are never deleted (A-06). | Shared by all Staff. |
-| *Sprint 3* | `AvailabilityTemplate` (F-14), `Notification` (F-16), suspension data for BR-19 (F-17). | — |
+| `AvailabilityTemplate` (Sprint 3, F-14) | `staffId` → User(STAFF); `name` ≤ 60 chars; index `(staffId)`. Generating slots never changes it; deleting it keeps the slots it generated (BR-18). Migration `0005_availability_templates`. | The Staff member in `staffId` (another staff member's id → 404). |
+| `TemplateEntry` (Sprint 3, F-14) | `templateId` → AvailabilityTemplate (`ON DELETE CASCADE`); `weekday` 1 (Mon) – 7 (Sun) (check constraint); `startTime` `HH:mm` Bangkok; `serviceId` → Service; unique `(templateId, weekday, startTime)`. | Through its template. |
+| `Notification` (Sprint 3, F-16) | `userId` → User (customer, `ON DELETE CASCADE`); `bookingId` → Booking (`ON DELETE CASCADE`); `message` ≤ 300 chars; `createdAt` = the history row's time; `readAt` nullable; index `(userId, createdAt)`. Written only by `historyService.recordStatusChange` in the same transaction when the actor is Staff. Migration `0006_notifications`. | The Customer in `userId`. |
+| BR-19 suspension (Sprint 3, F-17) | No new table: computed from the `NO_SHOW` rows of `BookingStatusChange` of the last 30 days (3 → 7 days without booking); index `(toStatus, createdAt)` (migration `0004_no_show_index`). Deactivation uses `User.isActive`. | — |
 
 **Times.** All timestamps are stored as UTC `timestamptz`. The API accepts local dates/times
 (`date: "YYYY-MM-DD"`, `startTime: "HH:mm"`) interpreted in `Asia/Bangkok` (UTC+7, no DST) and
@@ -143,10 +166,15 @@ returns ISO-8601 UTC strings; the UI formats them in Asia/Bangkok (NFR-10).
 | `/staff/bookings/:reference` | Staff | Booking detail with history and outcome buttons (F-10, F-09) | 2 |
 | `/bookings/:reference/reschedule` | Customer | Reschedule (F-08) | 2 |
 | `/search` | Customer | Find a Slot — date range, service and staff search (F-12) | 2 |
-| `/staff/dashboard`, `/staff/users` | Staff | Dashboard, accounts | 3 |
+| `/staff/dashboard` | Staff | Dashboard — figures over a period (F-15) | 3 |
+| `/staff/templates` | Staff | Availability templates and slot generation (F-14) | 3 |
+| `/staff/users` | Staff | Accounts — customers, suspension status, deactivate / reactivate (F-17) | 3 |
+| `/notifications` | Customer | Notifications — list, mark as read (F-16) | 3 |
 
 Header (all authenticated pages): product name, role navigation with the active item marked
-`aria-current="page"`, the user's name and role badge, **Log out** button. Unauthenticated access to
+`aria-current="page"`, the user's name and role badge, **Log out** button. Customers also see the
+**Notifications** link with the unread count ("Notifications (2)", `aria-label` "Notifications, 2 unread"),
+refreshed on navigation (F-16). Unauthenticated access to
 any page redirects to `/login`; a page of the other role redirects to the user's home.
 
 ### 3.2 Shared UI Behavior
@@ -161,6 +189,8 @@ any page redirects to `/login`; a page of the other role redirects to the user's
 - **Confirmations:** accessible dialog (focus trap, Esc closes, focus returns) for Book and Cancel.
 - **Dates/times:** displayed as `Mon 10 Nov 2026, 09:30` (Asia/Bangkok).
 - **Responsive:** single column below 768 px, no horizontal page scroll at 320 px (NFR-08).
+- **Contrast (NFR-09, F-18):** accent `#1a5fcf` (5.9:1 on white, 5.1:1 on the badge background `#e8effd`);
+  every route is checked by axe-core (WCAG 2.1 A/AA, E2E-20) with no serious or critical finding.
 
 ## 4. API Conventions
 
@@ -220,6 +250,20 @@ any page redirects to `/login`; a page of the other role redirects to the user's
 | `POST /api/bookings/:reference/reschedule` | Move own booking atomically | Customer | F-08 |
 | `GET /api/slots/search?from=&to=&serviceId=&staffId=` | Search bookable slots | Customer | F-12 |
 | `GET /api/staff-members` | Active staff names for the search filter | any authenticated | F-12 |
+
+### 4.3 Endpoint Overview (Sprint 3)
+
+| Method and path | Purpose | Roles | Contract |
+| :--- | :--- | :--- | :--- |
+| `GET /api/staff/dashboard?from=&to=` | Own figures over a period (≤ 92 days) | Staff | F-15 |
+| `GET`, `POST /api/staff/templates`, `PUT`, `DELETE /api/staff/templates/:id` | Own availability templates | Staff | F-14 |
+| `POST /api/staff/templates/:id/generate` | Generate slots over ≤ 31 days → `{ created, skipped[] }` | Staff | F-14 |
+| `GET /api/staff/users?q=` | Customer accounts with upcoming bookings, no-shows (30 days), suspension | Staff | F-17 |
+| `POST /api/staff/users/:id/deactivate`, `…/reactivate` | Deactivate (cancels future bookings, ends sessions) / reactivate | Staff | F-17 |
+| `GET /api/notifications` | Own notifications (last 50, newest first) and unread count | Customer | F-16 |
+| `POST /api/notifications/:id/read`, `POST /api/notifications/read-all` | Mark one / all as read | Customer | F-16 |
+
+`POST /api/bookings` and `POST /api/bookings/:reference/reschedule` also answer `409 BOOKING_SUSPENDED` (BR-19, F-17).
 
 ## 5. Roles, Permissions and Ownership
 
@@ -298,3 +342,4 @@ is never the protection.**
 | 1.3 | 2026-11-11 | Yanis Amrane | Lab 5 (Issue #20): `GET /api/ready` in §4 (probe exception, 503, endpoint table); §7 variables follow the new `.env.example` (placeholders, `SEED_DEMO_DATA`, `CLIENT_DIST`, production seed opt-in, startup refusal). |
 | 1.4 | 2026-11-14 | Simeon Audouit | Lab 5 (Issue #25): `GET /api/version` in §4.1; `APP_COMMIT` in §7. |
 | 1.5 | 2026-11-25 | Yanis Amrane | Sprint 2 contracts (Issue #49): §2 `BookingStatusChange` and `service_name_ci`; §3.1 Sprint 2 screens; §4 codes `SLOT_NOT_EDITABLE`, `SERVICE_NAME_TAKEN`; new §4.2 Sprint 2 endpoints. Reviewed by Simeon Audouit. |
+| 1.6 | 2026-11-26 | Yanis Amrane | Final release (Issue #63): §2 `AvailabilityTemplate`, `TemplateEntry`, `Notification`, BR-19 computed from history (index `0004`); §3.1 Sprint 3 screens and Notifications header link; §3.2 contrast (F-18); new §4.3 Sprint 3 endpoints. Reviewed by Simeon Audouit in the release PR. |

@@ -1,6 +1,6 @@
 # Sprint 3 — Software Test Specification (STS)
 
-Version 1.0 (2026-11-25), written with the Sprint 3 contracts before any Sprint 3 code (Issue #57). Same
+Version 1.1 (2026-11-26; 1.0 of 2026-11-25 was written with the Sprint 3 contracts before any Sprint 3 code, Issue #57). Same
 conventions as Sprints 1 and 2. F-15 is implemented in Deliverable 2 (Issue #58); the other rows are the plan
 for Sprint 3 and are filled at the Sprint 3 release (13 Dec). Sprint 1 and Sprint 2 tests stay in the
 regression suite.
@@ -28,3 +28,13 @@ regression suite.
 | E2E-21 | AC-85 | E2E | Sprint 3 routes at 3 widths | No horizontal scroll / clipped control | `e2e/sprint3-responsive.spec.ts` | Planned (#62) |
 | PERF-02 | AC-86 | Perf | Release candidate + deployed URL | PERF-01 green; deployed p95 recorded | `server/tests/perf/perf.test.ts`, `artifacts/sprint-3/perf/` | Planned (#62) |
 | MAN-03 | AC-87 | Script | Release commit | `scripts/release-check.sh` exits 0 (no skip/only, every AC has a test) | `scripts/release-check.sh` | Planned (#62) |
+
+## Earlier Tests Changed by Sprint 3
+
+| Test | Change | Reason |
+| :--- | :--- | :--- |
+| E2E-15 | `seedReference` moved to `e2e/helpers.ts` (shared with E2E-20); timeout 60 s; assertions unchanged | Reuse; defect D-06 (30.1 s under full-suite load) |
+| PERF-01 | Output folder selectable (`SLOTBOOK_PERF_SPRINT=sprint-3` for the PERF-02 re-run); thresholds and calls unchanged | PERF-02 re-run on the release candidate |
+
+No other Sprint 1 or Sprint 2 test file is changed by Sprint 3; F-16 reuses the history writer, so the F-07, F-09 and
+F-17 tests run unchanged and API-53 checks the notifications they now create.

@@ -45,4 +45,5 @@ AC-69 … AC-87; UNIT-15..18, API-50..57, UI-12..15, E2E-16..21, PERF-02, MAN-03
 | Version | Date | File(s) | Author | Change and reason |
 | :--- | :--- | :--- | :--- | :--- |
 | 3.0 | 2026-11-25 | all Sprint 3 files; ../../traceability.md | Yanis Amrane | Initial Sprint 3 contracts and STS, recorded before any Sprint 3 code (Issue #57). Reviewed by Simeon Audouit. |
-| 3.1 | 2026-11-26 | F-17-accounts-no-show.md 1.1 | Yanis Amrane | `activeBookingRefs` and the 409 date format (Issue #61). |
+| 3.1 | 2026-11-26 | F-17-accounts-no-show.md 1.1 | Simeon Audouit | `activeBookingRefs` and the 409 date format (Issue #61). |
+| 3.2 | 2026-11-26 | F-18-hardening.md 1.1; sts.md 1.1 | Yanis Amrane | PERF-02 deployed part is read-only (search and one-day availability); the booking latency is measured on the release candidate by PERF-01 (Issue #62). The STS lists the earlier tests changed. Reviewed by Simeon Audouit in the #62 and release PRs. |
