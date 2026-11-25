@@ -3,14 +3,18 @@ import { Link } from 'react-router-dom';
 import { http } from '../api/http';
 import { Callout } from '../components/Callout';
 import { EmptyState } from '../components/EmptyState';
+import { OutcomeButtons } from '../components/OutcomeButtons';
 import { Skeleton } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
+import { Toast } from '../components/Toast';
 import { addDays, formatDay, formatTimeRange, todayBangkok } from '../utils/time';
 
 type ScheduleSlot = {
   id: number; startAt: string; endAt: string; status: string;
   service: { id: number; name: string; durationMin: number };
-  booking: null | { reference: string; status: string; note: string | null; customer: { id: number; name: string } };
+  booking: null | {
+    reference: string; status: string; note: string | null; customer: { id: number; name: string }; canRecordOutcome?: boolean;
+  };
 };
 type Schedule = { date: string; slots: ScheduleSlot[]; summary: { total: number; booked: number; open: number; closed: number } };
 
@@ -22,6 +26,8 @@ export default function SchedulePage() {
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [error, setError] = useState<string | null>(null);
   const latest = useRef(0);
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const request = ++latest.current;
@@ -34,10 +40,17 @@ export default function SchedulePage() {
     else setError(res.message);
   }, [date]);
   useEffect(() => { load(); }, [load]);
+  // Reload after an outcome without the loading skeleton, so focus and scroll stay in place.
+  const refresh = async () => {
+    const res = await http<Schedule>(`/staff/schedule?date=${date}`);
+    if (res.ok) setSchedule(res.data);
+  };
 
   return (
     <>
       <h1>Schedule</h1>
+      {toast && <Toast key={toast.id} message={toast.message} onDone={() => setToast(null)} />}
+      {actionError && <Callout tone="error">{actionError}</Callout>}
       <div className="day-picker">
         <button type="button" className="secondary" disabled={!date} onClick={() => setDate(addDays(date, -1))}>Previous day</button>
         <div>
@@ -58,7 +71,7 @@ export default function SchedulePage() {
                 <>
                   <p className="summary">{summaryLine(schedule.summary)}</p>
                   <table className="responsive-table">
-                    <thead><tr><th>Time</th><th>Service</th><th>Status</th><th>Booking</th><th>Customer</th><th>Note</th></tr></thead>
+                    <thead><tr><th>Time</th><th>Service</th><th>Status</th><th>Booking</th><th>Customer</th><th>Note</th><th>Outcome</th></tr></thead>
                     <tbody>
                       {schedule.slots.map((slot) => (
                         <tr key={slot.id}>
@@ -68,6 +81,13 @@ export default function SchedulePage() {
                           <td data-label="Booking">{slot.booking ? <Link to={`/staff/bookings/${slot.booking.reference}`}>{slot.booking.reference}</Link> : '—'}</td>
                           <td data-label="Customer">{slot.booking?.customer.name ?? '—'}</td>
                           <td data-label="Note">{slot.booking?.note || '—'}</td>
+                          <td data-label="Outcome">
+                            {slot.booking?.canRecordOutcome
+                              ? <OutcomeButtons reference={slot.booking.reference} customer={slot.booking.customer.name}
+                                  onDone={() => { setActionError(null); setToast({ id: Date.now(), message: 'Outcome recorded' }); refresh(); }}
+                                  onError={(message) => { setActionError(message); refresh(); }} />
+                              : '—'}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

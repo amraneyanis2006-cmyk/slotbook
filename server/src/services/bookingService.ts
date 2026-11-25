@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../db.js';
 import { AppError } from '../errors.js';
-import { BOOKING_LEAD_MIN, BOOKING_RULE_MESSAGES, canCustomerCancel, checkCustomerLimits, formatReference, isBookable } from '../rules/bookingRules.js';
+import { BOOKING_LEAD_MIN, BOOKING_RULE_MESSAGES, canCustomerCancel, canRecordOutcome, checkCustomerLimits, formatReference, isBookable } from '../rules/bookingRules.js';
 import { now } from '../utils/clock.js';
 import { getHistory, recordStatusChange } from './historyService.js';
 import { addDays, bangkokDate, bangkokToUtc } from '../utils/time.js';
@@ -123,4 +123,24 @@ export function cancel(customerId: number, reference: string) {
       select: BOOKING_VIEW_SELECT,
     });
   });
+}
+
+/**
+ * F-09 §1 step 3: locks the booking of one of the caller's slots (missing or another staff member's → 404), checks
+ * BR-13 then BR-15, sets the outcome and appends its history row, in one transaction.
+ */
+export async function recordOutcome(staffId: number, reference: string, outcome: 'COMPLETED' | 'NO_SHOW') {
+  await prisma.$transaction(async (tx) => {
+    const [locked] = await tx.$queryRaw<{ id: number }[]>`
+      SELECT b.id FROM "Booking" b JOIN "Slot" s ON s.id = b."slotId"
+      WHERE b.reference = ${reference.toUpperCase()} AND s."staffId" = ${staffId} FOR UPDATE OF b`;
+    if (!locked) throw bookingNotFound();
+    const at = now();
+    const booking = await tx.booking.findUniqueOrThrow({ where: { id: locked.id }, select: { status: true, slot: { select: { startAt: true } } } });
+    const refusal = canRecordOutcome(booking, booking.slot, at);
+    if (refusal) throw reject(refusal);
+    await tx.booking.update({ where: { id: locked.id }, data: { status: outcome } });
+    await recordStatusChange(tx, { bookingId: locked.id, from: 'BOOKED', to: outcome, actorId: staffId, at });
+  });
+  return getForStaff(staffId, reference);
 }

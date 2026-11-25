@@ -1,0 +1,364 @@
+# Issue:   #53
+# Branch:  feature/53-attendance
+# Commit:  218e841 (test(F-09): attendance outcome tests, red (#53))
+# Date:    2026-11-25 18:17:24 +0700
+# Env:     Node v22.23.4, PostgreSQL 16 local slotbook_test (reset + seeded by server/tests/setup.ts), Chrome for Playwright
+
+===== $ cd server && npx vitest run tests/unit/bookingRules.test.ts tests/api/attendance.api.test.ts tests/api/schedule.api.test.ts (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/server
+
+ ❯ tests/api/attendance.api.test.ts (3 tests | 3 failed) 1038ms
+   × record an outcome (F-09) > API-40: the slot's staff member records COMPLETED and NO_SHOW after the start (exactly at the start allowed), with a history row 33ms
+     → expected 404 to be 200 // Object.is equality
+   × record an outcome (F-09) > API-41: too early → 409 OUTCOME_TOO_EARLY; not BOOKED → 409 BOOKING_NOT_ACTIVE; another staff member → 404; Customer → 403; bad outcome → 422; nothing changes 22ms
+     → expected 404 to be 409 // Object.is equality
+   × record an outcome (F-09) > API-42: the schedule marks only started BOOKED bookings with canRecordOutcome; the customer then lists the booking as past with its status 23ms
+     → expected { 'BK-2030-000012': undefined, …(1) } to deeply equal { 'BK-2030-000012': true, …(1) }
+ ❯ tests/api/schedule.api.test.ts (1 test | 1 failed) 758ms
+   × GET /api/staff/schedule (F-06) > API-24: only the caller's non-cancelled slots of that Bangkok day, ordered, with reference, customer and note, and a summary where total = booked + open + closed; Customer 403; bad date 422 58ms
+     → expected { id: 60, …(5) } to deeply equal { id: 60, …(5) }
+ ❯ tests/unit/bookingRules.test.ts (4 tests | 1 failed) 9ms
+   ✓ formatReference (F-04, BR-10) > UNIT-03: formats BK-YYYY-NNNNNN and throws when the sequence exceeds 999999 2ms
+   ✓ isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04) > UNIT-04: +60 min is bookable; +59 min, CLOSED/CANCELLED and inactive service are not; 3 active → limit; past/cancelled not counted; overlap vs back-to-back 1ms
+   ✓ canCustomerCancel (F-05, BR-05, BR-13) > UNIT-05 (CR-01): +1440 min → allowed; +1439, +180 and +120 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first 1ms
+   × canRecordOutcome (F-09 §2, BR-15, BR-13) > UNIT-12: before the start → OUTCOME_TOO_EARLY; at the start and later → null; non-BOOKED → BOOKING_NOT_ACTIVE, checked first 4ms
+     → canRecordOutcome is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/attendance.api.test.ts > record an outcome (F-09) > API-40: the slot's staff member records COMPLETED and NO_SHOW after the start (exactly at the start allowed), with a history row
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/attendance.api.test.ts:47:24
+     45| 
+     46|     const res = await outcome(agents.anan, done.reference.toLowerCase(…
+     47|     expect(res.status).toBe(200);
+       |                        ^
+     48|     expect(res.body.booking).toMatchObject({ reference: done.reference…
+     49|     expect(res.body.history.at(-1)).toEqual({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/api/attendance.api.test.ts > record an outcome (F-09) > API-41: too early → 409 OUTCOME_TOO_EARLY; not BOOKED → 409 BOOKING_NOT_ACTIVE; another staff member → 404; Customer → 403; bad outcome → 422; nothing changes
+AssertionError: expected 404 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 404
+
+ ❯ tests/api/attendance.api.test.ts:66:26
+     64| 
+     65|     const early = await outcome(agents.anan, soon.reference, 'COMPLETE…
+     66|     expect(early.status).toBe(409);
+       |                          ^
+     67|     expect(early.body).toEqual({ error: 'OUTCOME_TOO_EARLY', message: …
+     68|     for (const b of [cancelled, completed]) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/api/attendance.api.test.ts > record an outcome (F-09) > API-42: the schedule marks only started BOOKED bookings with canRecordOutcome; the customer then lists the booking as past with its status
+AssertionError: expected { 'BK-2030-000012': undefined, …(1) } to deeply equal { 'BK-2030-000012': true, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "BK-2030-000012": true,
+-   "BK-2030-000013": false,
++   "BK-2030-000012": undefined,
++   "BK-2030-000013": undefined,
+  }
+
+ ❯ tests/api/attendance.api.test.ts:96:19
+     94|     const byRef = Object.fromEntries((day.body.slots as { booking: { r…
+     95|       .filter((s) => s.booking).map((s) => [s.booking!.reference, s.bo…
+     96|     expect(byRef).toEqual({ [started.reference]: true, [future.referen…
+       |                   ^
+     97| 
+     98|     await outcome(agents.anan, started.reference, 'NO_SHOW');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/api/schedule.api.test.ts > GET /api/staff/schedule (F-06) > API-24: only the caller's non-cancelled slots of that Bangkok day, ordered, with reference, customer and note, and a summary where total = booked + open + closed; Customer 403; bad date 422
+AssertionError: expected { id: 60, …(5) } to deeply equal { id: 60, …(5) }
+
+- Expected
++ Received
+
+@@ -1,8 +1,7 @@
+  {
+    "booking": {
+-     "canRecordOutcome": false,
+      "customer": {
+        "id": 3,
+        "name": "Ploy Chai",
+      },
+      "note": "Transcript question",
+
+ ❯ tests/api/schedule.api.test.ts:61:31
+     59|     expect(res.body.slots.map((s: { id: number }) => s.id)).toEqual([o…
+     60|     expect(res.body.summary).toEqual({ total: 6, booked: 3, open: 2, c…
+     61|     expect(res.body.slots[1]).toEqual({
+       |                               ^
+     62|       id: booked.id, startAt: '2030-04-09T02:00:00.000Z', endAt: '2030…
+     63|       service: { id: ids.advising, name: 'Academic advising', duration…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/unit/bookingRules.test.ts > canRecordOutcome (F-09 §2, BR-15, BR-13) > UNIT-12: before the start → OUTCOME_TOO_EARLY; at the start and later → null; non-BOOKED → BOOKING_NOT_ACTIVE, checked first
+TypeError: canRecordOutcome is not a function
+ ❯ tests/unit/bookingRules.test.ts:77:12
+     75|     const { canRecordOutcome } = await import('../../src/rules/booking…
+     76|     const slotAt = (min: number) => ({ startAt: plus(min) });
+     77|     expect(canRecordOutcome({ status: 'BOOKED' }, slotAt(1), NOW)).toB…
+       |            ^
+     78|     expect(canRecordOutcome({ status: 'BOOKED' }, slotAt(0), NOW)).toB…
+     79|     expect(canRecordOutcome({ status: 'BOOKED' }, slotAt(-180), NOW)).…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  5 failed | 3 passed (8)
+   Start at  18:17:25
+   Duration  5.56s (transform 341ms, setup 0ms, collect 1.26s, tests 1.80s, environment 1ms, prepare 188ms)
+
+
+===== $ cd client && npx vitest run tests/SchedulePage.test.tsx (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/client
+
+stderr | tests/SchedulePage.test.tsx > SchedulePage outcomes (F-09) > UI-09: Completed / No-show only where canRecordOutcome; after confirming, the badge replaces the buttons
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ tests/SchedulePage.test.tsx (1 test | 1 failed) 147ms
+   × SchedulePage outcomes (F-09) > UI-09: Completed / No-show only where canRecordOutcome; after confirming, the badge replaces the buttons 146ms
+     → Unable to find an accessible element with the role "button" and name "No-show BK-2030-000051"
+
+Here are the accessible roles:
+
+  cell:
+
+  Name "09:00–09:30":
+  <td
+    data-label="Time"
+  />
+
+  --------------------------------------------------cell:
+
+  Name "Academic advising":
+  <td
+    data-label="Service"
+  />
+
+  --------------------------------------------------cell:
+
+  Name "Booked":
+  <td
+    data-label="Status"
+  />
+
+  --------------------------------------------------cell:
+
+  Name "BK-2030-000051":
+  <td
+    data-label="Booking"
+  />
+
+  --------------------------------------------------
+  link:
+
+  Name "BK-2030-000051":
+  <a
+    href="/staff/bookings/BK-2030-000051"
+  />
+
+  --------------------------------------------------cell:
+
+  Name "Ploy Chai":
+  <td
+    data-label="Customer"
+  />
+
+  --------------------------------------------------cell:
+
+  Name "—":
+  <td
+    data-label="Note"
+  />
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+<tr>
+  <td
+    data-label="Time"
+  >
+    09:00–09:30
+  </td>
+  <td
+    data-label="Service"
+  >
+    Academic advising
+  </td>
+  <td
+    data-label="Status"
+  >
+    <span
+      class="badge status-booked"
+    >
+      Booked
+    </span>
+  </td>
+  <td
+    data-label="Booking"
+  >
+    <a
+      href="/staff/bookings/BK-2030-000051"
+    >
+      BK-2030-000051
+    </a>
+  </td>
+  <td
+    data-label="Customer"
+  >
+    Ploy Chai
+  </td>
+  <td
+    data-label="Note"
+  >
+    —
+  </td>
+</tr>
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/SchedulePage.test.tsx > SchedulePage outcomes (F-09) > UI-09: Completed / No-show only where canRecordOutcome; after confirming, the badge replaces the buttons
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "No-show BK-2030-000051"
+
+Here are the accessible roles:
+
+  cell:
+
+  Name "09:00–09:30":
+  <td
+    data-label="Time"
+  />
+
+  --------------------------------------------------cell:
+
+  Name "Academic advising":
+  <td
+    data-label="Service"
+  />
+
+  --------------------------------------------------cell:
+
+  Name "Booked":
+  <td
+    data-label="Status"
+  />
+
+  --------------------------------------------------cell:
+
+  Name "BK-2030-000051":
+  <td
+    data-label="Booking"
+  />
+
+  --------------------------------------------------
+  link:
+
+  Name "BK-2030-000051":
+  <a
+    href="/staff/bookings/BK-2030-000051"
+  />
+
+  --------------------------------------------------cell:
+
+  Name "Ploy Chai":
+  <td
+    data-label="Customer"
+  />
+
+  --------------------------------------------------cell:
+
+  Name "—":
+  <td
+    data-label="Note"
+  />
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+<tr>
+  <td
+    data-label="Time"
+  >
+    09:00–09:30
+  </td>
+  <td
+    data-label="Service"
+  >
+    Academic advising
+  </td>
+  <td
+    data-label="Status"
+  >
+    <span
+      class="badge status-booked"
+    >
+      Booked
+    </span>
+  </td>
+  <td
+    data-label="Booking"
+  >
+    <a
+      href="/staff/bookings/BK-2030-000051"
+    >
+      BK-2030-000051
+    </a>
+  </td>
+  <td
+    data-label="Customer"
+  >
+    Ploy Chai
+  </td>
+  <td
+    data-label="Note"
+  >
+    —
+  </td>
+</tr>
+ ❯ Object.getElementError ../../slotbook/client/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../slotbook/client/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../slotbook/client/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../slotbook/client/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/SchedulePage.test.tsx:43:28
+     41|     const started = (await screen.findByRole('link', { name: 'BK-2030-…
+     42|     const future = screen.getByRole('link', { name: 'BK-2030-000052' }…
+     43|     expect(within(started).getByRole('button', { name: 'No-show BK-203…
+       |                            ^
+     44|     expect(within(started).getByRole('button', { name: 'Completed BK-2…
+     45|     expect(within(future).queryAllByRole('button')).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  18:17:32
+   Duration  1.03s (transform 118ms, setup 143ms, collect 149ms, tests 147ms, environment 299ms, prepare 74ms)
+
+

@@ -69,3 +69,18 @@ describe('canCustomerCancel (F-05, BR-05, BR-13)', () => {
     }
   });
 });
+
+describe('canRecordOutcome (F-09 §2, BR-15, BR-13)', () => {
+  it('UNIT-12: before the start → OUTCOME_TOO_EARLY; at the start and later → null; non-BOOKED → BOOKING_NOT_ACTIVE, checked first', async () => {
+    const { canRecordOutcome } = await import('../../src/rules/bookingRules.js');
+    const slotAt = (min: number) => ({ startAt: plus(min) });
+    expect(canRecordOutcome({ status: 'BOOKED' }, slotAt(1), NOW)).toBe('OUTCOME_TOO_EARLY');
+    expect(canRecordOutcome({ status: 'BOOKED' }, slotAt(0), NOW)).toBeNull();
+    expect(canRecordOutcome({ status: 'BOOKED' }, slotAt(-180), NOW)).toBeNull();
+    for (const status of ['CANCELLED', 'COMPLETED', 'NO_SHOW'] as const) {
+      expect(canRecordOutcome({ status }, slotAt(-30), NOW)).toBe('BOOKING_NOT_ACTIVE');
+      expect(canRecordOutcome({ status }, slotAt(30), NOW)).toBe('BOOKING_NOT_ACTIVE');
+    }
+  });
+});
+
