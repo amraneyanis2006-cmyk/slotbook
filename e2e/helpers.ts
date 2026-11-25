@@ -8,7 +8,9 @@ if (!PASSWORD) throw new Error('SEED_PASSWORD is not set (copy .env.example to .
 //   Ploy: seed today+1 Anan 09:00; booking-journey books and cancels the global today+10 15:00 slot; SHOT-01 books
 //         (then cancels) tomorrow Mali 14:00 and inserts (then deletes) one late booking; E2E-06 books today+10 15:00
 //         again, after E2E-05 freed it → at most 3.
-//   Ken:  seed today+3 Anan 10:00; E2E-08 books today+6 Anan 09:00 → 2.
+//   Ken:  seed today+3 Anan 10:00; E2E-08 books today+6 Anan 09:00; E2E-09 books (then cancels) today+6 Anan 13:00;
+//         E2E-11 books today+7 Mali 09:30 (then Mali cancels the slot); E2E-13 books today+5 Anan 09:00, moves it to
+//         Mali 09:30 and cancels it; E2E-14 books (then cancels) one Anan Career counselling slot → at most 3.
 //   Nina: SHOT-01 books today+4 Anan 09:00, today+4 Mali 14:00, today+5 Anan 13:00 → 3 (then the 4th is refused).
 
 /** Asia/Bangkok date `YYYY-MM-DD`, `days` from today (E2E data is relative to the real clock). */
@@ -22,6 +24,12 @@ export async function logIn(page: Page, email: string) {
   await page.getByLabel('Password').fill(PASSWORD);
   await page.getByRole('button', { name: 'Log in' }).click();
   await expect(page).toHaveURL(email.startsWith('staff.') ? /\/staff\/slots$/ : /\/book$/);
+}
+
+/** Logs in as another account: drops the current session cookie first, since /login redirects a signed-in user home. */
+export async function switchUser(page: Page, email: string) {
+  await page.context().clearCookies();
+  await logIn(page, email);
 }
 
 /** Logs the page's API context in (shares the cookie with the page) for data set-up through the real API. */
@@ -41,3 +49,21 @@ export async function apiBook(page: Page, date: string, startTime: string, staff
   expect(res.status()).toBe(201);
   return (await res.json()).booking.reference as string;
 }
+
+/** No horizontal page scroll, and every visible control lies fully inside the viewport width. */
+export async function expectNoOverflow(page: Page, label: string) {
+  const { scrollWidth, clientWidth, clipped } = await page.evaluate(() => {
+    const width = document.documentElement.clientWidth;
+    const controls = [...document.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea')]
+      .filter((el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: width,
+      clipped: controls.filter((el) => { const r = el.getBoundingClientRect(); return r.left < 0 || r.right > width + 0.5; })
+        .map((el) => el.outerHTML.slice(0, 80)),
+    };
+  });
+  expect(scrollWidth, `${label}: horizontal page scroll`).toBeLessThanOrEqual(clientWidth);
+  expect(clipped, `${label}: clipped controls`).toEqual([]);
+}
+

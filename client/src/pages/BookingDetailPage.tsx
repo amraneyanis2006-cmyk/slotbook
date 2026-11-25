@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { canCancel, type BookingView } from '../api/bookings';
+import { Link, useLocation, useParams } from 'react-router-dom';
+import { canCancel, staffCancellation, type BookingView, type HistoryEntry } from '../api/bookings';
 import { http } from '../api/http';
 import { Callout } from '../components/Callout';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { HistoryList } from '../components/HistoryList';
 import { Skeleton } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
 import { Toast } from '../components/Toast';
@@ -15,19 +16,22 @@ export default function BookingDetailPage() {
   const { reference = '' } = useParams();
   const path = `/bookings/${encodeURIComponent(reference)}`;
   const [booking, setBooking] = useState<BookingView | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [error, setError] = useState<{ status: number; message: string } | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+  // A reschedule (F-08) lands here with its toast in the navigation state.
+  const arrival = (useLocation().state as { toast?: string } | null)?.toast;
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(arrival ? { id: Date.now(), message: arrival } : null);
   const heading = useRef<HTMLHeadingElement>(null);
   // After a cancellation attempt the Cancel button may be gone: focus the page heading instead of losing it.
   useEffect(() => { if (toast || pageError) heading.current?.focus(); }, [toast, pageError]);
 
   const load = useCallback(async () => {
     setError(null);
-    const res = await http<{ booking: BookingView }>(path);
-    if (res.ok) setBooking(res.data.booking);
+    const res = await http<{ booking: BookingView; history?: HistoryEntry[] }>(path);
+    if (res.ok) { setBooking(res.data.booking); setHistory(res.data.history ?? []); }
     else setError({ status: res.status, message: res.message });
   }, [path]);
   useEffect(() => { load(); }, [load]);
@@ -41,6 +45,7 @@ export default function BookingDetailPage() {
     if (res.ok) {
       setBooking(res.data.booking);
       setToast({ id: Date.now(), message: 'Booking cancelled' });
+      load(); // fetch the new history line
     } else {
       setPageError(res.message);
       load(); // show the current status
@@ -53,11 +58,13 @@ export default function BookingDetailPage() {
   if (error) return <><h1>Booking {reference.toUpperCase()}</h1><Callout tone="error" onRetry={load}>{error.message}</Callout>{back}</>;
   if (!booking) return <><h1>Booking {reference.toUpperCase()}</h1><Skeleton rows={4} label="Loading the booking" /></>;
 
+  const byStaff = staffCancellation(history);
   return (
     <>
       <h1 ref={heading} tabIndex={-1}>Booking {booking.reference}</h1>
       {toast && <Toast key={toast.id} message={toast.message} onDone={() => setToast(null)} />}
       {pageError && <Callout tone="error">{pageError}</Callout>}
+      {byStaff && <Callout>Cancelled by {byStaff.actor.name}: {byStaff.reason}</Callout>}
       <div className="panel detail">
         <dl>
           <dt>Status</dt><dd><StatusBadge status={booking.status} /></dd>
@@ -69,9 +76,15 @@ export default function BookingDetailPage() {
           {booking.cancelledAt && <><dt>Cancelled on</dt><dd>{at(booking.cancelledAt)}</dd></>}
         </dl>
         {canCancel(booking)
-          ? <button type="button" onClick={() => { setPageError(null); setConfirming(true); }}>Cancel booking</button>
+          ? (
+            <div className="row-actions">
+              <button type="button" onClick={() => { setPageError(null); setConfirming(true); }}>Cancel booking</button>
+              <Link className="button secondary" to={`${path}/reschedule`}>Reschedule</Link>
+            </div>
+          )
           : booking.status === 'BOOKED' && <p className="hint">Cancellation closes 24 hours before the start.</p>}
       </div>
+      <HistoryList history={history} />
       {back}
 
       {confirming && (

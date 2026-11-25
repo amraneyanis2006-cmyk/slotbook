@@ -6,7 +6,7 @@
 | Team | EN-036 "Y Que Fue" — Yanis Amrane (69540460041), Simeon Audouit (65540460046) |
 | Theme | 1 — Appointment and Scheduling System (Sprint 1 roles: Customer / Staff) |
 | Product | **SlotBook** |
-| Version | 1.3 (Deliverable 1 baseline + pre-review fixes + A-04 + CR-01) — history in §8 |
+| Version | 1.4 (Deliverable 1 baseline + pre-review fixes + A-04 + CR-01 + Sprint 2 decisions) — history in §8 |
 
 ---
 
@@ -146,7 +146,10 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | A-01 | Assumption | Opening hours are 08:00–18:00 Asia/Bangkok, every day; holidays are not modelled in Sprint 1. | Holiday closures can be done by closing slots (FR-12, Sprint 2). |
 | A-02 | Assumption | Accounts are created by the seed (2 Staff, 3 Customers, 1 inactive Customer). | Self-registration excluded by the deliverable (§2 of the brief). |
 | A-03 | Assumption | Services are seeded in Sprint 1 (3 active services + 1 inactive (Thesis consultation, 60 min)) and managed by Staff from Sprint 2 (FR-17). | Keeps Sprint 1 small. |
-| A-04 | Assumption | BR-04 only compares against future bookings; to be reviewed in Sprint 2 when F-11 allows services up to 120 min. | Every Sprint 1 service lasts 60 min or less, no longer than the 60 min minimum lead time (BR-02), and touching bookings do not overlap, so a booking that has already started can never overlap a bookable slot. |
+| A-04 | Assumption | BR-04 only compares against future bookings; to be reviewed in Sprint 2 when F-11 allows services up to 120 min. **Resolved in Sprint 2 (F-11 §1 step 6): BR-04 compares against BOOKED bookings whose end is after now.** | Every Sprint 1 service lasts 60 min or less, no longer than the 60 min minimum lead time (BR-02), and touching bookings do not overlap, so a booking that has already started can never overlap a bookable slot. |
+| A-05 | Assumption | A reschedule (FR-14) releases the old slot, so BR-05 applies to the old booking: a booking can be rescheduled only while it can be cancelled (≥ 24 h before its start). | Same rule for the customer whether they cancel and rebook or reschedule (F-08). |
+| A-06 | Assumption | The service catalogue is shared by all Staff: any active Staff member can create, change and deactivate any service; services are never deleted, only deactivated. | Small team of advisers sharing one office; deletion would break the history of past slots (F-11). |
+| D-07 | Decision | Booking history is a separate append-only table `BookingStatusChange`, written in the same transaction as each status change and protected by a database trigger against UPDATE/DELETE. | BR-17 holds even against a programming error; F-15/F-16 (Sprint 3) read their events from it. |
 | Q-01 | Question | Can a Staff member book on behalf of a Customer (phone call)? | Resolved: **not in scope** for Sprint 1–3; Customers book themselves. Revisit after Sprint 3 if time allows. |
 | Q-02 | Question | Should a Customer see the Staff member's name before booking? | Resolved: **yes**, slot list shows staff name and service. |
 | Q-03 | Question | What happens to bookings when a Customer account is deactivated (FR-22)? | Resolved: future active bookings are cancelled with reason "account deactivated" (Sprint 3, BR-17 history). |
@@ -159,3 +162,4 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | 1.1 | 2026-11-07 | Yanis Amrane | Pre-PR review fixes (BR-02 active service, BR-10 Bangkok year, A-03 services, NFR-05 verification); see PR #9. |
 | 1.2 | 2026-11-10 | Simeon Audouit | A-04 added (BR-04 compares only against future bookings), decided by Yanis Amrane for Issue #8. |
 | 1.3 | 2026-11-25 | Yanis Amrane | CR-01 (Lab 7 maintenance change, Issue #45; TA/instructor approval requested 2026-11-25, recorded in the Issue before implementation): BR-05 cancellation cutoff 2 h → 24 h; exactly 24 h allowed. Reviewed by Simeon Audouit before implementation. |
+| 1.4 | 2026-11-25 | Yanis Amrane | Sprint 2 contracts (Issue #49): A-04 resolved, A-05 (reschedule respects BR-05), A-06 (shared service catalogue), D-07 (history table). No FR/BR/NFR wording changed. Reviewed by Simeon Audouit. |

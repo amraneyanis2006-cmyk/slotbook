@@ -14,6 +14,7 @@ export const BOOKING_RULE_MESSAGES = {
   BOOKING_OVERLAP: 'You already have a booking at this time.',
   BOOKING_NOT_ACTIVE: 'This booking is no longer active.',
   CANCELLATION_WINDOW_CLOSED: 'Cancellation closes 24 hours before the start.',
+  OUTCOME_TOO_EARLY: 'An outcome can be recorded only after the booking starts.',
 } as const;
 
 export type BookableSlot = TimeRange & { status: SlotStatus; service: { isActive: boolean } };
@@ -26,12 +27,13 @@ export const isBookable = (slot: BookableSlot, now: Date): null | 'SLOT_NOT_BOOK
     : 'SLOT_NOT_BOOKABLE';
 
 /**
- * BR-03 then BR-04 against the customer's active future bookings (the service selects BOOKED with start > now;
- * only BOOKED entries count here, so cancelled or finished bookings never block).
+ * BR-03 then BR-04 against the customer's active bookings that have not ended (the service selects BOOKED with
+ * end > now; only BOOKED entries count here, so cancelled or finished bookings never block). BR-03 counts only
+ * bookings that start after now; BR-04 also counts one that has started (A-04, resolved by F-11 §1 step 6).
  */
-export function checkCustomerLimits(activeFutureBookings: CustomerBooking[], slot: TimeRange): null | 'BOOKING_LIMIT_REACHED' | 'BOOKING_OVERLAP' {
-  const active = activeFutureBookings.filter((b) => b.status === 'BOOKED');
-  if (active.length >= MAX_ACTIVE_BOOKINGS) return 'BOOKING_LIMIT_REACHED';
+export function checkCustomerLimits(activeBookings: CustomerBooking[], slot: TimeRange, now: Date): null | 'BOOKING_LIMIT_REACHED' | 'BOOKING_OVERLAP' {
+  const active = activeBookings.filter((b) => b.status === 'BOOKED');
+  if (active.filter((b) => b.slot.startAt > now).length >= MAX_ACTIVE_BOOKINGS) return 'BOOKING_LIMIT_REACHED';
   return active.some((b) => overlaps(b.slot, slot)) ? 'BOOKING_OVERLAP' : null;
 }
 
@@ -39,6 +41,18 @@ export function checkCustomerLimits(activeFutureBookings: CustomerBooking[], slo
 export function canCustomerCancel(booking: { status: BookingStatus }, slot: { startAt: Date }, now: Date): null | 'BOOKING_NOT_ACTIVE' | 'CANCELLATION_WINDOW_CLOSED' {
   if (booking.status !== 'BOOKED') return 'BOOKING_NOT_ACTIVE';
   return slot.startAt.getTime() - now.getTime() >= CANCEL_WINDOW_MIN * 60_000 ? null : 'CANCELLATION_WINDOW_CLOSED';
+}
+
+/** F-09 §2: BR-13 first (only BOOKED), then BR-15 (now ≥ start; exactly at the start is allowed). */
+export function canRecordOutcome(booking: { status: BookingStatus }, slot: { startAt: Date }, now: Date): null | 'BOOKING_NOT_ACTIVE' | 'OUTCOME_TOO_EARLY' {
+  if (booking.status !== 'BOOKED') return 'BOOKING_NOT_ACTIVE';
+  return now >= slot.startAt ? null : 'OUTCOME_TOO_EARLY';
+}
+
+/** F-08 §2: the target must be another slot of the same service (422 on `slotId`). */
+export function checkRescheduleTarget(oldSlot: { id: number; serviceId: number }, newSlot: { id: number; serviceId: number }): null | { slotId: string } {
+  if (newSlot.id === oldSlot.id) return { slotId: 'Choose a different slot.' };
+  return newSlot.serviceId === oldSlot.serviceId ? null : { slotId: 'Choose a slot of the same service.' };
 }
 
 /** BR-10 booking reference: BK-<Bangkok year>-<6-digit sequence>; throws above 999999. */

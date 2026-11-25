@@ -32,18 +32,22 @@ describe('isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04)', () => {
     expect(isBookable(slot(120, 'OPEN', false), NOW)).toBe('SLOT_NOT_BOOKABLE');
 
     const two = [booking('08:00', '08:30', 'BOOKED', '2026-11-13'), booking('09:00', '09:30', 'BOOKED', '2026-11-13')];
-    expect(checkCustomerLimits(two, target)).toBeNull(); // the third booking is allowed
+    expect(checkCustomerLimits(two, target, NOW)).toBeNull(); // the third booking is allowed
     const three = [...two, booking('11:00', '11:30', 'BOOKED', '2026-11-13')];
-    expect(checkCustomerLimits(three, target)).toBe('BOOKING_LIMIT_REACHED');
+    expect(checkCustomerLimits(three, target, NOW)).toBe('BOOKING_LIMIT_REACHED');
     // Cancelled and finished (past) bookings are not active: two active + those → still allowed.
-    expect(checkCustomerLimits([...two, booking('11:00', '11:30', 'CANCELLED'), booking('12:00', '12:30', 'COMPLETED'), booking('13:00', '13:30', 'NO_SHOW')], target)).toBeNull();
+    expect(checkCustomerLimits([...two, booking('11:00', '11:30', 'CANCELLED'), booking('12:00', '12:30', 'COMPLETED'), booking('13:00', '13:30', 'NO_SHOW')], target, NOW)).toBeNull();
 
-    expect(checkCustomerLimits([booking('10:15', '10:45')], target)).toBe('BOOKING_OVERLAP');
-    expect(checkCustomerLimits([booking('09:45', '10:15')], target)).toBe('BOOKING_OVERLAP');
-    expect(checkCustomerLimits([booking('09:30', '10:00'), booking('10:30', '11:00')], target)).toBeNull(); // back-to-back
-    expect(checkCustomerLimits([booking('10:00', '10:30', 'CANCELLED')], target)).toBeNull();
+    expect(checkCustomerLimits([booking('10:15', '10:45')], target, NOW)).toBe('BOOKING_OVERLAP');
+    expect(checkCustomerLimits([booking('09:45', '10:15')], target, NOW)).toBe('BOOKING_OVERLAP');
+    expect(checkCustomerLimits([booking('09:30', '10:00'), booking('10:30', '11:00')], target, NOW)).toBeNull(); // back-to-back
+    expect(checkCustomerLimits([booking('10:00', '10:30', 'CANCELLED')], target, NOW)).toBeNull();
+    // A-04 (F-11 §1 step 6): a booking that has started still blocks an overlap but no longer counts towards BR-03.
+    const ongoing = { status: 'BOOKED' as const, slot: { startAt: plus(-30), endAt: plus(90) } };
+    expect(checkCustomerLimits([ongoing], { startAt: plus(60), endAt: plus(90) }, NOW)).toBe('BOOKING_OVERLAP');
+    expect(checkCustomerLimits([...two, ongoing], { startAt: plus(90), endAt: plus(120) }, NOW)).toBeNull();
     // BR-03 is checked before BR-04 (F-04 §1 step 4).
-    expect(checkCustomerLimits([...two, booking('10:00', '10:30')], target)).toBe('BOOKING_LIMIT_REACHED');
+    expect(checkCustomerLimits([...two, booking('10:00', '10:30')], target, NOW)).toBe('BOOKING_LIMIT_REACHED');
   });
 });
 
@@ -65,3 +69,28 @@ describe('canCustomerCancel (F-05, BR-05, BR-13)', () => {
     }
   });
 });
+
+describe('canRecordOutcome (F-09 §2, BR-15, BR-13)', () => {
+  it('UNIT-12: before the start → OUTCOME_TOO_EARLY; at the start and later → null; non-BOOKED → BOOKING_NOT_ACTIVE, checked first', async () => {
+    const { canRecordOutcome } = await import('../../src/rules/bookingRules.js');
+    const slotAt = (min: number) => ({ startAt: plus(min) });
+    expect(canRecordOutcome({ status: 'BOOKED' }, slotAt(1), NOW)).toBe('OUTCOME_TOO_EARLY');
+    expect(canRecordOutcome({ status: 'BOOKED' }, slotAt(0), NOW)).toBeNull();
+    expect(canRecordOutcome({ status: 'BOOKED' }, slotAt(-180), NOW)).toBeNull();
+    for (const status of ['CANCELLED', 'COMPLETED', 'NO_SHOW'] as const) {
+      expect(canRecordOutcome({ status }, slotAt(-30), NOW)).toBe('BOOKING_NOT_ACTIVE');
+      expect(canRecordOutcome({ status }, slotAt(30), NOW)).toBe('BOOKING_NOT_ACTIVE');
+    }
+  });
+});
+
+describe('checkRescheduleTarget (F-08 §2)', () => {
+  it('UNIT-13: same slot → "Choose a different slot."; other service → same-service message; valid target → null', async () => {
+    const { checkRescheduleTarget } = await import('../../src/rules/bookingRules.js');
+    const old = { id: 10, serviceId: 1 };
+    expect(checkRescheduleTarget(old, { id: 10, serviceId: 1 })).toEqual({ slotId: 'Choose a different slot.' });
+    expect(checkRescheduleTarget(old, { id: 11, serviceId: 2 })).toEqual({ slotId: 'Choose a slot of the same service.' });
+    expect(checkRescheduleTarget(old, { id: 11, serviceId: 1 })).toBeNull();
+  });
+});
+

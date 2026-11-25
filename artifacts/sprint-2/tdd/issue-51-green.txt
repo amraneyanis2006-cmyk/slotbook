@@ -1,0 +1,132 @@
+# Issue:   #51
+# Branch:  feature/51-service-catalogue
+# Commit:  3a51465 (feat(F-11): shared service catalogue, BR-04 vs started bookings (#51))
+# Date:    2026-11-25 18:15:26 +0700
+# Env:     Node v22.23.4, PostgreSQL 16 local slotbook_test (reset + seeded by server/tests/setup.ts), Chrome for Playwright
+
+===== $ cd server && npx vitest run (exit 0)
+
+ RUN  v3.2.7 /home/claude/wt/server
+
+ ✓ tests/api/bookings.api.test.ts (9 tests) 1720ms
+ ✓ tests/api/services.api.test.ts (3 tests) 1366ms
+ ✓ tests/db/services.db.test.ts (1 test) 68ms
+ ✓ tests/unit/bookingRules.test.ts (3 tests) 5ms
+ ✓ tests/unit/serviceRules.test.ts (1 test) 4ms
+stderr | tests/api/access.api.test.ts > API-09 safe errors (F-02, NFR-06) > API-09: /api/__test__/throw → 500 INTERNAL_ERROR without stack trace, SQL or file path
+[5fe81e3e-253d-429a-8d34-e36d91e857af] Error: Boom in /srv/slotbook/server/src/secret.ts while running SELECT * FROM "User"
+    at /home/claude/wt/server/src/routes/testOnly.ts:8:9
+    at Layer.handle [as handle_request] (/home/claude/slotbook/server/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/claude/slotbook/server/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/claude/slotbook/server/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/home/claude/slotbook/server/node_modules/express/lib/router/layer.js:95:5)
+    at /home/claude/slotbook/server/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/home/claude/slotbook/server/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/claude/slotbook/server/node_modules/express/lib/router/index.js:280:10)
+    at Function.handle (/home/claude/slotbook/server/node_modules/express/lib/router/index.js:175:3)
+    at router (/home/claude/slotbook/server/node_modules/express/lib/router/index.js:47:12)
+
+stderr | tests/api/access.api.test.ts > API-09 safe errors (F-02, NFR-06) > API-09: /api/__test__/prisma-error → 500 INTERNAL_ERROR without stack trace, SQL or file path
+[9e29856c-8436-4afe-9e63-ff2d8e63acf6] PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `42P01`. Message: `relation "TableThatDoesNotExist" does not exist`
+    at $n.handleRequestError (/home/claude/slotbook/server/node_modules/@prisma/client/runtime/library.js:121:7315)
+    at $n.handleAndLogRequestError (/home/claude/slotbook/server/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/home/claude/slotbook/server/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at l (/home/claude/slotbook/server/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at /home/claude/wt/server/src/routes/testOnly.ts:13:5 {
+  code: 'P2010',
+  clientVersion: '5.22.0',
+  meta: {
+    code: '42P01',
+    message: 'relation "TableThatDoesNotExist" does not exist'
+  }
+}
+
+ ✓ tests/api/access.api.test.ts (24 tests) 2980ms
+   ✓ API-07 role restriction (F-02, NFR-02) > API-07: POST /api/staff/slots as CUSTOMER → 403 FORBIDDEN  337ms
+   ✓ API-08 server-side identity (F-02, BR-08) > API-08: staffId in the body is ignored; the slot belongs to the session staff member  347ms
+   ✓ API-08 server-side identity (F-02, BR-08) > API-08: customerId in the body is ignored; the booking belongs to the session customer  361ms
+ ✓ tests/unit/sessionConfig.test.ts (3 tests) 2580ms
+   ✓ server startup (F-00, NFR-12) > UNIT-07: in production the server refuses to start (exit 1, clear message) when SESSION_SECRET is missing, shorter than 32 characters or the .env.example placeholder  1851ms
+   ✓ graceful shutdown (F-00, NFR-12) > UNIT-08: on SIGTERM (Cloud Run stop, docker stop) the running server closes and exits 0 instead of waiting for SIGKILL  725ms
+ ✓ tests/api/auth.api.test.ts (6 tests) 2192ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-01: valid credentials (also upper-case e-mail) return the user without secrets and an HttpOnly SameSite=Lax cookie  616ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-02: wrong password and unknown e-mail both return 401 INVALID_CREDENTIALS with the same message; no session follows  425ms
+   ✓ POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me (F-01) > API-03: an inactive account cannot log in; a session of a user deactivated later gets 401 UNAUTHENTICATED  563ms
+ ✓ tests/db/seed.db.test.ts (3 tests) 2108ms
+   ✓ seed (F-00) > DB-02: running the seed twice gives the same counts, the seeded accounts with roles and no plaintext password  920ms
+   ✓ seed in production (F-00, NFR-12) > DB-03: with NODE_ENV=production the seed writes nothing unless SEED_DEMO_DATA=true and SEED_PASSWORD is set  862ms
+   ✓ seed rerun in production (F-00, NFR-12) > DB-04: with NODE_ENV=production and SEED_DEMO_DATA=true a later rerun is insert-only: a changed password hash, a closed seeded slot and a UAT booking stay as they are, and no booking is created  317ms
+ ✓ tests/api/my-bookings.api.test.ts (4 tests) 1750ms
+   ✓ GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-20: only the caller's bookings, split into upcoming (BOOKED, start ≥ now, ascending) and past (newest first); detail by reference; same data after a new login  629ms
+ ✓ tests/api/history.api.test.ts (2 tests) 1322ms
+ ✓ tests/api/slots.api.test.ts (4 tests) 823ms
+ ✓ tests/api/schedule.api.test.ts (1 test) 668ms
+ ✓ tests/db/history.db.test.ts (2 tests) 525ms
+   ✓ history backfill (F-10 §1 step 5) > DB-06: the migration backfill gives every booking a history ending in its status, with the marker reason on second rows; the seed uses the same SQL and keeps the counts  413ms
+ ✓ tests/api/production.api.test.ts (2 tests) 387ms
+   ✓ production serving (F-00, NFR-12) > API-27: in production Express serves CLIENT_DIST with an index.html fallback for non-/api GET routes, /api 404s stay JSON, and the Secure cookie is set behind the proxy  380ms
+ ✓ tests/db/constraints.db.test.ts (1 test) 98ms
+ ✓ tests/api/health.api.test.ts (3 tests) 99ms
+ ✓ tests/unit/slotRules.test.ts (2 tests) 8ms
+ ✓ tests/unit/historyRules.test.ts (1 test) 5ms
+
+ Test Files  19 passed (19)
+      Tests  75 passed (75)
+   Start at  18:15:26
+   Duration  31.28s (transform 520ms, setup 0ms, collect 5.63s, tests 18.71s, environment 3ms, prepare 1.29s)
+
+
+===== $ cd client && npx vitest run (exit 0)
+
+ RUN  v3.2.7 /home/claude/wt/client
+
+stderr | tests/ServicesPage.test.tsx > ServicesPage (F-11) > UI-07: field errors under the fields, 409 under Name; deactivating through the dialog shows the Inactive badge
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ tests/ServicesPage.test.tsx (1 test) 393ms
+   ✓ ServicesPage (F-11) > UI-07: field errors under the fields, 409 under Name; deactivating through the dialog shows the Inactive badge  392ms
+stderr | tests/BookSlotPage.test.tsx > BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ tests/BookSlotPage.test.tsx (3 tests) 728ms
+   ✓ BookSlotPage (F-04) > UI-03: dialog with focus trap and Esc, busy confirm, reference on 201, 409 message in the dialog and list re-fetched; empty state  637ms
+stderr | tests/MyBookingsPage.test.tsx > MyBookingsPage / BookingDetailPage (F-05) > UI-04 (CR-01): two sections with badges; Cancel only for the booking ≥ 24 h ahead; after confirming, the badge shows Cancelled
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ tests/MyBookingsPage.test.tsx (3 tests) 400ms
+   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04 (CR-01): two sections with badges; Cancel only for the booking ≥ 24 h ahead; after confirming, the badge shows Cancelled  322ms
+stderr | tests/LoginPage.test.tsx > LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ tests/LoginPage.test.tsx (1 test) 376ms
+   ✓ LoginPage (F-01) > UI-01: labelled form, busy button, 401 keeps e-mail and clears password, 200 goes to the role home  375ms
+ ✓ tests/MySlotsPage.test.tsx (1 test) 352ms
+   ✓ MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list  350ms
+stderr | tests/BookingDetailPage.test.tsx > BookingDetailPage history (F-10) > UI-06: ordered History list with actor and reason; callout "Cancelled by Anan Wong: Staff illness"
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ tests/BookingDetailPage.test.tsx (1 test) 119ms
+ ✓ tests/ReleaseFooter.test.tsx (2 tests) 104ms
+
+ Test Files  7 passed (7)
+      Tests  12 passed (12)
+   Start at  18:15:58
+   Duration  7.80s (transform 285ms, setup 686ms, collect 619ms, tests 2.47s, environment 2.25s, prepare 420ms)
+
+
+===== $ npx playwright test --config pw-local.config.ts --reporter=line e2e/sprint2-services.spec.ts (exit 0)
+
+Running 1 test using 1 worker
+
+[1/1] e2e/sprint2-services.spec.ts:4:1 › E2E-10: Anan adds "Visa letter (30 min)", sees it in the slot form, deactivates it and it leaves the slot form
+  1 passed (7.9s)
+

@@ -4,8 +4,8 @@ import { useAuth } from '../auth/AuthProvider';
 
 // Header for every authenticated page: product name, role navigation (aria-current via NavLink), user + Log out.
 const NAV = {
-  CUSTOMER: [{ to: '/book', label: 'Book a Slot' }, { to: '/bookings', label: 'My Bookings' }],
-  STAFF: [{ to: '/staff/slots', label: 'My Slots' }, { to: '/staff/schedule', label: 'Schedule' }],
+  CUSTOMER: [{ to: '/book', label: 'Book a Slot' }, { to: '/search', label: 'Find a Slot' }, { to: '/bookings', label: 'My Bookings' }],
+  STAFF: [{ to: '/staff/slots', label: 'My Slots' }, { to: '/staff/schedule', label: 'Schedule' }, { to: '/staff/services', label: 'Services' }, { to: '/staff/dashboard', label: 'Dashboard' }],
 };
 
 export default function AppShell() {

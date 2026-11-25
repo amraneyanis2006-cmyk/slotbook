@@ -37,3 +37,18 @@ export const overlaps = (a: TimeRange, b: TimeRange): boolean => a.startAt < b.e
 /** BR-07: first non-cancelled existing slot overlapping the new one, or null. */
 export const findOverlap = <T extends TimeRange & { status: SlotStatus }>(slot: TimeRange, existing: T[]): T | null =>
   existing.find((s) => s.status !== 'CANCELLED' && overlaps(slot, s)) ?? null;
+
+export type SlotAction = 'edit' | 'close' | 'reopen' | 'cancel';
+
+/**
+ * F-07 §2 in binding order: SLOT_NOT_EDITABLE (cancelled, started, close of a non-OPEN or reopen of a non-CLOSED slot)
+ * before SLOT_HAS_BOOKING (BR-14: a booked slot can only be cancelled).
+ */
+export function checkSlotChange(action: SlotAction, slot: { status: SlotStatus; startAt: Date }, hasBooking: boolean, now: Date):
+  null | 'SLOT_NOT_EDITABLE' | 'SLOT_HAS_BOOKING' {
+  if (slot.status === 'CANCELLED' || slot.startAt <= now) return 'SLOT_NOT_EDITABLE';
+  if (action === 'close' && slot.status !== 'OPEN') return 'SLOT_NOT_EDITABLE';
+  if (action === 'reopen' && slot.status !== 'CLOSED') return 'SLOT_NOT_EDITABLE';
+  if (hasBooking && (action === 'edit' || action === 'close')) return 'SLOT_HAS_BOOKING';
+  return null;
+}

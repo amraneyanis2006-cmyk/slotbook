@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { bangkokDatePlus, logIn, PASSWORD } from './helpers';
+import { bangkokDatePlus, expectNoOverflow, logIn, PASSWORD } from './helpers';
 import { VIEWPORTS } from './viewports';
 
 // AC-30 (NFR-08, NFR-09): the five Sprint 1 screens at 320, 768 and 1280 px; keyboard-only login + booking.
@@ -12,23 +12,6 @@ const SCREENS: { email: string | null; path: string; ready: (page: Page) => Loca
   { email: 'staff.mali@slotbook.test', path: '/staff/slots', ready: (p) => p.getByRole('button', { name: 'Publish slot' }) },
   { email: 'staff.mali@slotbook.test', path: '/staff/schedule', ready: (p) => p.getByRole('button', { name: 'Next day' }) },
 ];
-
-/** No horizontal page scroll, and every visible control lies fully inside the viewport width. */
-async function expectNoOverflow(page: Page, label: string) {
-  const { scrollWidth, clientWidth, clipped } = await page.evaluate(() => {
-    const width = document.documentElement.clientWidth;
-    const controls = [...document.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea')]
-      .filter((el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden');
-    return {
-      scrollWidth: document.documentElement.scrollWidth,
-      clientWidth: width,
-      clipped: controls.filter((el) => { const r = el.getBoundingClientRect(); return r.left < 0 || r.right > width + 0.5; })
-        .map((el) => el.outerHTML.slice(0, 80)),
-    };
-  });
-  expect(scrollWidth, `${label}: horizontal page scroll`).toBeLessThanOrEqual(clientWidth);
-  expect(clipped, `${label}: clipped controls`).toEqual([]);
-}
 
 test('E2E-07: /login, /book, /bookings, /staff/slots and /staff/schedule have no horizontal scroll or clipped control at 320, 768 and 1280 px', async ({ page }) => {
   let current: string | null = null;

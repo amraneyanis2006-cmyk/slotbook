@@ -23,3 +23,33 @@ Team EN-036 "Y Que Fue": Yanis Amrane (`amraneyanis2006-cmyk`) and Simeon Audoui
 
 Every PR was reviewed by the student who did not write it, and only the author's teammate approved it. AI
 assistance is declared in [`ai-use.md`](ai-use.md).
+
+---
+
+# Contributions — Sprint 2 and Deliverable 2
+
+Facts taken from GitHub on 2026-11-25 (PRs #64–#73, their reviews and merge records, UTC). Code and tests were
+written with Claude (see [`ai-use.md`](ai-use.md), Sprint 2 section); the split below is the agreed ownership of
+each feature (commit author, PR opener) and who reviewed it.
+
+| Student | Issues owned | PRs opened | PRs reviewed and approved |
+| :--- | :--- | :--- | :--- |
+| Yanis Amrane | #49 contracts, #50 F-10, #51 F-11, #54 F-08, #56 release, #57 Sprint 3 contracts, #58 F-15; created Issues #49–#63 | #64, #65, #66, #69, #71, #72, #73 | #67, #68, #70 |
+| Simeon Audouit | #52 F-07, #53 F-09, #55 F-12 | #67, #68, #70 | #64, #65, #66, #69, #71, #72, #73 |
+
+## Pull requests (all into `staging`, merge commits)
+
+| PR | Issue | Opened by | Approved by (UTC) | Merged (UTC) by |
+| :--- | :--- | :--- | :--- | :--- |
+| #64 | #49 Sprint 2 contracts, STS, DoD | Yanis | Simeon 11:01 | 11:04, Yanis |
+| #65 | #50 F-10 Booking history | Yanis | Simeon 14:17 | 14:18, Yanis |
+| #66 | #51 F-11 Service catalogue + A-04 | Yanis | Simeon 14:21 | 14:22, Yanis |
+| #67 | #52 F-07 Slot maintenance | Simeon | Yanis 14:41 | 14:45, Simeon |
+| #68 | #53 F-09 Attendance outcome | Simeon | Yanis 14:52 | 14:52, Simeon |
+| #69 | #54 F-08 Reschedule | Yanis | Simeon 14:56 | 14:58, Yanis |
+| #70 | #55 F-12 Slot search + NFR-11 | Simeon | Yanis 15:01 | 15:05, Simeon |
+| #71 | #57 Sprint 3 contracts | Yanis | Simeon 15:07 | 15:09, Yanis |
+| #72 | #58 F-15 Staff dashboard | Yanis | Simeon 15:10 | 15:11, Yanis |
+| #73 | #56 Sprint 2 release preparation | Yanis | Simeon (to re-review after the STS results commit) | open |
+
+Every PR was approved by the student who did not open it. Issues close when `staging` is released to `main`.

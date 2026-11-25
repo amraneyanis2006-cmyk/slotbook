@@ -61,7 +61,8 @@ describe('GET /api/staff/schedule (F-06)', () => {
     expect(res.body.slots[1]).toEqual({
       id: booked.id, startAt: '2030-04-09T02:00:00.000Z', endAt: '2030-04-09T02:30:00.000Z', status: 'OPEN',
       service: { id: ids.advising, name: 'Academic advising', durationMin: 30 },
-      booking: { reference: bookedRow.reference, status: 'BOOKED', note: 'Transcript question', customer: { id: ids.ploy, name: 'Ploy Chai' } },
+      // canRecordOutcome since F-09 (STS Sprint 2 §7): this booking has not started.
+      booking: { reference: bookedRow.reference, status: 'BOOKED', note: 'Transcript question', customer: { id: ids.ploy, name: 'Ploy Chai' }, canRecordOutcome: false },
     });
     expect(res.body.slots[0].booking).toBeNull();
     expect(res.body.slots[3].booking).toBeNull();
