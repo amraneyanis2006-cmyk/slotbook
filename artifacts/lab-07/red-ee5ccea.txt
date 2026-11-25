@@ -1,0 +1,120 @@
+RED for CR-01 (#45) - commit T = ee5ccea7c8831dd89898615d2d6d2767f778a5d6 (test(CR-01): RED), detached; code = pre-change implementation (server/src/rules/bookingRules.ts: CANCEL_WINDOW_MIN = 120)
+Base staging M1 = 026f34b (merge of contract PR #46). Run 25/11/2026 11:58 Bangkok, local, slotbook_test reset + seeded by server/tests/setup.ts
+
+Result: UNIT-05, API-23 and UI-04 (first test) FAIL on assertions (expected 120 to be 1440; expected 200 to be 409; Cancel button still offered at +3 h).
+API-22 PASSES at T: it checks the allowed side (+25 h and exactly +24 h), which the old 2 h rule also allows;
+it is kept as the GREEN boundary/regression check. No compile or fixture error.
+
+===== $ cd server && npx vitest run tests/unit/bookingRules.test.ts tests/api/my-bookings.api.test.ts  (exit 1)
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/server
+
+ ❯ tests/api/my-bookings.api.test.ts (4 tests | 1 failed) 1854ms
+   ✓ GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-20: only the caller's bookings, split into upcoming (BOOKED, start ≥ now, ascending) and past (newest first); detail by reference; same data after a new login  701ms
+   ✓ GET /api/bookings/mine, GET /api/bookings/:reference (F-05) > API-21: reading or cancelling Ken's booking as Ploy → 404 NOT_FOUND without booking data; Ken's booking still BOOKED 32ms
+   ✓ POST /api/bookings/:reference/cancel (F-05) > API-22 (CR-01): cancelling at +25 h (and exactly +24 h) → 200 CANCELLED with cancelledAt; the slot is available again and Nina books it 53ms
+   × POST /api/bookings/:reference/cancel (F-05) > API-23 (CR-01): inside 24 h → 409 CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW (or a second cancel) → 409 BOOKING_NOT_ACTIVE; rows unchanged 38ms
+     → expected 200 to be 409 // Object.is equality
+ ❯ tests/unit/bookingRules.test.ts (3 tests | 1 failed) 13ms
+   ✓ formatReference (F-04, BR-10) > UNIT-03: formats BK-YYYY-NNNNNN and throws when the sequence exceeds 999999 3ms
+   ✓ isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04) > UNIT-04: +60 min is bookable; +59 min, CLOSED/CANCELLED and inactive service are not; 3 active → limit; past/cancelled not counted; overlap vs back-to-back 1ms
+   × canCustomerCancel (F-05, BR-05, BR-13) > UNIT-05 (CR-01): +1440 min → allowed; +1439, +180 and +120 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first 8ms
+     → expected 120 to be 1440 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/my-bookings.api.test.ts > POST /api/bookings/:reference/cancel (F-05) > API-23 (CR-01): inside 24 h → 409 CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW (or a second cancel) → 409 BOOKING_NOT_ACTIVE; rows unchanged
+AssertionError: expected 200 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 200
+
+ ❯ tests/api/my-bookings.api.test.ts:137:26
+    135|     for (const { booking } of inside) {
+    136|       const res = await cancel(agents.ploy, booking.reference);
+    137|       expect(res.status).toBe(409);
+       |                          ^
+    138|       expect(res.body).toEqual({ error: 'CANCELLATION_WINDOW_CLOSED', …
+    139|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/unit/bookingRules.test.ts > canCustomerCancel (F-05, BR-05, BR-13) > UNIT-05 (CR-01): +1440 min → allowed; +1439, +180 and +120 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first
+AssertionError: expected 120 to be 1440 // Object.is equality
+
+- Expected
++ Received
+
+- 1440
++ 120
+
+ ❯ tests/unit/bookingRules.test.ts:54:31
+     52| 
+     53|   it('UNIT-05 (CR-01): +1440 min → allowed; +1439, +180 and +120 min →…
+     54|     expect(CANCEL_WINDOW_MIN).toBe(24 * 60);
+       |                               ^
+     55|     expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(24 * 60), NO…
+     56|     expect(canCustomerCancel({ status: 'BOOKED' }, slotIn(72 * 60), NO…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 5 passed (7)
+   Start at  11:58:14
+   Duration  5.67s (transform 198ms, setup 0ms, collect 941ms, tests 1.87s, environment 0ms, prepare 170ms)
+
+npm notice
+npm notice New major version of npm available! 11.19.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
+
+===== $ cd client && npx vitest run tests/MyBookingsPage.test.tsx  (exit 1)
+
+ RUN  v3.2.7 /Users/yanisamrane/Documents/KMUTT_courses/Software_engineering/Project/slotbook/client
+
+stderr | tests/MyBookingsPage.test.tsx > MyBookingsPage / BookingDetailPage (F-05) > UI-04 (CR-01): two sections with badges; Cancel only for the booking ≥ 24 h ahead; after confirming, the badge shows Cancelled
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ tests/MyBookingsPage.test.tsx (3 tests | 1 failed) 374ms
+   × MyBookingsPage / BookingDetailPage (F-05) > UI-04 (CR-01): two sections with badges; Cancel only for the booking ≥ 24 h ahead; after confirming, the badge shows Cancelled 288ms
+     → expected <button type="button"></button> to be null
+   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04: a refused cancel (409) closes the dialog, shows the server message on the page, focuses the heading and reloads the status 53ms
+   ✓ MyBookingsPage / BookingDetailPage (F-05) > UI-04: empty list, load error with Retry, and "Booking not found." for a foreign reference 32ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/MyBookingsPage.test.tsx > MyBookingsPage / BookingDetailPage (F-05) > UI-04 (CR-01): two sections with badges; Cancel only for the booking ≥ 24 h ahead; after confirming, the badge shows Cancelled
+AssertionError: expected <button type="button"></button> to be null
+
+- Expected: 
+null
+
++ Received: 
+<button
+  type="button"
+>
+  Cancel booking
+</button>
+
+ ❯ tests/MyBookingsPage.test.tsx:68:70
+     66|     await user.click(within(upcoming).getByRole('link', { name: `View …
+     67|     expect(await screen.findByRole('heading', { name: `Booking ${SOON.…
+     68|     expect(screen.queryByRole('button', { name: 'Cancel booking' })).t…
+       |                                                                      ^
+     69|     expect(screen.getByText('Cancellation closes 24 hours before the s…
+     70|     await user.click(screen.getByRole('link', { name: 'Back to My Book…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  11:58:21
+   Duration  2.29s (transform 127ms, setup 298ms, collect 241ms, tests 374ms, environment 835ms, prepare 165ms)
+
