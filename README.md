@@ -70,6 +70,8 @@ The seed also creates 4 services (one inactive), slots at fixed times from 2 day
 ```bash
 npm test                    # server (Vitest + Supertest, resets and seeds slotbook_test) then client (Vitest + jsdom)
 npm run test:e2e            # Playwright; starts the API on the test database and the app itself
+npm run test:perf           # PERF-01 (NFR-11): seed ×10 in slotbook_test, p95 of search/available/book < 500 ms;
+                            # timings written to artifacts/sprint-2/perf/ (not part of npm test)
 ```
 
 Ports 3000 and 5173 must be free before `npm run test:e2e` (stop `npm run dev` first). The suite includes

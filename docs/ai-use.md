@@ -67,3 +67,42 @@ show which written records were posted or completed after the merge.
     - **After the merge:** the change request was rewritten (edited at 08:24:19Z and 08:36:42Z). It now says the first screenshot 17 did not clearly show the customer or the final page and is fixed, that the schedule shows only the staff member's own slots, and that the pages fit on small screens.
 - **Test runs.** Every test total in a PR body comes from a real run whose output is saved in `artifacts/sprint-1/tdd/` (red and green per Issue). The release totals come from the clean-clone run in `artifacts/sprint-1/clean-clone-check.md`.
 - **Local setup.** Simeon ran the README setup on a Windows machine (Node 24, npm 12, PostgreSQL 18) and created the database role by hand. That run found the setup gaps fixed in Issue #8.
+
+---
+
+# AI Use Declaration — Sprint 2 and Deliverable 2
+
+## Tools and way of working
+
+- **Claude (Anthropic, model Claude Opus 5.5)** in a cloud session driven by Yanis wrote the Sprint 2 and Sprint 3
+  contracts, the tests and the code of F-07..F-12 and F-15, on local branches, in the order of
+  `sprints/sprint-2/README.md`: contract PR first, then per Issue a red commit (tests only) and a green commit.
+  Every commit it wrote carries `Co-Authored-By: Claude Opus 5.5`.
+- **Pushing.** The cloud session cannot push to GitHub. The contract PR (#64) was handed over as a `git format-patch`
+  file; the implementation commits as one `git bundle`, so the pushed commits keep the exact hashes named in the
+  red/green evidence. Claude Code on Yanis's computer created the Issues, pushed every branch and opened Yanis's PRs.
+  The commits of F-07, F-09 and F-12 carry Simeon as author (agreed split of the features), and Simeon opened those
+  three PRs himself; Yanis reviewed them.
+- **Review.** Every PR was reviewed and approved on GitHub by the teammate who did not open it. Review comments
+  are the reviewer's own; the AI never wrote or posted a review or an approval.
+- **Test evidence.** The red and green outputs in `artifacts/sprint-2/tdd/` come from real runs of the committed code
+  (server Vitest against a local PostgreSQL 16 `_test` database, client Vitest, Playwright with Chrome), with the
+  commit, date and command in each file. CI runs on GitHub are the reference for the merged code.
+
+## What the AI did not do
+
+- It did not choose the product scope: FR/BR/NFR come from the Deliverable 1 SRS; the decisions recorded in SRS 1.4
+  (A-04 resolved, A-05, A-06, D-07) were proposed by the AI and accepted by Yanis, then reviewed by Simeon in the
+  contract PR.
+- It did not touch GCP billing, IAM, Cloud SQL or secrets; deployments run through the `deploy.yml` pipeline.
+- No real personal data was used; all accounts are synthetic seed data.
+
+## Corrections found while implementing (recorded, not hidden)
+
+| Where | What the first version did | Fix |
+| :--- | :--- | :--- |
+| F-10 backfill (DB-06) | A seed booking of a past slot got its outcome row dated before its creation row | `GREATEST(createdAt, …)`, F-10 1.1 |
+| F-10 History list | Each line put the status alone in `<strong>`, so the Sprint 1 E2E-05 check `getByText('Cancelled', exact)` matched two elements | One text node per line; E2E-05 unchanged |
+| F-07 Actions menu | Choosing a dialog action closed the menu, so Esc on the dialog left the focus nowhere | The menu stays open while its dialog is open (found by E2E-15) |
+| STS Sprint 2 §4 | Wrong folder for the client tests (`client/src`) | `client/tests/`, STS 1.1 |
+
