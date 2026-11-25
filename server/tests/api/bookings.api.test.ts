@@ -206,3 +206,24 @@ describe('POST /api/bookings (F-04)', () => {
     expect((await book(agents.ploy, backToBack.id)).status).toBe(201);
   });
 });
+
+describe('BR-04 against bookings that have started (F-11 §1 step 6, A-04)', () => {
+  it('API-34: a 120-minute booking that started 30 min ago blocks an overlapping slot 60 min ahead; the slot at its end is bookable', async () => {
+    freezeClock('2030-02-27T08:00:00+07:00');
+    const long = await prisma.service.create({ data: { name: 'API-34 two-hour consultation', durationMin: 120 } });
+    try {
+      const ongoing = await makeSlot(prisma, { staffId: ids.anan, serviceId: long.id, date: '2030-02-27', time: '07:30', durationMin: 120 });
+      await makeBooking(prisma, { slotId: ongoing.id, customerId: ids.nina });
+      const overlapping = await slot('mali', '2030-02-27', '09:00');
+      const atTheEnd = await slot('mali', '2030-02-27', '09:30');
+      const refused = await book(agents.nina, overlapping.id);
+      expect(refused.status).toBe(409);
+      expect(refused.body.error).toBe('BOOKING_OVERLAP');
+      expect((await book(agents.nina, atTheEnd.id)).status).toBe(201);
+    } finally {
+      await removeSlotsBetween(prisma, bkk('2030-02-27', '00:00'), bkk('2030-02-28', '00:00'));
+      await prisma.service.delete({ where: { id: long.id } });
+    }
+  });
+});
+

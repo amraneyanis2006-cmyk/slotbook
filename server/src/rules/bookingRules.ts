@@ -26,12 +26,13 @@ export const isBookable = (slot: BookableSlot, now: Date): null | 'SLOT_NOT_BOOK
     : 'SLOT_NOT_BOOKABLE';
 
 /**
- * BR-03 then BR-04 against the customer's active future bookings (the service selects BOOKED with start > now;
- * only BOOKED entries count here, so cancelled or finished bookings never block).
+ * BR-03 then BR-04 against the customer's active bookings that have not ended (the service selects BOOKED with
+ * end > now; only BOOKED entries count here, so cancelled or finished bookings never block). BR-03 counts only
+ * bookings that start after now; BR-04 also counts one that has started (A-04, resolved by F-11 §1 step 6).
  */
-export function checkCustomerLimits(activeFutureBookings: CustomerBooking[], slot: TimeRange): null | 'BOOKING_LIMIT_REACHED' | 'BOOKING_OVERLAP' {
-  const active = activeFutureBookings.filter((b) => b.status === 'BOOKED');
-  if (active.length >= MAX_ACTIVE_BOOKINGS) return 'BOOKING_LIMIT_REACHED';
+export function checkCustomerLimits(activeBookings: CustomerBooking[], slot: TimeRange, now: Date): null | 'BOOKING_LIMIT_REACHED' | 'BOOKING_OVERLAP' {
+  const active = activeBookings.filter((b) => b.status === 'BOOKED');
+  if (active.filter((b) => b.slot.startAt > now).length >= MAX_ACTIVE_BOOKINGS) return 'BOOKING_LIMIT_REACHED';
   return active.some((b) => overlaps(b.slot, slot)) ? 'BOOKING_OVERLAP' : null;
 }
 

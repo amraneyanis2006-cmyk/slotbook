@@ -59,11 +59,12 @@ export function book(customerId: number, slotId: number, note: string | null) {
     if (isBookable(slot, at)) throw reject('SLOT_NOT_BOOKABLE');
     if (slot.bookings.length) throw reject('SLOT_ALREADY_BOOKED');
 
-    const activeFuture = await tx.booking.findMany({
-      where: { customerId, status: 'BOOKED', slot: { startAt: { gt: at } } },
+    // Not yet ended (A-04): a booking that has started still counts for BR-04, not for BR-03 (checkCustomerLimits).
+    const notEnded = await tx.booking.findMany({
+      where: { customerId, status: 'BOOKED', slot: { endAt: { gt: at } } },
       select: { status: true, slot: { select: { startAt: true, endAt: true } } },
     });
-    const limit = checkCustomerLimits(activeFuture, slot);
+    const limit = checkCustomerLimits(notEnded, slot, at);
     if (limit) throw reject(limit);
 
     const [{ seq }] = await tx.$queryRaw<{ seq: bigint }[]>`SELECT nextval('booking_ref_seq') AS seq`;

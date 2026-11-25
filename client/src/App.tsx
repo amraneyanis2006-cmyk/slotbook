@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import MySlotsPage from './pages/MySlotsPage';
 import SchedulePage from './pages/SchedulePage';
+import ServicesPage from './pages/ServicesPage';
 import StaffBookingPage from './pages/StaffBookingPage';
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/staff/slots" element={<MySlotsPage />} />
           <Route path="/staff/schedule" element={<SchedulePage />} />
           <Route path="/staff/bookings/:reference" element={<StaffBookingPage />} />
+          <Route path="/staff/services" element={<ServicesPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
