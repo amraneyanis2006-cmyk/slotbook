@@ -1,0 +1,1860 @@
+# Issue:   #52
+# Branch:  feature/52-slot-maintenance
+# Commit:  5098fbd (test(F-07): slot maintenance tests, red (#52))
+# Date:    2026-11-25 18:16:17 +0700
+# Env:     Node v22.23.4, PostgreSQL 16 local slotbook_test (reset + seeded by server/tests/setup.ts), Chrome for Playwright
+
+===== $ cd server && npx vitest run tests/unit/slotRules.test.ts tests/api/slotMaintenance.api.test.ts (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/server
+
+ ❯ tests/api/slotMaintenance.api.test.ts (5 tests | 5 failed) 1148ms
+   × edit time (F-07) > API-35: moves an own unbooked slot keeping its duration; BR-06 → 422; BR-07 → 409 SLOT_OVERLAP; +15 min within its own range is allowed 28ms
+     → expected 404 to be 200 // Object.is equality
+   × edit time (F-07) > API-36: close hides and blocks an open slot; reopen makes it listed and bookable again 29ms
+     → expected 404 to be 200 // Object.is equality
+   × edit time (F-07) > API-37: editing or closing a booked slot → 409 SLOT_HAS_BOOKING; slot and booking unchanged 24ms
+     → expected 404 to be 409 // Object.is equality
+   × cancel with reason (F-07, BR-14 cascade) > API-38: cancelling a booked slot cancels the booking in the same transaction with a history row carrying the reason; the customer sees it; no reason → 422 31ms
+     → expected 404 to be 422 // Object.is equality
+   × cancel with reason (F-07, BR-14 cascade) > API-39: a started or CANCELLED slot → 409 SLOT_NOT_EDITABLE; another staff member's slot → 404 unchanged; Customer → 403; a bad id → 404 23ms
+     → expected 404 to be 409 // Object.is equality
+ ❯ tests/unit/slotRules.test.ts (3 tests | 1 failed) 9ms
+   ✓ validateSlot (F-03, BR-06) > UNIT-01: rejects past, off-step, out-of-hours and inactive-service slots with the specified messages; accepts valid ones 3ms
+   ✓ overlaps / findOverlap (F-03, BR-07) > UNIT-02: overlapping ranges collide, touching edges do not, cancelled slots are ignored 0ms
+   × checkSlotChange (F-07 §2, BR-14) > UNIT-11: SLOT_NOT_EDITABLE first (cancelled, started, wrong status for close/reopen), then SLOT_HAS_BOOKING for edit/close only 3ms
+     → checkSlotChange is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/slotMaintenance.api.test.ts > edit time (F-07) > API-35: moves an own unbooked slot keeping its duration; BR-06 → 422; BR-07 → 409 SLOT_OVERLAP; +15 min within its own range is allowed
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/slotMaintenance.api.test.ts:44:26
+     42|     await anans('2030-09-03', '11:00');
+     43|     const moved = await edit(agents.anan, slot.id, { date: '2030-09-04…
+     44|     expect(moved.status).toBe(200);
+       |                          ^
+     45|     expect(moved.body.slot).toMatchObject({ id: slot.id, status: 'OPEN…
+     46|     expect((await row(slot.id)).staffId).toBe(ids.anan);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/api/slotMaintenance.api.test.ts > edit time (F-07) > API-36: close hides and blocks an open slot; reopen makes it listed and bookable again
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/slotMaintenance.api.test.ts:69:27
+     67| 
+     68|     const closed = await act(agents.anan, slot.id, 'close');
+     69|     expect(closed.status).toBe(200);
+       |                           ^
+     70|     expect(closed.body.slot).toMatchObject({ id: slot.id, status: 'CLO…
+     71|     expect(await listed()).not.toContain(slot.id);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/api/slotMaintenance.api.test.ts > edit time (F-07) > API-37: editing or closing a booked slot → 409 SLOT_HAS_BOOKING; slot and booking unchanged
+AssertionError: expected 404 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 404
+
+ ❯ tests/api/slotMaintenance.api.test.ts:85:26
+     83|     const before = await row(slot.id);
+     84|     for (const res of [await edit(agents.anan, slot.id, { date: '2030-…
+     85|       expect(res.status).toBe(409);
+       |                          ^
+     86|       expect(res.body).toEqual({ error: 'SLOT_HAS_BOOKING', message: '…
+     87|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/api/slotMaintenance.api.test.ts > cancel with reason (F-07, BR-14 cascade) > API-38: cancelling a booked slot cancels the booking in the same transaction with a history row carrying the reason; the customer sees it; no reason → 422
+AssertionError: expected 404 to be 422 // Object.is equality
+
+- Expected
++ Received
+
+- 422
++ 404
+
+ ❯ tests/api/slotMaintenance.api.test.ts:100:29
+     98| 
+     99|     const noReason = await act(agents.anan, slot.id, 'cancel', { reaso…
+    100|     expect(noReason.status).toBe(422);
+       |                             ^
+    101|     expect(noReason.body.fields).toEqual({ reason: 'Enter a reason of …
+    102|     expect((await act(agents.anan, slot.id, 'cancel', { reason: 'x'.re…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/api/slotMaintenance.api.test.ts > cancel with reason (F-07, BR-14 cascade) > API-39: a started or CANCELLED slot → 409 SLOT_NOT_EDITABLE; another staff member's slot → 404 unchanged; Customer → 403; a bad id → 404
+AssertionError: expected 404 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 404
+
+ ❯ tests/api/slotMaintenance.api.test.ts:131:28
+    129|         await act(agents.anan, id, 'reopen'), await act(agents.anan, i…
+    130|       ]) {
+    131|         expect(res.status).toBe(409);
+       |                            ^
+    132|         expect(res.body).toEqual({ error: 'SLOT_NOT_EDITABLE', message…
+    133|       }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/unit/slotRules.test.ts > checkSlotChange (F-07 §2, BR-14) > UNIT-11: SLOT_NOT_EDITABLE first (cancelled, started, wrong status for close/reopen), then SLOT_HAS_BOOKING for edit/close only
+TypeError: checkSlotChange is not a function
+ ❯ tests/unit/slotRules.test.ts:59:14
+     57| 
+     58|     for (const action of ['edit', 'close', 'reopen', 'cancel'] as cons…
+     59|       expect(checkSlotChange(action, slot(60, 'CANCELLED'), false, NOW…
+       |              ^
+     60|       expect(checkSlotChange(action, slot(0), false, NOW)).toBe('SLOT_…
+     61|       expect(checkSlotChange(action, slot(-1, action === 'reopen' ? 'C…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  6 failed | 2 passed (8)
+   Start at  18:16:18
+   Duration  4.00s (transform 288ms, setup 0ms, collect 704ms, tests 1.16s, environment 0ms, prepare 100ms)
+
+
+===== $ cd client && npx vitest run tests/MySlotsPage.test.tsx (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/client
+
+ ❯ tests/MySlotsPage.test.tsx (2 tests | 1 failed) 1307ms
+   ✓ MySlotsPage (F-03) > UI-02: skeleton while loading, empty state, field error under Start time, then toast and refreshed list 285ms
+   × MySlotsPage actions (F-07) > UI-08: a booked slot offers only Cancel slot; the cancel dialog names the booking, counts characters and shows the reason error under the field 1020ms
+     → Unable to find role="button" and name "Actions for Tue 8 Jan 2030 09:00"
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <h1>
+      My Slots
+    </h1>
+    <section
+      aria-labelledby="publish-title"
+      class="panel"
+    >
+      <h2
+        id="publish-title"
+      >
+        Publish a slot
+      </h2>
+      <form
+        class="slot-form"
+        novalidate=""
+      >
+        <div>
+          <label
+            class="required"
+            for="serviceId"
+          >
+            Service
+          </label>
+          <select
+            aria-invalid="false"
+            id="serviceId"
+            required=""
+          >
+            <option
+              value=""
+            >
+              Choose a service
+            </option>
+            <option
+              value="1"
+            >
+              Academic advising
+            </option>
+          </select>
+        </div>
+        <div>
+          <label
+            class="required"
+            for="date"
+          >
+            Date
+          </label>
+          <input
+            aria-invalid="false"
+            id="date"
+            min="2026-11-25"
+            required=""
+            type="date"
+            value=""
+          />
+        </div>
+        <div>
+          <label
+            class="required"
+            for="startTime"
+          >
+            Start time
+          </label>
+          <select
+            aria-invalid="false"
+            id="startTime"
+            required=""
+          >
+            <option
+              value=""
+            >
+              Choose a time
+            </option>
+            <option
+              value="08:00"
+            >
+              08:00
+            </option>
+            <option
+              value="08:15"
+            >
+              08:15
+            </option>
+            <option
+              value="08:30"
+            >
+              08:30
+            </option>
+            <option
+              value="08:45"
+            >
+              08:45
+            </option>
+            <option
+              value="09:00"
+            >
+              09:00
+            </option>
+            <option
+              value="09:15"
+            >
+              09:15
+            </option>
+            <option
+              value="09:30"
+            >
+              09:30
+            </option>
+            <option
+              value="09:45"
+            >
+              09:45
+            </option>
+            <option
+              value="10:00"
+            >
+              10:00
+            </option>
+            <option
+              value="10:15"
+            >
+              10:15
+            </option>
+            <option
+              value="10:30"
+            >
+              10:30
+            </option>
+            <option
+              value="10:45"
+            >
+              10:45
+            </option>
+            <option
+              value="11:00"
+            >
+              11:00
+            </option>
+            <option
+              value="11:15"
+            >
+              11:15
+            </option>
+            <option
+              value="11:30"
+            >
+              11:30
+            </option>
+            <option
+              value="11:45"
+            >
+              11:45
+            </option>
+            <option
+              value="12:00"
+            >
+              12:00
+            </option>
+            <option
+              value="12:15"
+            >
+              12:15
+            </option>
+            <option
+              value="12:30"
+            >
+              12:30
+            </option>
+            <option
+              value="12:45"
+            >
+              12:45
+            </option>
+            <option
+              value="13:00"
+            >
+              13:00
+            </option>
+            <option
+              value="13:15"
+            >
+              13:15
+            </option>
+            <option
+              value="13:30"
+            >
+              13:30
+            </option>
+            <option
+              value="13:45"
+            >
+              13:45
+            </option>
+            <option
+              value="14:00"
+            >
+              14:00
+            </option>
+            <option
+              value="14:15"
+            >
+              14:15
+            </option>
+            <option
+              value="14:30"
+            >
+              14:30
+            </option>
+            <option
+              value="14:45"
+            >
+              14:45
+            </option>
+            <option
+              value="15:00"
+            >
+              15:00
+            </option>
+            <option
+              value="15:15"
+            >
+              15:15
+            </option>
+            <option
+              value="15:30"
+            >
+              15:30
+            </option>
+            <option
+              value="15:45"
+            >
+              15:45
+            </option>
+            <option
+              value="16:00"
+            >
+              16:00
+            </option>
+            <option
+              value="16:15"
+            >
+              16:15
+            </option>
+            <option
+              value="16:30"
+            >
+              16:30
+            </option>
+            <option
+              value="16:45"
+            >
+              16:45
+            </option>
+            <option
+              value="17:00"
+            >
+              17:00
+            </option>
+            <option
+              value="17:15"
+            >
+              17:15
+            </option>
+            <option
+              value="17:30"
+            >
+              17:30
+            </option>
+            <option
+              value="17:45"
+            >
+              17:45
+            </option>
+          </select>
+        </div>
+        <button
+          type="submit"
+        >
+          Publish slot
+        </button>
+      </form>
+    </section>
+    <section
+      aria-labelledby="upcoming-title"
+    >
+      <h2
+        id="upcoming-title"
+      >
+        Upcoming slots
+      </h2>
+      <table
+        class="responsive-table"
+      >
+        <thead>
+          <tr>
+            <th>
+              Date
+            </th>
+            <th>
+              Time
+            </th>
+            <th>
+              Service
+            </th>
+            <th>
+              Status
+            </th>
+            <th>
+              Booking
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              09:00
+              –
+              09:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-open"
+              >
+                Open
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              —
+            </td>
+          </tr>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              10:00
+              –
+              10:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-closed"
+              >
+                Closed
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              —
+            </td>
+          </tr>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              11:00
+              –
+              11:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-booked"
+              >
+                Booked
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              BK-2030-000041 · Ploy Chai
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <h1>
+      My Slots
+    </h1>
+    <section
+      aria-labelledby="publish-title"
+      class="panel"
+    >
+      <h2
+        id="publish-title"
+      >
+        Publish a slot
+      </h2>
+      <form
+        class="slot-form"
+        novalidate=""
+      >
+        <div>
+          <label
+            class="required"
+            for="serviceId"
+          >
+            Service
+          </label>
+          <select
+            aria-invalid="false"
+            id="serviceId"
+            required=""
+          >
+            <option
+              value=""
+            >
+              Choose a service
+            </option>
+            <option
+              value="1"
+            >
+              Academic advising
+            </option>
+          </select>
+        </div>
+        <div>
+          <label
+            class="required"
+            for="date"
+          >
+            Date
+          </label>
+          <input
+            aria-invalid="false"
+            id="date"
+            min="2026-11-25"
+            required=""
+            type="date"
+            value=""
+          />
+        </div>
+        <div>
+          <label
+            class="required"
+            for="startTime"
+          >
+            Start time
+          </label>
+          <select
+            aria-invalid="false"
+            id="startTime"
+            required=""
+          >
+            <option
+              value=""
+            >
+              Choose a time
+            </option>
+            <option
+              value="08:00"
+            >
+              08:00
+            </option>
+            <option
+              value="08:15"
+            >
+              08:15
+            </option>
+            <option
+              value="08:30"
+            >
+              08:30
+            </option>
+            <option
+              value="08:45"
+            >
+              08:45
+            </option>
+            <option
+              value="09:00"
+            >
+              09:00
+            </option>
+            <option
+              value="09:15"
+            >
+              09:15
+            </option>
+            <option
+              value="09:30"
+            >
+              09:30
+            </option>
+            <option
+              value="09:45"
+            >
+              09:45
+            </option>
+            <option
+              value="10:00"
+            >
+              10:00
+            </option>
+            <option
+              value="10:15"
+            >
+              10:15
+            </option>
+            <option
+              value="10:30"
+            >
+              10:30
+            </option>
+            <option
+              value="10:45"
+            >
+              10:45
+            </option>
+            <option
+              value="11:00"
+            >
+              11:00
+            </option>
+            <option
+              value="11:15"
+            >
+              11:15
+            </option>
+            <option
+              value="11:30"
+            >
+              11:30
+            </option>
+            <option
+              value="11:45"
+            >
+              11:45
+            </option>
+            <option
+              value="12:00"
+            >
+              12:00
+            </option>
+            <option
+              value="12:15"
+            >
+              12:15
+            </option>
+            <option
+              value="12:30"
+            >
+              12:30
+            </option>
+            <option
+              value="12:45"
+            >
+              12:45
+            </option>
+            <option
+              value="13:00"
+            >
+              13:00
+            </option>
+            <option
+              value="13:15"
+            >
+              13:15
+            </option>
+            <option
+              value="13:30"
+            >
+              13:30
+            </option>
+            <option
+              value="13:45"
+            >
+              13:45
+            </option>
+            <option
+              value="14:00"
+            >
+              14:00
+            </option>
+            <option
+              value="14:15"
+            >
+              14:15
+            </option>
+            <option
+              value="14:30"
+            >
+              14:30
+            </option>
+            <option
+              value="14:45"
+            >
+              14:45
+            </option>
+            <option
+              value="15:00"
+            >
+              15:00
+            </option>
+            <option
+              value="15:15"
+            >
+              15:15
+            </option>
+            <option
+              value="15:30"
+            >
+              15:30
+            </option>
+            <option
+              value="15:45"
+            >
+              15:45
+            </option>
+            <option
+              value="16:00"
+            >
+              16:00
+            </option>
+            <option
+              value="16:15"
+            >
+              16:15
+            </option>
+            <option
+              value="16:30"
+            >
+              16:30
+            </option>
+            <option
+              value="16:45"
+            >
+              16:45
+            </option>
+            <option
+              value="17:00"
+            >
+              17:00
+            </option>
+            <option
+              value="17:15"
+            >
+              17:15
+            </option>
+            <option
+              value="17:30"
+            >
+              17:30
+            </option>
+            <option
+              value="17:45"
+            >
+              17:45
+            </option>
+          </select>
+        </div>
+        <button
+          type="submit"
+        >
+          Publish slot
+        </button>
+      </form>
+    </section>
+    <section
+      aria-labelledby="upcoming-title"
+    >
+      <h2
+        id="upcoming-title"
+      >
+        Upcoming slots
+      </h2>
+      <table
+        class="responsive-table"
+      >
+        <thead>
+          <tr>
+            <th>
+              Date
+            </th>
+            <th>
+              Time
+            </th>
+            <th>
+              Service
+            </th>
+            <th>
+              Status
+            </th>
+            <th>
+              Booking
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              09:00
+              –
+              09:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-open"
+              >
+                Open
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              —
+            </td>
+          </tr>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              10:00
+              –
+              10:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-closed"
+              >
+                Closed
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              —
+            </td>
+          </tr>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              11:00
+              –
+              11:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-booked"
+              >
+                Booked
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              BK-2030-000041 · Ploy Chai
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/MySlotsPage.test.tsx > MySlotsPage actions (F-07) > UI-08: a booked slot offers only Cancel slot; the cancel dialog names the booking, counts characters and shows the reason error under the field
+TestingLibraryElementError: Unable to find role="button" and name "Actions for Tue 8 Jan 2030 09:00"
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <h1>
+      My Slots
+    </h1>
+    <section
+      aria-labelledby="publish-title"
+      class="panel"
+    >
+      <h2
+        id="publish-title"
+      >
+        Publish a slot
+      </h2>
+      <form
+        class="slot-form"
+        novalidate=""
+      >
+        <div>
+          <label
+            class="required"
+            for="serviceId"
+          >
+            Service
+          </label>
+          <select
+            aria-invalid="false"
+            id="serviceId"
+            required=""
+          >
+            <option
+              value=""
+            >
+              Choose a service
+            </option>
+            <option
+              value="1"
+            >
+              Academic advising
+            </option>
+          </select>
+        </div>
+        <div>
+          <label
+            class="required"
+            for="date"
+          >
+            Date
+          </label>
+          <input
+            aria-invalid="false"
+            id="date"
+            min="2026-11-25"
+            required=""
+            type="date"
+            value=""
+          />
+        </div>
+        <div>
+          <label
+            class="required"
+            for="startTime"
+          >
+            Start time
+          </label>
+          <select
+            aria-invalid="false"
+            id="startTime"
+            required=""
+          >
+            <option
+              value=""
+            >
+              Choose a time
+            </option>
+            <option
+              value="08:00"
+            >
+              08:00
+            </option>
+            <option
+              value="08:15"
+            >
+              08:15
+            </option>
+            <option
+              value="08:30"
+            >
+              08:30
+            </option>
+            <option
+              value="08:45"
+            >
+              08:45
+            </option>
+            <option
+              value="09:00"
+            >
+              09:00
+            </option>
+            <option
+              value="09:15"
+            >
+              09:15
+            </option>
+            <option
+              value="09:30"
+            >
+              09:30
+            </option>
+            <option
+              value="09:45"
+            >
+              09:45
+            </option>
+            <option
+              value="10:00"
+            >
+              10:00
+            </option>
+            <option
+              value="10:15"
+            >
+              10:15
+            </option>
+            <option
+              value="10:30"
+            >
+              10:30
+            </option>
+            <option
+              value="10:45"
+            >
+              10:45
+            </option>
+            <option
+              value="11:00"
+            >
+              11:00
+            </option>
+            <option
+              value="11:15"
+            >
+              11:15
+            </option>
+            <option
+              value="11:30"
+            >
+              11:30
+            </option>
+            <option
+              value="11:45"
+            >
+              11:45
+            </option>
+            <option
+              value="12:00"
+            >
+              12:00
+            </option>
+            <option
+              value="12:15"
+            >
+              12:15
+            </option>
+            <option
+              value="12:30"
+            >
+              12:30
+            </option>
+            <option
+              value="12:45"
+            >
+              12:45
+            </option>
+            <option
+              value="13:00"
+            >
+              13:00
+            </option>
+            <option
+              value="13:15"
+            >
+              13:15
+            </option>
+            <option
+              value="13:30"
+            >
+              13:30
+            </option>
+            <option
+              value="13:45"
+            >
+              13:45
+            </option>
+            <option
+              value="14:00"
+            >
+              14:00
+            </option>
+            <option
+              value="14:15"
+            >
+              14:15
+            </option>
+            <option
+              value="14:30"
+            >
+              14:30
+            </option>
+            <option
+              value="14:45"
+            >
+              14:45
+            </option>
+            <option
+              value="15:00"
+            >
+              15:00
+            </option>
+            <option
+              value="15:15"
+            >
+              15:15
+            </option>
+            <option
+              value="15:30"
+            >
+              15:30
+            </option>
+            <option
+              value="15:45"
+            >
+              15:45
+            </option>
+            <option
+              value="16:00"
+            >
+              16:00
+            </option>
+            <option
+              value="16:15"
+            >
+              16:15
+            </option>
+            <option
+              value="16:30"
+            >
+              16:30
+            </option>
+            <option
+              value="16:45"
+            >
+              16:45
+            </option>
+            <option
+              value="17:00"
+            >
+              17:00
+            </option>
+            <option
+              value="17:15"
+            >
+              17:15
+            </option>
+            <option
+              value="17:30"
+            >
+              17:30
+            </option>
+            <option
+              value="17:45"
+            >
+              17:45
+            </option>
+          </select>
+        </div>
+        <button
+          type="submit"
+        >
+          Publish slot
+        </button>
+      </form>
+    </section>
+    <section
+      aria-labelledby="upcoming-title"
+    >
+      <h2
+        id="upcoming-title"
+      >
+        Upcoming slots
+      </h2>
+      <table
+        class="responsive-table"
+      >
+        <thead>
+          <tr>
+            <th>
+              Date
+            </th>
+            <th>
+              Time
+            </th>
+            <th>
+              Service
+            </th>
+            <th>
+              Status
+            </th>
+            <th>
+              Booking
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              09:00
+              –
+              09:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-open"
+              >
+                Open
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              —
+            </td>
+          </tr>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              10:00
+              –
+              10:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-closed"
+              >
+                Closed
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              —
+            </td>
+          </tr>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              11:00
+              –
+              11:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-booked"
+              >
+                Booked
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              BK-2030-000041 · Ploy Chai
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <h1>
+      My Slots
+    </h1>
+    <section
+      aria-labelledby="publish-title"
+      class="panel"
+    >
+      <h2
+        id="publish-title"
+      >
+        Publish a slot
+      </h2>
+      <form
+        class="slot-form"
+        novalidate=""
+      >
+        <div>
+          <label
+            class="required"
+            for="serviceId"
+          >
+            Service
+          </label>
+          <select
+            aria-invalid="false"
+            id="serviceId"
+            required=""
+          >
+            <option
+              value=""
+            >
+              Choose a service
+            </option>
+            <option
+              value="1"
+            >
+              Academic advising
+            </option>
+          </select>
+        </div>
+        <div>
+          <label
+            class="required"
+            for="date"
+          >
+            Date
+          </label>
+          <input
+            aria-invalid="false"
+            id="date"
+            min="2026-11-25"
+            required=""
+            type="date"
+            value=""
+          />
+        </div>
+        <div>
+          <label
+            class="required"
+            for="startTime"
+          >
+            Start time
+          </label>
+          <select
+            aria-invalid="false"
+            id="startTime"
+            required=""
+          >
+            <option
+              value=""
+            >
+              Choose a time
+            </option>
+            <option
+              value="08:00"
+            >
+              08:00
+            </option>
+            <option
+              value="08:15"
+            >
+              08:15
+            </option>
+            <option
+              value="08:30"
+            >
+              08:30
+            </option>
+            <option
+              value="08:45"
+            >
+              08:45
+            </option>
+            <option
+              value="09:00"
+            >
+              09:00
+            </option>
+            <option
+              value="09:15"
+            >
+              09:15
+            </option>
+            <option
+              value="09:30"
+            >
+              09:30
+            </option>
+            <option
+              value="09:45"
+            >
+              09:45
+            </option>
+            <option
+              value="10:00"
+            >
+              10:00
+            </option>
+            <option
+              value="10:15"
+            >
+              10:15
+            </option>
+            <option
+              value="10:30"
+            >
+              10:30
+            </option>
+            <option
+              value="10:45"
+            >
+              10:45
+            </option>
+            <option
+              value="11:00"
+            >
+              11:00
+            </option>
+            <option
+              value="11:15"
+            >
+              11:15
+            </option>
+            <option
+              value="11:30"
+            >
+              11:30
+            </option>
+            <option
+              value="11:45"
+            >
+              11:45
+            </option>
+            <option
+              value="12:00"
+            >
+              12:00
+            </option>
+            <option
+              value="12:15"
+            >
+              12:15
+            </option>
+            <option
+              value="12:30"
+            >
+              12:30
+            </option>
+            <option
+              value="12:45"
+            >
+              12:45
+            </option>
+            <option
+              value="13:00"
+            >
+              13:00
+            </option>
+            <option
+              value="13:15"
+            >
+              13:15
+            </option>
+            <option
+              value="13:30"
+            >
+              13:30
+            </option>
+            <option
+              value="13:45"
+            >
+              13:45
+            </option>
+            <option
+              value="14:00"
+            >
+              14:00
+            </option>
+            <option
+              value="14:15"
+            >
+              14:15
+            </option>
+            <option
+              value="14:30"
+            >
+              14:30
+            </option>
+            <option
+              value="14:45"
+            >
+              14:45
+            </option>
+            <option
+              value="15:00"
+            >
+              15:00
+            </option>
+            <option
+              value="15:15"
+            >
+              15:15
+            </option>
+            <option
+              value="15:30"
+            >
+              15:30
+            </option>
+            <option
+              value="15:45"
+            >
+              15:45
+            </option>
+            <option
+              value="16:00"
+            >
+              16:00
+            </option>
+            <option
+              value="16:15"
+            >
+              16:15
+            </option>
+            <option
+              value="16:30"
+            >
+              16:30
+            </option>
+            <option
+              value="16:45"
+            >
+              16:45
+            </option>
+            <option
+              value="17:00"
+            >
+              17:00
+            </option>
+            <option
+              value="17:15"
+            >
+              17:15
+            </option>
+            <option
+              value="17:30"
+            >
+              17:30
+            </option>
+            <option
+              value="17:45"
+            >
+              17:45
+            </option>
+          </select>
+        </div>
+        <button
+          type="submit"
+        >
+          Publish slot
+        </button>
+      </form>
+    </section>
+    <section
+      aria-labelledby="upcoming-title"
+    >
+      <h2
+        id="upcoming-title"
+      >
+        Upcoming slots
+      </h2>
+      <table
+        class="responsive-table"
+      >
+        <thead>
+          <tr>
+            <th>
+              Date
+            </th>
+            <th>
+              Time
+            </th>
+            <th>
+              Service
+            </th>
+            <th>
+              Status
+            </th>
+            <th>
+              Booking
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              09:00
+              –
+              09:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-open"
+              >
+                Open
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              —
+            </td>
+          </tr>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              10:00
+              –
+              10:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-closed"
+              >
+                Closed
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              —
+            </td>
+          </tr>
+          <tr>
+            <td
+              data-label="Date"
+            >
+              Tue 8 Jan 2030
+            </td>
+            <td
+              data-label="Time"
+            >
+              11:00
+              –
+              11:30
+            </td>
+            <td
+              data-label="Service"
+            >
+              Academic advising
+            </td>
+            <td
+              data-label="Status"
+            >
+              <span
+                class="badge status-booked"
+              >
+                Booked
+              </span>
+            </td>
+            <td
+              data-label="Booking"
+            >
+              BK-2030-000041 · Ploy Chai
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+ ❯ waitForWrapper ../../slotbook/client/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../slotbook/client/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ menu tests/MySlotsPage.test.tsx:90:37
+     88| 
+     89|     const menu = async (time: string) => {
+     90|       await user.click(await screen.findByRole('button', { name: `Acti…
+       |                                     ^
+     91|       return screen.getByRole('button', { name: `Actions for Tue 8 Jan…
+     92|     };
+ ❯ tests/MySlotsPage.test.tsx:94:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  18:16:23
+   Duration  2.13s (transform 136ms, setup 110ms, collect 150ms, tests 1.31s, environment 281ms, prepare 67ms)
+
+
