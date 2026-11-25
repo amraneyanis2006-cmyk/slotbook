@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import MySlotsPage from './pages/MySlotsPage';
 import SchedulePage from './pages/SchedulePage';
+import StaffBookingPage from './pages/StaffBookingPage';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Route element={<RequireRole role="STAFF"><AppShell /></RequireRole>}>
           <Route path="/staff/slots" element={<MySlotsPage />} />
           <Route path="/staff/schedule" element={<SchedulePage />} />
+          <Route path="/staff/bookings/:reference" element={<StaffBookingPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

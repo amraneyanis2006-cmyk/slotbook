@@ -68,9 +68,10 @@ describe('GET /api/bookings/mine, GET /api/bookings/:reference (F-05)', () => {
     });
     const detail = await agents.ploy.get(`/api/bookings/${sooner.booking.reference}`);
     expect(detail.status).toBe(200);
-    expect(detail.body).toEqual({ booking: upcoming[0] });
+    // Since F-10 the detail also carries `history` (STS Sprint 2 §7); this booking was inserted without one.
+    expect(detail.body).toEqual({ booking: upcoming[0], history: [] });
     // A lower-case reference in the URL is normalised to upper case (F-05 §7).
-    expect((await agents.ploy.get(`/api/bookings/${sooner.booking.reference.toLowerCase()}`)).body).toEqual({ booking: upcoming[0] });
+    expect((await agents.ploy.get(`/api/bookings/${sooner.booking.reference.toLowerCase()}`)).body).toEqual({ booking: upcoming[0], history: [] });
 
     const first = request.agent(app);
     await loginAs(first, 'cust.ploy@slotbook.test');
@@ -78,7 +79,7 @@ describe('GET /api/bookings/mine, GET /api/bookings/:reference (F-05)', () => {
     const relogged = request.agent(app);
     await loginAs(relogged, 'cust.ploy@slotbook.test');
     expect((await relogged.get('/api/bookings/mine')).body).toEqual(res.body);
-    expect((await relogged.get(`/api/bookings/${sooner.booking.reference}`)).body).toEqual({ booking: upcoming[0] });
+    expect((await relogged.get(`/api/bookings/${sooner.booking.reference}`)).body).toEqual({ booking: upcoming[0], history: [] });
   });
 
   it('API-21: reading or cancelling Ken\'s booking as Ploy → 404 NOT_FOUND without booking data; Ken\'s booking still BOOKED', async () => {

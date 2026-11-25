@@ -37,7 +37,7 @@ bookingsRouter.get('/mine', async (req, res, next) => {
 
 bookingsRouter.get('/:reference', async (req, res, next) => {
   try {
-    res.json({ booking: await getMine(req.user!.id, req.params.reference) });
+    res.json(await getMine(req.user!.id, req.params.reference));
   } catch (err) {
     next(err);
   }

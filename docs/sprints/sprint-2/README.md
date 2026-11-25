@@ -63,3 +63,4 @@ the file's own history row and a sentence in the PR body.
 | Version | Date | File(s) | Author | Change and reason |
 | :--- | :--- | :--- | :--- | :--- |
 | 2.0 | 2026-11-25 | all Sprint 2 files; ../../srs.md 1.4; ../../system-sds.md 1.5; ../../traceability.md; ../plan.md | Yanis Amrane | Initial Sprint 2 contracts, STS and DoD, recorded before any Sprint 2 implementation (Issue #49). Reviewed by Simeon Audouit, who implements F-07, F-09 and F-12. |
+| 2.1 | 2026-11-25 | F-10-booking-history.md 1.1, sts.md 1.1 | Yanis Amrane | F-10 §1 step 5: backfill times never before `createdAt`, one shared backfill SQL file; STS §4 path `client/tests/`. Found while implementing Issue #50; reviewed in its PR. |
