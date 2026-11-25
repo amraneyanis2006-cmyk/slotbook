@@ -122,3 +122,8 @@ label.required::after { content: " *"; color: var(--color-danger); }
 .status-active { background: #e6f4ea; color: var(--color-success); }
 .status-inactive { background: #f1f2f4; color: var(--color-muted); }
 .row-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* Slot actions menu (F-07 §4) */
+.actions-menu { position: relative; }
+.actions-list { list-style: none; margin: var(--space-1) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1); }
+textarea { width: 100%; font: inherit; }
