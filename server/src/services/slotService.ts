@@ -56,10 +56,14 @@ export async function listUpcoming(staffId: number) {
  * so total = booked + open + closed = number of slots: a slot with a booking is "booked" whatever its status.
  */
 export async function getSchedule(staffId: number, date: string) {
+  const at = now();
+  // F-09 §3: canRecordOutcome = BOOKED and started, so the client never compares clocks.
   const slots = (await prisma.slot.findMany({
     where: { staffId, status: { not: 'CANCELLED' }, startAt: { gte: bangkokToUtc(date, '00:00'), lt: bangkokToUtc(addDays(date, 1), '00:00') } },
     orderBy: [{ startAt: 'asc' }, { id: 'asc' }],
     include: SCHEDULE_INCLUDE,
+  })).map((slot) => ({
+    ...slot, bookings: slot.bookings.map((b) => ({ ...b, canRecordOutcome: b.status === 'BOOKED' && slot.startAt <= at })),
   })).map(toSlotStaffView);
   const booked = slots.filter((s) => s.booking).length;
   const open = slots.filter((s) => !s.booking && s.status === 'OPEN').length;

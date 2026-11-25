@@ -4,8 +4,10 @@ import type { HistoryEntry, StaffBookingView } from '../api/bookings';
 import { http } from '../api/http';
 import { Callout } from '../components/Callout';
 import { HistoryList } from '../components/HistoryList';
+import { OutcomeButtons } from '../components/OutcomeButtons';
 import { Skeleton } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
+import { Toast } from '../components/Toast';
 import { formatDay, formatTime, formatTimeRange } from '../utils/time';
 
 /** Staff booking detail with history (F-10 §4): only bookings on the caller's own slots (others → 404). */
@@ -13,6 +15,8 @@ export default function StaffBookingPage() {
   const { reference = '' } = useParams();
   const [data, setData] = useState<{ booking: StaffBookingView; history: HistoryEntry[] } | null>(null);
   const [error, setError] = useState<{ status: number; message: string } | null>(null);
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -31,6 +35,8 @@ export default function StaffBookingPage() {
   return (
     <>
       <h1>Booking {booking.reference}</h1>
+      {toast && <Toast key={toast.id} message={toast.message} onDone={() => setToast(null)} />}
+      {actionError && <Callout tone="error">{actionError}</Callout>}
       <div className="panel detail">
         <dl>
           <dt>Status</dt><dd><StatusBadge status={booking.status} /></dd>
@@ -40,6 +46,11 @@ export default function StaffBookingPage() {
           <dt>Note</dt><dd>{booking.note || '—'}</dd>
           <dt>Booked on</dt><dd>{formatDay(booking.createdAt)}, {formatTime(booking.createdAt)}</dd>
         </dl>
+        {booking.status === 'BOOKED' && Date.parse(booking.slot.startAt) <= Date.now() && (
+          <OutcomeButtons reference={booking.reference} customer={booking.customer.name}
+            onDone={() => { setActionError(null); setToast({ id: Date.now(), message: 'Outcome recorded' }); load(); }}
+            onError={(message) => { setActionError(message); load(); }} />
+        )}
       </div>
       <HistoryList history={history} />
       {back}

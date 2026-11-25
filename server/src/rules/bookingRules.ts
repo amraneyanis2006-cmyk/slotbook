@@ -14,6 +14,7 @@ export const BOOKING_RULE_MESSAGES = {
   BOOKING_OVERLAP: 'You already have a booking at this time.',
   BOOKING_NOT_ACTIVE: 'This booking is no longer active.',
   CANCELLATION_WINDOW_CLOSED: 'Cancellation closes 24 hours before the start.',
+  OUTCOME_TOO_EARLY: 'An outcome can be recorded only after the booking starts.',
 } as const;
 
 export type BookableSlot = TimeRange & { status: SlotStatus; service: { isActive: boolean } };
@@ -40,6 +41,12 @@ export function checkCustomerLimits(activeBookings: CustomerBooking[], slot: Tim
 export function canCustomerCancel(booking: { status: BookingStatus }, slot: { startAt: Date }, now: Date): null | 'BOOKING_NOT_ACTIVE' | 'CANCELLATION_WINDOW_CLOSED' {
   if (booking.status !== 'BOOKED') return 'BOOKING_NOT_ACTIVE';
   return slot.startAt.getTime() - now.getTime() >= CANCEL_WINDOW_MIN * 60_000 ? null : 'CANCELLATION_WINDOW_CLOSED';
+}
+
+/** F-09 §2: BR-13 first (only BOOKED), then BR-15 (now ≥ start; exactly at the start is allowed). */
+export function canRecordOutcome(booking: { status: BookingStatus }, slot: { startAt: Date }, now: Date): null | 'BOOKING_NOT_ACTIVE' | 'OUTCOME_TOO_EARLY' {
+  if (booking.status !== 'BOOKED') return 'BOOKING_NOT_ACTIVE';
+  return now >= slot.startAt ? null : 'OUTCOME_TOO_EARLY';
 }
 
 /** BR-10 booking reference: BK-<Bangkok year>-<6-digit sequence>; throws above 999999. */
