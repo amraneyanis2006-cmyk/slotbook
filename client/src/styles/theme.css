@@ -133,3 +133,9 @@ a.button { display: inline-block; font: inherit; padding: var(--space-2) var(--s
 a.button.secondary { background: transparent; color: var(--color-accent); }
 .slot-choices { border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); margin: var(--space-2) 0; }
 .slot-choices .choice { display: flex; gap: var(--space-2); align-items: center; padding: var(--space-1) 0; }
+
+/* Dashboard tiles (F-15 §4) */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--space-2); margin: var(--space-2) 0; }
+.tile { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-2) var(--space-3); }
+.tile dt { color: var(--color-muted); font-size: 0.9rem; }
+.tile dd { margin: 0; font-size: 1.6rem; font-weight: 600; }

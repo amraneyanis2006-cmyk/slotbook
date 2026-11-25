@@ -5,6 +5,7 @@ import AppShell from './components/AppShell';
 import ReleaseFooter from './components/ReleaseFooter';
 import BookingDetailPage from './pages/BookingDetailPage';
 import BookSlotPage from './pages/BookSlotPage';
+import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import MySlotsPage from './pages/MySlotsPage';
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/staff/schedule" element={<SchedulePage />} />
           <Route path="/staff/bookings/:reference" element={<StaffBookingPage />} />
           <Route path="/staff/services" element={<ServicesPage />} />
+          <Route path="/staff/dashboard" element={<DashboardPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
