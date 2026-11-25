@@ -37,4 +37,4 @@ Implemented in `server/src/rules/bookingRules.ts` (`CANCEL_WINDOW_MIN = 120`, `c
 - **AC-27 v2** UI: the Cancel button is not offered inside the 24-hour window and the hint says "Cancellation closes 24 hours before the start."
 
 ### Approval
-Requested from the TAs/instructor by e-mail on 25/11/2026. Approver, date: _to fill when received_. **No implementation before approval.**
+Requested from the TAs and instructors by e-mail on 25/11/2026 at 11:09 (Bangkok). **Approved to proceed** by TA Kantapat Suwannahong (Bump), e-mail of 25/11/2026 11:48: “For Lab 7, you do not need to have the instructor or TAs check or approve your work. You can proceed directly.” Recorded on Issue #45 before the implementation commits (ee5ccea, d6491a7). Contract reviewed and approved by Simeon Audouit in PR #46 (25/11/2026 11:17, review points answered in 3470dd7) before implementation.

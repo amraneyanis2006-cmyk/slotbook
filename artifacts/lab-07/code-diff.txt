@@ -1,0 +1,91 @@
+diff --git a/client/src/api/bookings.ts b/client/src/api/bookings.ts
+index 5f56579..1fbc3fa 100644
+--- a/client/src/api/bookings.ts
++++ b/client/src/api/bookings.ts
+@@ -7,7 +7,7 @@ export type BookingView = {
+   reference: string; status: string; note: string | null; createdAt: string; cancelledAt: string | null; slot: SlotView;
+ };
+ 
+-const CANCEL_WINDOW_MS = 120 * 60_000; // BR-05
++const CANCEL_WINDOW_MS = 24 * 60 * 60_000; // BR-05 v2 (CR-01): 24 h
+ 
+ /** Comfort check mirroring BR-13/BR-05 with the browser clock; the server decides. */
+ export const canCancel = (booking: BookingView) =>
+diff --git a/client/src/pages/BookingDetailPage.tsx b/client/src/pages/BookingDetailPage.tsx
+index 93b5c6a..3aaadde 100644
+--- a/client/src/pages/BookingDetailPage.tsx
++++ b/client/src/pages/BookingDetailPage.tsx
+@@ -70,7 +70,7 @@ export default function BookingDetailPage() {
+         </dl>
+         {canCancel(booking)
+           ? <button type="button" onClick={() => { setPageError(null); setConfirming(true); }}>Cancel booking</button>
+-          : booking.status === 'BOOKED' && <p className="hint">Cancellation closes 2 hours before the start.</p>}
++          : booking.status === 'BOOKED' && <p className="hint">Cancellation closes 24 hours before the start.</p>}
+       </div>
+       {back}
+ 
+diff --git a/e2e/db.ts b/e2e/db.ts
+index c033c78..ae5c9d9 100644
+--- a/e2e/db.ts
++++ b/e2e/db.ts
+@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
+ import { formatReference } from '../server/src/rules/bookingRules';
+ 
+ // Direct access to the E2E (test) database for the one demo situation the API cannot create at any time of day:
+-// a booking that starts in less than 2 hours (BR-02 needs ≥ 60 min, BR-06 opening hours). Rules are bypassed on
++// a booking that starts within the BR-05 cancellation window (BR-02 needs ≥ 60 min, BR-06 opening hours). Rules are bypassed on
+ // purpose; INDEX.md says so. @prisma/client lives in server/node_modules, so it is resolved from there.
+ type Row = { id: number };
+ type Client = {
+diff --git a/e2e/demo-evidence.spec.ts b/e2e/demo-evidence.spec.ts
+index 3166086..c0469f4 100644
+--- a/e2e/demo-evidence.spec.ts
++++ b/e2e/demo-evidence.spec.ts
+@@ -67,14 +67,14 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
+   await shot(page, '10-overlap-rejected');
+   await page.keyboard.press('Escape');
+ 
+-  // BR-05: a booking starting in 75–90 minutes (next 15-minute step) offers no Cancel button. It is inserted directly,
++  // BR-05 (24 h since CR-01): a booking starting in 75–90 minutes (next 15-minute step) offers no Cancel button. It is inserted directly,
+   // bypassing the slot rules: through the API such a booking exists only during opening hours (BR-06), which would make
+   // the run depend on the time of day. It is deleted after the shot so later specs see Ploy's usual bookings.
+   const quarter = 15 * 60_000;
+   const late = await insertBooking('staff.anan@slotbook.test', 'cust.ploy@slotbook.test', new Date(Math.ceil((Date.now() + 75 * 60_000) / quarter) * quarter));
+   try {
+     await page.goto(`/bookings/${late}`);
+-    await expect(page.getByText('Cancellation closes 2 hours before the start.')).toBeVisible();
++    await expect(page.getByText('Cancellation closes 24 hours before the start.')).toBeVisible();
+     await expect(page.getByRole('button', { name: 'Cancel booking' })).toHaveCount(0);
+     await shot(page, '11-late-cancel-no-button');
+   } finally {
+diff --git a/server/src/rules/bookingRules.ts b/server/src/rules/bookingRules.ts
+index 1943d9f..b847bb7 100644
+--- a/server/src/rules/bookingRules.ts
++++ b/server/src/rules/bookingRules.ts
+@@ -4,7 +4,7 @@ import { overlaps, type TimeRange } from './slotRules.js';
+ 
+ export const BOOKING_LEAD_MIN = 60;
+ export const MAX_ACTIVE_BOOKINGS = 3;
+-export const CANCEL_WINDOW_MIN = 120;
++export const CANCEL_WINDOW_MIN = 24 * 60; // BR-05 v2 (CR-01): 24 h; was 120 min in Sprint 1
+ 
+ /** User messages of the 409 booking rule errors (system-sds §4). */
+ export const BOOKING_RULE_MESSAGES = {
+@@ -13,7 +13,7 @@ export const BOOKING_RULE_MESSAGES = {
+   BOOKING_LIMIT_REACHED: 'You already have 3 upcoming bookings, the maximum.',
+   BOOKING_OVERLAP: 'You already have a booking at this time.',
+   BOOKING_NOT_ACTIVE: 'This booking is no longer active.',
+-  CANCELLATION_WINDOW_CLOSED: 'Cancellation closes 2 hours before the start.',
++  CANCELLATION_WINDOW_CLOSED: 'Cancellation closes 24 hours before the start.',
+ } as const;
+ 
+ export type BookableSlot = TimeRange & { status: SlotStatus; service: { isActive: boolean } };
+@@ -35,7 +35,7 @@ export function checkCustomerLimits(activeFutureBookings: CustomerBooking[], slo
+   return active.some((b) => overlaps(b.slot, slot)) ? 'BOOKING_OVERLAP' : null;
+ }
+ 
+-/** BR-13 first (only BOOKED changes), then BR-05 (start − now ≥ 120 min; exactly 120 is allowed). */
++/** BR-13 first (only BOOKED changes), then BR-05 v2 (start − now ≥ 24 h; exactly 24 h is allowed). */
+ export function canCustomerCancel(booking: { status: BookingStatus }, slot: { startAt: Date }, now: Date): null | 'BOOKING_NOT_ACTIVE' | 'CANCELLATION_WINDOW_CLOSED' {
+   if (booking.status !== 'BOOKED') return 'BOOKING_NOT_ACTIVE';
+   return slot.startAt.getTime() - now.getTime() >= CANCEL_WINDOW_MIN * 60_000 ? null : 'CANCELLATION_WINDOW_CLOSED';

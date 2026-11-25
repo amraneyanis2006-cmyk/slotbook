@@ -102,24 +102,28 @@ describe('GET /api/bookings/mine, GET /api/bookings/:reference (F-05)', () => {
 });
 
 describe('POST /api/bookings/:reference/cancel (F-05)', () => {
-  it('API-22: cancelling at +3 h (and exactly +120 min) → 200 CANCELLED with cancelledAt; the slot is available again and Nina books it', async () => {
-    const { slot, booking } = await bookingAt('ploy', '2030-03-04', '11:00');
+  it('API-22 (CR-01): cancelling at +25 h (and exactly +24 h) → 200 CANCELLED with cancelledAt; the slot is available again and Nina books it', async () => {
+    const { slot, booking } = await bookingAt('ploy', '2030-03-05', '09:00', 'BOOKED', 'mali'); // +25 h (Mali: Anan's 05/03 09:00 slot belongs to the listing test above)
 
     const res = await cancel(agents.ploy, booking.reference);
     expect(res.status).toBe(200);
     expect(res.body.booking).toMatchObject({ reference: booking.reference, status: 'CANCELLED', cancelledAt: '2030-03-04T01:00:00.000Z' });
     expect(await prisma.booking.findUniqueOrThrow({ where: { id: booking.id } })).toMatchObject({ status: 'CANCELLED', cancelledById: ids.ploy });
 
-    const available = await agents.nina.get('/api/slots/available').query({ date: '2030-03-04' });
+    const available = await agents.nina.get('/api/slots/available').query({ date: '2030-03-05' });
     expect(available.body.slots.map((s: { id: number }) => s.id)).toContain(slot.id);
     expect((await agents.nina.post('/api/bookings').send({ slotId: slot.id })).status).toBe(201);
 
-    const boundary = await bookingAt('ploy', '2030-03-04', '10:00', 'BOOKED', 'mali'); // exactly 120 min before the start
+    const boundary = await bookingAt('ploy', '2030-03-05', '08:00', 'BOOKED', 'mali'); // exactly 24 h before the start
     expect((await cancel(agents.ploy, boundary.booking.reference.toLowerCase())).status).toBe(200); // lower-case URL too
   });
 
-  it('API-23: inside 2 h → 409 CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW (or a second cancel) → 409 BOOKING_NOT_ACTIVE; rows unchanged', async () => {
-    const inside = [await bookingAt('ploy', '2030-03-04', '09:30'), await bookingAt('ploy', '2030-03-04', '09:59', 'BOOKED', 'mali')]; // +90, +119 min
+  it('API-23 (CR-01): inside 24 h → 409 CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW (or a second cancel) → 409 BOOKING_NOT_ACTIVE; rows unchanged', async () => {
+    const inside = [
+      await bookingAt('ploy', '2030-03-05', '07:59'), // +23 h 59 min
+      await bookingAt('ploy', '2030-03-04', '11:00', 'BOOKED', 'mali'), // +3 h: cancellable before CR-01
+      await bookingAt('ploy', '2030-03-04', '09:30'), // +90 min
+    ];
     const inactive = [
       await bookingAt('ploy', '2030-03-14', '09:00', 'CANCELLED'),
       await bookingAt('ploy', '2030-03-01', '10:00', 'COMPLETED'),
@@ -131,7 +135,7 @@ describe('POST /api/bookings/:reference/cancel (F-05)', () => {
     for (const { booking } of inside) {
       const res = await cancel(agents.ploy, booking.reference);
       expect(res.status).toBe(409);
-      expect(res.body).toEqual({ error: 'CANCELLATION_WINDOW_CLOSED', message: 'Cancellation closes 2 hours before the start.' });
+      expect(res.body).toEqual({ error: 'CANCELLATION_WINDOW_CLOSED', message: 'Cancellation closes 24 hours before the start.' });
     }
     for (const { booking } of inactive) {
       const res = await cancel(agents.ploy, booking.reference);

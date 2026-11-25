@@ -7,6 +7,9 @@ import { VIEWPORTS } from './viewports';
 // artifacts/sprint-1/screenshots/<NN>-<name>.png, described in artifacts/sprint-1/screenshots/INDEX.md.
 const DIR = 'artifacts/sprint-1/screenshots';
 const TOMORROW = bangkokDatePlus(1);
+// CR-01 (BR-05 v2): the demo booking that shot 12 cancels must start ≥ 24 h ahead at any time of day, so it is
+// made two days ahead (the seed has Mali 14:00 every day). Shot file names are kept for the Sprint 1 index.
+const BOOKING_DAY = bangkokDatePlus(2);
 const shot = (page: Page, name: string, fullPage = false) => page.screenshot({ path: `${DIR}/${name}.png`, fullPage });
 const loaded = (page: Page) => expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
 const NOTE = 'Demo: request for a transcript translation'; // distinct from the seeded notes
@@ -21,7 +24,7 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
   await loaded(page);
   await shot(page, '02-customer-home');
 
-  await page.getByLabel('Date').fill(TOMORROW);
+  await page.getByLabel('Date').fill(BOOKING_DAY);
   await loaded(page);
   await expect(page.getByRole('button', { name: /^Book 14:00 Academic advising with Mali Srisuk/ })).toBeVisible();
   await shot(page, '03-available-tomorrow');
@@ -67,14 +70,14 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
   await shot(page, '10-overlap-rejected');
   await page.keyboard.press('Escape');
 
-  // BR-05: a booking starting in 75–90 minutes (next 15-minute step) offers no Cancel button. It is inserted directly,
+  // BR-05 (24 h since CR-01): a booking starting in 75–90 minutes (next 15-minute step) offers no Cancel button. It is inserted directly,
   // bypassing the slot rules: through the API such a booking exists only during opening hours (BR-06), which would make
   // the run depend on the time of day. It is deleted after the shot so later specs see Ploy's usual bookings.
   const quarter = 15 * 60_000;
   const late = await insertBooking('staff.anan@slotbook.test', 'cust.ploy@slotbook.test', new Date(Math.ceil((Date.now() + 75 * 60_000) / quarter) * quarter));
   try {
     await page.goto(`/bookings/${late}`);
-    await expect(page.getByText('Cancellation closes 2 hours before the start.')).toBeVisible();
+    await expect(page.getByText('Cancellation closes 24 hours before the start.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Cancel booking' })).toHaveCount(0);
     await shot(page, '11-late-cancel-no-button');
   } finally {
@@ -120,13 +123,13 @@ test('SHOT-01: Sprint 1 demo screenshots (login, booking, rules, cancellation, s
   await shot(staffPage, '14-slot-overlap');
 
   await staffPage.goto('/staff/schedule');
-  await staffPage.getByLabel('Date').fill(TOMORROW);
+  await staffPage.getByLabel('Date').fill(BOOKING_DAY);
   await expect(staffPage.getByRole('row', { name: new RegExp(reference) })).toContainText('Ploy Chai');
   await shot(staffPage, '15-schedule-mali');
   await staffPage.getByRole('button', { name: 'Log out' }).click();
   await logIn(staffPage, 'staff.anan@slotbook.test');
   await staffPage.goto('/staff/schedule');
-  await staffPage.getByLabel('Date').fill(TOMORROW);
+  await staffPage.getByLabel('Date').fill(BOOKING_DAY);
   await loaded(staffPage);
   await expect(staffPage.getByText(reference)).toHaveCount(0);
   await shot(staffPage, '16-schedule-anan');
