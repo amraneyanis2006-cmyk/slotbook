@@ -21,7 +21,7 @@ const view = (reference: string, startInMs: number, status = 'BOOKED', staff = '
   };
 };
 const LATER = view('BK-2030-000021', 72 * HOUR); // cancellable
-const SOON = view('BK-2030-000022', 1.5 * HOUR, 'BOOKED', 'Mali Srisuk'); // inside the 2-hour window
+const SOON = view('BK-2030-000022', 3 * HOUR, 'BOOKED', 'Mali Srisuk'); // inside the 24-hour window (CR-01; cancellable under the old 2 h rule)
 const OLD = view('BK-2030-000020', -48 * HOUR, 'CANCELLED');
 
 const renderAt = (path: string) => render(
@@ -36,7 +36,7 @@ const renderAt = (path: string) => render(
 afterEach(() => vi.unstubAllGlobals());
 
 describe('MyBookingsPage / BookingDetailPage (F-05)', () => {
-  it('UI-04: two sections with badges; Cancel only for the cancellable booking; after confirming, the badge shows Cancelled', async () => {
+  it('UI-04 (CR-01): two sections with badges; Cancel only for the booking ≥ 24 h ahead; after confirming, the badge shows Cancelled', async () => {
     let cancelled = false;
     const cancelCalls: string[] = [];
     vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
@@ -62,11 +62,11 @@ describe('MyBookingsPage / BookingDetailPage (F-05)', () => {
     expect(within(past).getByText(OLD.reference)).toBeInTheDocument();
     expect(within(past).getByText('Cancelled')).toBeInTheDocument();
 
-    // Inside the 2-hour window: no Cancel button, the reason instead.
+    // Inside the 24-hour window (CR-01): no Cancel button, the reason instead.
     await user.click(within(upcoming).getByRole('link', { name: `View ${SOON.reference}` }));
     expect(await screen.findByRole('heading', { name: `Booking ${SOON.reference}` })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel booking' })).toBeNull();
-    expect(screen.getByText('Cancellation closes 2 hours before the start.')).toBeInTheDocument();
+    expect(screen.getByText('Cancellation closes 24 hours before the start.')).toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: 'Back to My Bookings' }));
 
     // Cancellable: dialog (Esc closes), confirm → toast, Cancelled badge, no more Cancel button.
@@ -90,7 +90,7 @@ describe('MyBookingsPage / BookingDetailPage (F-05)', () => {
   it('UI-04: a refused cancel (409) closes the dialog, shows the server message on the page, focuses the heading and reloads the status', async () => {
     let loads = 0;
     vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
-      if (init?.method === 'POST') return Promise.resolve(json(409, { error: 'CANCELLATION_WINDOW_CLOSED', message: 'Cancellation closes 2 hours before the start.' }));
+      if (init?.method === 'POST') return Promise.resolve(json(409, { error: 'CANCELLATION_WINDOW_CLOSED', message: 'Cancellation closes 24 hours before the start.' }));
       loads += 1;
       return Promise.resolve(json(200, { booking: LATER }));
     }));
@@ -99,7 +99,7 @@ describe('MyBookingsPage / BookingDetailPage (F-05)', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Cancel booking' }));
     await user.click(screen.getByRole('button', { name: 'Yes, cancel booking' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Cancellation closes 2 hours before the start.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Cancellation closes 24 hours before the start.');
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByRole('heading', { name: `Booking ${LATER.reference}` })).toHaveFocus();
     expect(loads).toBe(2);
