@@ -1,0 +1,181 @@
+# Issue:   #54
+# Branch:  feature/54-reschedule
+# Commit:  b3f00f8 (test(F-08): reschedule tests, red (#54))
+# Date:    2026-11-25 18:18:36 +0700
+# Env:     Node v22.23.4, PostgreSQL 16 local slotbook_test (reset + seeded by server/tests/setup.ts), Chrome for Playwright
+
+===== $ cd server && npx vitest run tests/unit/bookingRules.test.ts tests/api/reschedule.api.test.ts (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/server
+
+ ❯ tests/api/reschedule.api.test.ts (5 tests | 5 failed) 1454ms
+   × reschedule (F-08) > API-43: moves an own booking ≥ 24 h ahead to a free slot of the same service: old CANCELLED, new BOOKED with a new reference and the note, history reasons, old slot listed again 51ms
+     → expected 404 to be 201 // Object.is equality
+   × reschedule (F-08) > API-44: a target that fails BR-01/BR-02/BR-03/BR-04 gets the F-04 code and nothing changes (BR-16) 40ms
+     → expected [ 404, 'NOT_FOUND' ] to deeply equal [ 409, 'SLOT_NOT_BOOKABLE' ]
+   × reschedule (F-08) > API-44: a target whose service was deactivated → 409 SLOT_NOT_BOOKABLE, nothing changes 47ms
+     → expected 'NOT_FOUND' to be 'SLOT_NOT_BOOKABLE' // Object.is equality
+   × reschedule (F-08) > API-45: the old booking is excluded: a customer with 3 active bookings can move one; a move 15 minutes later overlapping the old time is allowed 60ms
+     → expected 404 to be 201 // Object.is equality
+   × reschedule (F-08) > API-46: inside 24 h → 409 CANCELLATION_WINDOW_CLOSED (exactly 24 h allowed); not active → 409; other customer → 404; same slot / other service → 422; unknown slot → 404; Staff → 403 41ms
+     → expected 404 to be 409 // Object.is equality
+ ❯ tests/unit/bookingRules.test.ts (5 tests | 1 failed) 11ms
+   ✓ formatReference (F-04, BR-10) > UNIT-03: formats BK-YYYY-NNNNNN and throws when the sequence exceeds 999999 2ms
+   ✓ isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04) > UNIT-04: +60 min is bookable; +59 min, CLOSED/CANCELLED and inactive service are not; 3 active → limit; past/cancelled not counted; overlap vs back-to-back 1ms
+   ✓ canCustomerCancel (F-05, BR-05, BR-13) > UNIT-05 (CR-01): +1440 min → allowed; +1439, +180 and +120 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first 0ms
+   ✓ canRecordOutcome (F-09 §2, BR-15, BR-13) > UNIT-12: before the start → OUTCOME_TOO_EARLY; at the start and later → null; non-BOOKED → BOOKING_NOT_ACTIVE, checked first 0ms
+   × checkRescheduleTarget (F-08 §2) > UNIT-13: same slot → "Choose a different slot."; other service → same-service message; valid target → null 5ms
+     → checkRescheduleTarget is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/reschedule.api.test.ts > reschedule (F-08) > API-43: moves an own booking ≥ 24 h ahead to a free slot of the same service: old CANCELLED, new BOOKED with a new reference and the note, history reasons, old slot listed again
+AssertionError: expected 404 to be 201 // Object.is equality
+
+- Expected
++ Received
+
+- 201
++ 404
+
+ ❯ tests/api/reschedule.api.test.ts:58:24
+     56|     const target = await slot('mali', '2030-11-07', '10:00');
+     57|     const res = await move(agents.ploy, old.reference.toLowerCase(), t…
+     58|     expect(res.status).toBe(201);
+       |                        ^
+     59|     expect(res.body.previous).toBe(old.reference);
+     60|     const fresh = res.body.booking;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/api/reschedule.api.test.ts > reschedule (F-08) > API-44: a target that fails BR-01/BR-02/BR-03/BR-04 gets the F-04 code and nothing changes (BR-16)
+AssertionError: expected [ 404, 'NOT_FOUND' ] to deeply equal [ 409, 'SLOT_NOT_BOOKABLE' ]
+
+- Expected
++ Received
+
+  [
+-   409,
+-   "SLOT_NOT_BOOKABLE",
++   404,
++   "NOT_FOUND",
+  ]
+
+ ❯ expectRefused tests/api/reschedule.api.test.ts:82:44
+     80|       targets.push(slotId);
+     81|       const res = await move(agents.ken, old.reference, slotId);
+     82|       expect([res.status, res.body.error]).toEqual([409, code]);
+       |                                            ^
+     83|     };
+     84| 
+ ❯ tests/api/reschedule.api.test.ts:85:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/api/reschedule.api.test.ts > reschedule (F-08) > API-44: a target whose service was deactivated → 409 SLOT_NOT_BOOKABLE, nothing changes
+AssertionError: expected 'NOT_FOUND' to be 'SLOT_NOT_BOOKABLE' // Object.is equality
+
+Expected: "SLOT_NOT_BOOKABLE"
+Received: "NOT_FOUND"
+
+ ❯ tests/api/reschedule.api.test.ts:110:91
+    108|       await prisma.service.update({ where: { id: temp.id }, data: { is…
+    109|       const before = await snapshot(old.body.booking.reference);
+    110|       expect((await move(agents.nina, old.body.booking.reference, targ…
+       |                                                                                           ^
+    111|       expect(await snapshot(old.body.booking.reference)).toEqual(befor…
+    112|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/api/reschedule.api.test.ts > reschedule (F-08) > API-45: the old booking is excluded: a customer with 3 active bookings can move one; a move 15 minutes later overlapping the old time is allowed
+AssertionError: expected 404 to be 201 // Object.is equality
+
+- Expected
++ Received
+
+- 201
++ 404
+
+ ❯ tests/api/reschedule.api.test.ts:124:24
+    122|     const later = await slot('mali', '2030-11-13', '09:15');
+    123|     const res = await move(agents.nina, old.reference, later.id);
+    124|     expect(res.status).toBe(201);
+       |                        ^
+    125|     const third = await slot('mali', '2030-11-13', '10:00');
+    126|     expect((await move(agents.nina, res.body.booking.reference, third.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/api/reschedule.api.test.ts > reschedule (F-08) > API-46: inside 24 h → 409 CANCELLATION_WINDOW_CLOSED (exactly 24 h allowed); not active → 409; other customer → 404; same slot / other service → 422; unknown slot → 404; Staff → 403
+AssertionError: expected 404 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 404
+
+ ❯ tests/api/reschedule.api.test.ts:136:25
+    134|     freezeClock('2030-11-04T08:31:00+07:00'); // inside: 23 h 59 min
+    135|     const late = await move(agents.ploy, inside.reference, target.id);
+    136|     expect(late.status).toBe(409);
+       |                         ^
+    137|     expect(late.body).toEqual({ error: 'CANCELLATION_WINDOW_CLOSED', m…
+    138|     freezeClock(NOW);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/unit/bookingRules.test.ts > checkRescheduleTarget (F-08 §2) > UNIT-13: same slot → "Choose a different slot."; other service → same-service message; valid target → null
+TypeError: checkRescheduleTarget is not a function
+ ❯ tests/unit/bookingRules.test.ts:91:12
+     89|     const { checkRescheduleTarget } = await import('../../src/rules/bo…
+     90|     const old = { id: 10, serviceId: 1 };
+     91|     expect(checkRescheduleTarget(old, { id: 10, serviceId: 1 })).toEqu…
+       |            ^
+     92|     expect(checkRescheduleTarget(old, { id: 11, serviceId: 2 })).toEqu…
+     93|     expect(checkRescheduleTarget(old, { id: 11, serviceId: 1 })).toBeN…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  6 failed | 4 passed (10)
+   Start at  18:18:36
+   Duration  4.38s (transform 289ms, setup 0ms, collect 682ms, tests 1.46s, environment 0ms, prepare 123ms)
+
+
+===== $ cd client && npx vitest run tests/ReschedulePage.test.tsx (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/client
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/ReschedulePage.test.tsx [ tests/ReschedulePage.test.tsx ]
+Error: Failed to resolve import "../src/pages/ReschedulePage" from "tests/ReschedulePage.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/claude/wt/client/tests/ReschedulePage.test.tsx:5:27
+  4  |  import { MemoryRouter, Route, Routes } from "react-router-dom";
+  5  |  import { afterEach, describe, expect, it, vi } from "vitest";
+  6  |  import ReschedulePage from "../src/pages/ReschedulePage";
+     |                              ^
+  7  |  const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  8  |  const DAY = new Date(Date.now() + 5 * 864e5 + 7 * 36e5).toISOString().slice(0, 10);
+ ❯ TransformPluginContext._formatLog ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42846:41
+ ❯ TransformPluginContext.error ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42843:16
+ ❯ normalizeUrl ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40820:23
+ ❯ ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40939:37
+ ❯ TransformPluginContext.transform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40866:7
+ ❯ EnvironmentPluginContainer.transform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42641:18
+ ❯ loadAndTransform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:36053:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  18:18:42
+   Duration  773ms (transform 57ms, setup 114ms, collect 0ms, tests 0ms, environment 330ms, prepare 83ms)
+
+
