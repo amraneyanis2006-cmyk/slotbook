@@ -19,13 +19,13 @@ now and receive AC/tests in their own sprint contracts.
 | FR-09 My bookings | F-05 My bookings | Sprint 1; AC-23, AC-27 / API-20, UI-04, E2E-05 |
 | FR-10 Cancel own booking | F-05 My bookings | Sprint 1; AC-25, AC-26 / UNIT-05, API-22, API-23, E2E-05 |
 | FR-11 Staff daily schedule | F-06 Schedule | Sprint 1; AC-28, AC-29 / API-24, E2E-06 |
-| FR-12 Edit / close slot | F-07 Slot maintenance | Sprint 2; contract in Sprint 2 |
-| FR-13 Cancel booked slot with reason | F-07 Slot maintenance | Sprint 2 |
-| FR-14 Reschedule | F-08 Reschedule | Sprint 2 |
-| FR-15 Attendance outcome | F-09 Attendance | Sprint 2 |
-| FR-16 Booking history | F-10 History | Sprint 2 |
-| FR-17 Service catalogue | F-11 Services | Sprint 2 |
-| FR-18 Slot search | F-12 Search | Sprint 2 |
+| FR-12 Edit / close slot | F-07 Slot maintenance | Sprint 2 (contract 2.0, Issue #49); AC-49, AC-50, AC-53, AC-54 / UNIT-11, API-35, API-36, API-39, UI-08, E2E-11 |
+| FR-13 Cancel booked slot with reason | F-07 Slot maintenance (+ F-10 reason display) | Sprint 2 (contract 2.0, Issue #49); AC-52, AC-54 / API-38, UI-06, UI-08, E2E-11 |
+| FR-14 Reschedule | F-08 Reschedule | Sprint 2 (contract 2.0, Issue #49); AC-59, AC-62, AC-63 / UNIT-13, API-43, API-46, UI-10, E2E-13 |
+| FR-15 Attendance outcome | F-09 Attendance | Sprint 2 (contract 2.0, Issue #49); AC-55, AC-57, AC-58 / UNIT-12, API-40, API-42, UI-09, E2E-12 |
+| FR-16 Booking history | F-10 History | Sprint 2 (contract 2.0, Issue #49); AC-40, AC-41, AC-43 / UNIT-09, API-29, API-30, UI-06, E2E-09 |
+| FR-17 Service catalogue | F-11 Services | Sprint 2 (contract 2.0, Issue #49); AC-44, AC-45, AC-46, AC-48 / UNIT-10, API-31, API-32, API-33, DB-07, UI-07, E2E-10 |
+| FR-18 Slot search | F-12 Search | Sprint 2 (contract 2.0, Issue #49); AC-64, AC-65, AC-67 / UNIT-14, API-47, API-48, API-49, UI-11, E2E-14 |
 | FR-19 Availability templates | F-14 Templates | Sprint 3 |
 | FR-20 Staff dashboard | F-15 Dashboard | Sprint 3 |
 | FR-21 In-app notifications | F-16 Notifications | Sprint 3 |
@@ -38,7 +38,7 @@ now and receive AC/tests in their own sprint contracts.
 | BR-01 Exclusive slot | F-04 (service check + DB partial unique index) | Sprint 1; AC-18, AC-19 / API-16, API-17, DB-01 |
 | BR-02 Bookable only ≥ 60 min ahead | F-04 | Sprint 1; AC-20 / UNIT-04, API-18 |
 | BR-03 Max 3 active bookings | F-04 | Sprint 1; AC-21 / UNIT-04, API-19 |
-| BR-04 No overlapping own bookings | F-04 | Sprint 1; AC-21 / UNIT-04, API-19 |
+| BR-04 No overlapping own bookings | F-04; query changed by F-11 (A-04 resolved) | Sprint 1; AC-21 / UNIT-04, API-19; Sprint 2: AC-47 / API-34 |
 | BR-05 Cancellation window 24 h (v2, CR-01 Lab 7; 2 h in Sprint 1) | F-05 | Sprint 1, changed by CR-01; AC-25, AC-26, AC-27 / UNIT-05, API-22, API-23, UI-04 |
 | BR-06 Valid slot (future, 15 min, opening hours, active service) | F-03 | Sprint 1; AC-12 / UNIT-01, API-11 |
 | BR-07 No overlapping staff slots | F-03 | Sprint 1; AC-13 / UNIT-02, API-12 |
@@ -48,10 +48,10 @@ now and receive AC/tests in their own sprint contracts.
 | BR-11 Freed slot after cancel | F-05 | Sprint 1; AC-25 / API-22, E2E-05 |
 | BR-12 Inactive accounts | F-01 | Sprint 1; AC-02 / API-03 |
 | BR-13 Only active bookings change | F-05 | Sprint 1; AC-26 / UNIT-05, API-23 |
-| BR-14 Booked slot only cancellable | F-07 | Sprint 2 |
-| BR-15 Outcome after start | F-09 | Sprint 2 |
-| BR-16 Atomic reschedule | F-08 | Sprint 2 |
-| BR-17 Append-only history | F-10 | Sprint 2 |
+| BR-14 Booked slot only cancellable | F-07 | Sprint 2 (contract 2.0, Issue #49); AC-51, AC-52 / UNIT-11, API-37, API-38 |
+| BR-15 Outcome after start | F-09 | Sprint 2 (contract 2.0, Issue #49); AC-55, AC-56 / UNIT-12, API-40, API-41 |
+| BR-16 Atomic reschedule | F-08 | Sprint 2 (contract 2.0, Issue #49); AC-60, AC-61 / API-44, API-45 |
+| BR-17 Append-only history | F-10 (+ writers F-04, F-05, F-07, F-08, F-09) | Sprint 2 (contract 2.0, Issue #49); AC-40, AC-42 / UNIT-09, API-29, DB-05, DB-06; history rows also asserted in API-38, API-40, API-43 |
 | BR-18 Template generation skips | F-14 | Sprint 3 |
 | BR-19 No-show suspension | F-17 | Sprint 3 |
 
@@ -66,10 +66,10 @@ now and receive AC/tests in their own sprint contracts.
 | NFR-05 Session lifetime / logout | F-01 | Sprint 1; AC-01, AC-04 / API-01, API-05, UNIT-06 |
 | NFR-06 Safe errors | F-02 error handler | Sprint 1; AC-09 / API-09 |
 | NFR-07 Reproducible setup, idempotent seed | F-00 | Sprint 1; AC-32 / DB-02 + MAN-02 clean-clone check at release |
-| NFR-08 Responsive UI | F-03..F-06 screens; F-18 later | Sprint 1 for S1 screens; AC-30 / E2E-07; re-verified each sprint |
-| NFR-09 Accessibility baseline | F-01..F-06 screens; F-18 full audit | Sprint 1 baseline; AC-30, AC-05, AC-15, AC-22, AC-27 / E2E-08, UI-01, UI-02, UI-03, UI-04; Sprint 3 audit |
+| NFR-08 Responsive UI | F-03..F-06, F-07..F-12 screens; F-18 later | Sprint 1 for S1 screens; AC-30 / E2E-07; Sprint 2 screens AC-68 / E2E-15; re-verified each sprint |
+| NFR-09 Accessibility baseline | F-01..F-12 screens; F-18 full audit | Sprint 1 baseline; AC-30, AC-05, AC-15, AC-22, AC-27 / E2E-08, UI-01, UI-02, UI-03, UI-04; Sprint 2 AC-68 / E2E-15; Sprint 3 audit |
 | NFR-10 Time correctness (UTC / Bangkok) | F-00 time helpers, F-03..F-05 rules | Sprint 1; AC-12, AC-20, AC-26 / UNIT-01, UNIT-04, UNIT-05 |
-| NFR-11 Performance p95 < 500 ms | F-12 Search (+ F-18 re-check) | Sprint 2; performance smoke test in Sprint 2 contract |
+| NFR-11 Performance p95 < 500 ms | F-12 Search (+ F-18 re-check) | Sprint 2 (contract 2.0, Issue #49); AC-66 / PERF-01 (`npm run test:perf`, timings in `artifacts/sprint-2/perf/`) |
 | NFR-12 Deployability (env, stateless, Docker, GCP) | Designed in SDS §7 (Sprint 1); F-00 1.2 cloud-ready server (Lab 5 #20); F-13 pipeline | Design Sprint 1 (health check AC-31 / API-25); Lab 5 #20: AC-33 / API-26 (`/api/ready`), AC-34 / API-27 (SPA in production, Secure cookie behind proxy), AC-35 / UNIT-07 (startup refusal), AC-36 / DB-03 (production seed opt-in), AC-37 / DB-04 (production seed rerun is insert-only); Lab 5 #19: GCP project `cpe334-slotbook-y`, alerts-only budget, teammate access (Console, `artifacts/lab-05/screenshots/issue-19/`); Lab 5 #21: single Docker image + compose, AC-38 / UNIT-08 (graceful shutdown on SIGTERM), C-03 fresh-clone check (`artifacts/lab-05/c03-fresh-clone.txt`); Lab 5 #22: CI job `test-and-docker` on every PR into staging/main (C-01), offline deploy-script tests (`deploy/tests/`), C-01 run 43270720258 with `test-and-docker` and `e2e` green (`artifacts/lab-05/test-output/ci-c01/`); Lab 5 #23: first deployment to Cloud Run (`deploy/deploy.sh --demo` from Cloud Shell, revision `slotbook-00001-jcd`, smoke test 4 PASS; `artifacts/lab-05/deploy/`); Lab 5 #24: keyless GitHub → GCP identity (Workload Identity pool `github-actions`, deployer `slotbook-deployer`, environment `demo` on `main` only, `artifacts/lab-05/deploy/wif-setup.txt`) and merge gate R-06 (rulesets `protect-main` / `protect-staging`, required check `test-and-docker`), C-02 PR #35 blocked by the failing required check (`artifacts/lab-05/merge-gate.md`); Lab 5 #25: deploy pipeline `deploy.yml` (R-07) and running commit (R-08) AC-39 / API-28, UI-05 (`/api/version`, release footer), `deploy/tests/test_release_stub.sh` (`APP_COMMIT`, `latest` rollback only); C-06 Release 2 PR #38, merge `82bc8b7`, Deploy run 43571888289, revision `slotbook-00002-fmw` (`artifacts/lab-05/c06-release.txt`); Lab 5 #26: C-05 persistence check (R-04): booking kept through a restart, a redeploy, a rollback to `latest` and a roll forward (runs 43579388131, 43579900715, 43580291684; `artifacts/lab-05/c05-persistence.md`); Docker, CI and GCP verified in the later Lab 5 Issues |
 | NFR-13 Test discipline / traceability | Release check of every sprint (Issue #8 in Sprint 1) | Every sprint; release traceability check |
 
@@ -90,3 +90,7 @@ now and receive AC/tests in their own sprint contracts.
   `SEED_DEMO_DATA=true` (was: refuses production) and is then insert-only, demo slots only on an empty database; `/api/ready`, production SPA serving, trust proxy and startup
   refusal added as AC-33..AC-37 (SDS 1.3 §4/§7 follow) with UNIT-07, API-26, API-27, DB-03, DB-04. Reason: Lab 5 cloud deployment and Lab 6 UAT
   demo accounts. Made in the Issue #20 PR.
+- **Sprint 2 contracts 2.0 (2026-11-25), Issue #49:** F-07..F-12, STS (AC-40..AC-68, UNIT-09..14, API-29..49,
+  DB-05..07, UI-06..11, E2E-09..15, PERF-01), DoD; SRS 1.4 (A-04 resolved, A-05, A-06, D-07); SDS 1.5. Sprint 1 tests
+  changed by Sprint 2 are listed in `sprints/sprint-2/sts.md` §7. Written by Yanis Amrane, reviewed by Simeon Audouit
+  before any Sprint 2 implementation.
