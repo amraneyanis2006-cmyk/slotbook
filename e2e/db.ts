@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { formatReference } from '../server/src/rules/bookingRules';
 
 // Direct access to the E2E (test) database for the one demo situation the API cannot create at any time of day:
-// a booking that starts in less than 2 hours (BR-02 needs ≥ 60 min, BR-06 opening hours). Rules are bypassed on
+// a booking that starts within the BR-05 cancellation window (BR-02 needs ≥ 60 min, BR-06 opening hours). Rules are bypassed on
 // purpose; INDEX.md says so. @prisma/client lives in server/node_modules, so it is resolved from there.
 type Row = { id: number };
 type Client = {

@@ -4,7 +4,7 @@ import { overlaps, type TimeRange } from './slotRules.js';
 
 export const BOOKING_LEAD_MIN = 60;
 export const MAX_ACTIVE_BOOKINGS = 3;
-export const CANCEL_WINDOW_MIN = 120;
+export const CANCEL_WINDOW_MIN = 24 * 60; // BR-05 v2 (CR-01): 24 h; was 120 min in Sprint 1
 
 /** User messages of the 409 booking rule errors (system-sds §4). */
 export const BOOKING_RULE_MESSAGES = {
@@ -13,7 +13,7 @@ export const BOOKING_RULE_MESSAGES = {
   BOOKING_LIMIT_REACHED: 'You already have 3 upcoming bookings, the maximum.',
   BOOKING_OVERLAP: 'You already have a booking at this time.',
   BOOKING_NOT_ACTIVE: 'This booking is no longer active.',
-  CANCELLATION_WINDOW_CLOSED: 'Cancellation closes 2 hours before the start.',
+  CANCELLATION_WINDOW_CLOSED: 'Cancellation closes 24 hours before the start.',
 } as const;
 
 export type BookableSlot = TimeRange & { status: SlotStatus; service: { isActive: boolean } };
@@ -35,7 +35,7 @@ export function checkCustomerLimits(activeFutureBookings: CustomerBooking[], slo
   return active.some((b) => overlaps(b.slot, slot)) ? 'BOOKING_OVERLAP' : null;
 }
 
-/** BR-13 first (only BOOKED changes), then BR-05 (start − now ≥ 120 min; exactly 120 is allowed). */
+/** BR-13 first (only BOOKED changes), then BR-05 v2 (start − now ≥ 24 h; exactly 24 h is allowed). */
 export function canCustomerCancel(booking: { status: BookingStatus }, slot: { startAt: Date }, now: Date): null | 'BOOKING_NOT_ACTIVE' | 'CANCELLATION_WINDOW_CLOSED' {
   if (booking.status !== 'BOOKED') return 'BOOKING_NOT_ACTIVE';
   return slot.startAt.getTime() - now.getTime() >= CANCEL_WINDOW_MIN * 60_000 ? null : 'CANCELLATION_WINDOW_CLOSED';
