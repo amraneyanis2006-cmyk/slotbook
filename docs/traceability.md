@@ -198,18 +198,18 @@ planned test is never counted as coverage. The whole suite of `v0.2.0-sprint2` r
 | AC-72 | FR-19, BR-18 | F-14 | 3 | UNIT-16 | `server/tests/unit/templateRules.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-73 | FR-19, BR-18 | F-14 | 3 | API-51 | `server/tests/api/templates.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-74 | FR-19 | F-14 | 3 | API-52 | `server/tests/api/templates.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
-| AC-75 | FR-19 | F-14 | 3 | UI-13 / E2E-17 | `client/tests/TemplatesPage.test.tsx` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-75 | FR-19 | F-14 | 3 | UI-13 / E2E-17 | `client/tests/TemplatesPage.test.tsx`<br>`e2e/sprint3-templates.spec.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-76 | FR-21 | F-16 | 3 | UNIT-17, API-53 | `server/tests/api/notifications.api.test.ts`<br>`server/tests/unit/notificationRules.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-77 | FR-21 | F-16 | 3 | API-54 | `server/tests/api/notifications.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
-| AC-78 | FR-21 | F-16 | 3 | UI-14 / E2E-18 | `client/tests/NotificationsPage.test.tsx` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-78 | FR-21 | F-16 | 3 | UI-14 / E2E-18 | `client/tests/NotificationsPage.test.tsx`<br>`e2e/sprint3-notifications.spec.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-79 | BR-19 | F-17 | 3 | UNIT-18 | `server/tests/unit/bookingRules.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-80 | BR-19 | F-17 | 3 | API-55 | `server/tests/api/noShowPolicy.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-81 | FR-22 | F-17 | 3 | API-56 | `server/tests/api/accounts.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-82 | FR-22 | F-17 | 3 | API-57 | `server/tests/api/accounts.api.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
-| AC-83 | FR-22 | F-17 | 3 | UI-15 / E2E-19 | `client/tests/AccountsPage.test.tsx` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-83 | FR-22 | F-17 | 3 | UI-15 / E2E-19 | `client/tests/AccountsPage.test.tsx`<br>`e2e/sprint3-accounts.spec.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-84 | — | F-18 | 3 | E2E-20 | `e2e/a11y-audit.spec.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-85 | — | F-18 | 3 | E2E-21 | `e2e/sprint3-responsive.spec.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
-| AC-86 | — | F-18 | 3 | PERF-02 | `server/tests/perf/perf.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
+| AC-86 | — | F-18 | 3 | PERF-02 | `server/tests/perf/perf.test.ts`<br>`server/tests/perf/deployed.perf.test.ts` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 | AC-87 | — | F-18 | 3 | MAN-03 | `scripts/release-check.sh` | No (planned) | Planned (Sprint 3); tests specified, not run | — |
 
 **Summary:** 71 AC: Implemented; verification run and passed; 16 AC: Planned (Sprint 3); tests specified, not run.

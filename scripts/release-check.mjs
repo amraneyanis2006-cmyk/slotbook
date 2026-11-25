@@ -1,6 +1,7 @@
 // Release check (F-18, MAN-03, AC-87, NFR-13). Fails (exit 1) when:
 //  - a test file of server/tests, client/tests or e2e contains a skipped or focused test, or
-//  - an AC of docs/traceability.md §6 has no test ID, or one of its test IDs has no test named "<ID>:" in the files
+//  - an AC of docs/traceability.md §6 has no test ID, or one of its test IDs has no test named "<ID>:" (or
+//    "<ID> (CR-nn):") in the files
 //    listed on its row (MAN-* IDs: the listed file must exist).
 // Usage: bash scripts/release-check.sh   (writes the report to stdout)
 import { execSync } from 'node:child_process';
@@ -18,10 +19,10 @@ const skipped = testFiles.filter((f) => SKIP.test(stripComments(readFileSync(f, 
 const trace = readFileSync('docs/traceability.md', 'utf8');
 const matrix = trace.slice(trace.indexOf('## 6.')).split('\n').filter((l) => /^\| AC-\d\d \|/.test(l));
 const named = (file, id) => existsSync(file)
-  && new RegExp(`^\\s*(?:it|test)\\(\\s*(['"\`])${id}:`, 'm').test(stripComments(readFileSync(file, 'utf8')));
+  && new RegExp(`^\\s*(?:it|test)\\(\\s*(['"\`])${id}(?: \\([^)]*\\))?:`, 'm').test(stripComments(readFileSync(file, 'utf8')));
 const rows = matrix.map((l) => {
   const c = cells(l);
-  const ids = c[4].split(',').map((s) => s.trim()).filter((s) => /^[A-Z0-9]+-\d\d$/.test(s));
+  const ids = c[4].split(/[,/]/).map((s) => s.trim()).filter((s) => /^[A-Z0-9]+-\d\d$/.test(s));
   const files = c[5].replace(/`/g, '').split('<br>').map((s) => s.trim()).filter(Boolean);
   const missing = ids.filter((id) => (id.startsWith('MAN-') ? !files.some(existsSync) : !files.some((f) => named(f, id))));
   return { ac: c[0], ids, missing, ok: ids.length > 0 && missing.length === 0 };

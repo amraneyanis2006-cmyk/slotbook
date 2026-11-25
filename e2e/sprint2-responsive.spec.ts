@@ -27,6 +27,7 @@ const SCREENS: Screen[] = [
 ];
 
 test('E2E-15: Sprint 2 screens have no horizontal scroll or clipped control at 320, 768 and 1280 px; new dialogs trap focus, close with Esc and return focus', async ({ page }) => {
+  test.setTimeout(60_000); // 18 page loads plus two dialogs: above the 30 s default on a loaded runner
   for (const screen of SCREENS) {
     const path = await screen.path(page);
     await switchUser(page, screen.email);
