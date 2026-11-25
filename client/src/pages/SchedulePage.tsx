@@ -65,7 +65,7 @@ export default function SchedulePage() {
                           <td data-label="Time">{formatTimeRange(slot)}</td>
                           <td data-label="Service">{slot.service.name}</td>
                           <td data-label="Status"><StatusBadge status={slot.booking?.status ?? slot.status} /></td>
-                          <td data-label="Booking">{slot.booking?.reference ?? '—'}</td>
+                          <td data-label="Booking">{slot.booking ? <Link to={`/staff/bookings/${slot.booking.reference}`}>{slot.booking.reference}</Link> : '—'}</td>
                           <td data-label="Customer">{slot.booking?.customer.name ?? '—'}</td>
                           <td data-label="Note">{slot.booking?.note || '—'}</td>
                         </tr>

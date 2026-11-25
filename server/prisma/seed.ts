@@ -1,4 +1,5 @@
 // Idempotent synthetic seed (F-00 §2): two runs in a row give the same counts.
+import { readFileSync } from 'node:fs';
 import bcrypt from 'bcrypt';
 import { PrismaClient, type BookingStatus, type Role, type SlotStatus } from '@prisma/client';
 import { formatReference } from '../src/rules/bookingRules.js';
@@ -102,6 +103,8 @@ export async function seed(prisma: PrismaClient, today = bangkokDate(new Date())
       await prisma.booking.create({ data: { ...data, slotId, customerId, reference } });
     }
   }
+  // F-10: the same backfill SQL as migration 0002 gives every booking without history its rows (DB-06).
+  await prisma.$executeRawUnsafe(readFileSync(new URL('./sql/backfill-history.sql', import.meta.url), 'utf8'));
   return 'seeded';
 }
 

@@ -1,9 +1,12 @@
 # Sprint 2 — Software Test Specification (STS)
 
-Version 1.0 (2026-11-25), written with the Sprint 2 contracts **before** any Sprint 2 code (Issue #49).
+Version 1.1 (2026-11-25), written with the Sprint 2 contracts **before** any Sprint 2 code (Issue #49).
 Same conventions as `../sprint-1/sts.md`: each test name in code **starts with its Test ID**; test databases
 are reset and seeded before each run; time rules use `freezeClock()` (server) or data relative to the real
 clock (E2E). The "Result" column is filled from the Sprint 2 release run (Issue #56).
+
+**1.1 (Issue #50):** §4 path corrected to `client/tests/` (where the Sprint 1 component tests live); file names in
+the tables are relative to the directory of their section.
 
 **Regression.** Every Sprint 1 test (UNIT-01..08, API-01..28, DB-01..04, UI-01..05, E2E-01..08) stays in the
 suites and must still pass; a Sprint 1 test changed by a Sprint 2 contract is listed in §7 with its reason.
@@ -54,7 +57,7 @@ suites and must still pass; a Sprint 1 test changed by a Sprint 2 contract is li
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | PERF-01 | AC-66 | `_test` database with the seed ×10 (`seedTimes10`); run with `npm run test:perf` (not part of `npm test`) | 100 sequential calls each: search (14 days), available (one day), book (distinct slots) | p95 < 500 ms for each; min/median/p95/max written to `artifacts/sprint-2/perf/perf-<commit>.txt` | `perf.test.ts` | Pending |
 
-## 4. Client Component Tests — `client/src/**/*.test.tsx`
+## 4. Client Component Tests — `client/tests/`
 
 | Test ID | AC | Precondition / input | Action | Expected result | File | Result |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |

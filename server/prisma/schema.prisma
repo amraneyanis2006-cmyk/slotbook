@@ -27,17 +27,18 @@ enum BookingStatus {
 }
 
 model User {
-  id                Int       @id @default(autoincrement())
-  email             String    @unique
+  id                Int                   @id @default(autoincrement())
+  email             String                @unique
   name              String
   passwordHash      String
   role              Role
-  isActive          Boolean   @default(true)
-  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
-  slots             Slot[]    @relation("StaffSlots")
-  bookings          Booking[] @relation("CustomerBookings")
-  cancelledBookings Booking[] @relation("CancelledBy")
+  isActive          Boolean               @default(true)
+  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime              @updatedAt @db.Timestamptz(3)
+  slots             Slot[]                @relation("StaffSlots")
+  bookings          Booking[]             @relation("CustomerBookings")
+  cancelledBookings Booking[]             @relation("CancelledBy")
+  historyActions    BookingStatusChange[]
 }
 
 model Service {
@@ -65,20 +66,37 @@ model Slot {
 }
 
 model Booking {
-  id            Int           @id @default(autoincrement())
-  reference     String        @unique
+  id            Int                   @id @default(autoincrement())
+  reference     String                @unique
   slotId        Int
-  slot          Slot          @relation(fields: [slotId], references: [id])
+  slot          Slot                  @relation(fields: [slotId], references: [id])
   customerId    Int
-  customer      User          @relation("CustomerBookings", fields: [customerId], references: [id])
-  status        BookingStatus @default(BOOKED)
-  note          String?       @db.VarChar(300)
-  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
-  cancelledAt   DateTime?     @db.Timestamptz(3)
+  customer      User                  @relation("CustomerBookings", fields: [customerId], references: [id])
+  status        BookingStatus         @default(BOOKED)
+  note          String?               @db.VarChar(300)
+  createdAt     DateTime              @default(now()) @db.Timestamptz(3)
+  cancelledAt   DateTime?             @db.Timestamptz(3)
   cancelledById Int?
-  cancelledBy   User?         @relation("CancelledBy", fields: [cancelledById], references: [id])
+  cancelledBy   User?                 @relation("CancelledBy", fields: [cancelledById], references: [id])
+  history       BookingStatusChange[]
 
   @@index([customerId, status])
+}
+
+// Append-only booking history (F-10, BR-17): written only by historyService.recordStatusChange;
+// a trigger in migration 0002 refuses direct UPDATE/DELETE.
+model BookingStatusChange {
+  id         Int            @id @default(autoincrement())
+  bookingId  Int
+  booking    Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromStatus BookingStatus?
+  toStatus   BookingStatus
+  actorId    Int
+  actor      User           @relation(fields: [actorId], references: [id])
+  reason     String?        @db.VarChar(200)
+  createdAt  DateTime       @db.Timestamptz(3)
+
+  @@index([bookingId, createdAt])
 }
 
 // Table used by connect-pg-simple (express-session store).

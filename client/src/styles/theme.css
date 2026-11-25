@@ -111,3 +111,9 @@ label.required::after { content: " *"; color: var(--color-danger); }
 .day-picker label { margin-top: 0; }
 .summary { font-weight: 600; margin: 0 0 var(--space-2); }
 .app-footer { max-width: 960px; margin: 0 auto; padding: var(--space-2) var(--space-3); color: var(--color-muted); font-size: 0.875rem; }
+
+/* Booking history (F-10 §4) */
+.history { margin: 0; padding-left: 1.25rem; }
+.history li { margin-bottom: var(--space-2); overflow-wrap: anywhere; }
+.history time { color: var(--color-muted); }
+.history blockquote { margin: var(--space-1) 0 0; padding-left: var(--space-2); border-left: 3px solid var(--color-border); }

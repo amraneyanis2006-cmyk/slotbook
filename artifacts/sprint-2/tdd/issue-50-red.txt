@@ -1,0 +1,451 @@
+# Issue:   #50
+# Branch:  feature/50-booking-history
+# Commit:  41ea1e9 (test(F-10): booking history tests, red (#50))
+# Date:    2026-11-25 18:14:11 +0700
+# Env:     Node v22.23.4, PostgreSQL 16 local slotbook_test (reset + seeded by server/tests/setup.ts), Chrome for Playwright
+
+===== $ cd server && npx vitest run tests/unit/historyRules.test.ts tests/api/history.api.test.ts tests/db/history.db.test.ts (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/server
+
+ ❯ tests/api/history.api.test.ts (2 tests | 2 failed) 1283ms
+   × history writers (F-10 §1) > API-29: booking appends null→BOOKED and cancelling appends BOOKED→CANCELLED, by the customer, at the time of the change; a refused booking leaves no row 36ms
+     → Cannot read properties of undefined (reading 'findMany')
+   × GET history (F-10 §3) > API-30: the customer and the slot's staff member read the history oldest first; other customer / other staff → 404 without data; wrong role → 403 55ms
+     → expected undefined to deeply equal [ { …(5) }, { …(5) } ]
+ ❯ tests/db/history.db.test.ts (2 tests | 2 failed) 70ms
+   × BookingStatusChange is append-only (F-10 §1 step 4, BR-17) > DB-05: Prisma update/delete and raw UPDATE are refused by the trigger; deleting the booking itself cascades 13ms
+     → Cannot read properties of undefined (reading 'create')
+   × history backfill (F-10 §1 step 5) > DB-06: the migration backfill gives every booking a history ending in its status, with the marker reason on second rows; the seed uses the same SQL and keeps the counts 2ms
+     → expected undefined to be defined
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/historyRules.test.ts [ tests/unit/historyRules.test.ts ]
+Error: Cannot find module '../../src/rules/historyRules.js' imported from '/home/claude/wt/server/tests/unit/historyRules.test.ts'
+ ❯ tests/unit/historyRules.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { isValidTransition, toHistoryView } from '../../src/rules/hist…
+       | ^
+      3| 
+      4| describe('history rules (F-10 §2)', () => {
+
+Caused by: Error: Failed to load url ../../src/rules/historyRules.js (resolved id: ../../src/rules/historyRules.js) in /home/claude/wt/server/tests/unit/historyRules.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../slotbook/server/node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/db/history.db.test.ts > BookingStatusChange is append-only (F-10 §1 step 4, BR-17) > DB-05: Prisma update/delete and raw UPDATE are refused by the trigger; deleting the booking itself cascades
+TypeError: Cannot read properties of undefined (reading 'create')
+ ❯ tests/db/history.db.test.ts:27:50
+     25|     const slot = await makeSlot(prisma, { staffId: ids.anan, serviceId…
+     26|     const booking = await makeBooking(prisma, { slotId: slot.id, custo…
+     27|     const row = await prisma.bookingStatusChange.create({
+       |                                                  ^
+     28|       data: { bookingId: booking.id, fromStatus: null, toStatus: 'BOOK…
+     29|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/db/history.db.test.ts > history backfill (F-10 §1 step 5) > DB-06: the migration backfill gives every booking a history ending in its status, with the marker reason on second rows; the seed uses the same SQL and keeps the counts
+AssertionError: expected undefined to be defined
+ ❯ tests/db/history.db.test.ts:43:23
+     41|   it('DB-06: the migration backfill gives every booking a history endi…
+     42|     const migration = readdirSync(`${prismaDir}migrations`).find((d) =…
+     43|     expect(migration).toBeDefined();
+       |                       ^
+     44|     const sql = readFileSync(`${prismaDir}migrations/${migration}/migr…
+     45|     const block = /-- backfill:start\n([\s\S]*?)-- backfill:end/.exec(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/api/history.api.test.ts > history writers (F-10 §1) > API-29: booking appends null→BOOKED and cancelling appends BOOKED→CANCELLED, by the customer, at the time of the change; a refused booking leaves no row
+TypeError: Cannot read properties of undefined (reading 'findMany')
+ ❯ historyOf tests/api/history.api.test.ts:36:30
+     34|   makeSlot(prisma, { staffId: ids.anan, serviceId: ids.advising, date,…
+     35| const historyOf = (reference: string) =>
+     36|   prisma.bookingStatusChange.findMany({ where: { booking: { reference …
+       |                              ^
+     37| 
+     38| describe('history writers (F-10 §1)', () => {
+ ❯ tests/api/history.api.test.ts:44:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/api/history.api.test.ts > GET history (F-10 §3) > API-30: the customer and the slot's staff member read the history oldest first; other customer / other staff → 404 without data; wrong role → 403
+AssertionError: expected undefined to deeply equal [ { …(5) }, { …(5) } ]
+
+- Expected: 
+[
+  {
+    "actor": {
+      "name": "Ploy Chai",
+      "role": "CUSTOMER",
+    },
+    "at": "2030-06-03T01:00:00.000Z",
+    "from": null,
+    "reason": null,
+    "to": "BOOKED",
+  },
+  {
+    "actor": {
+      "name": "Ploy Chai",
+      "role": "CUSTOMER",
+    },
+    "at": "2030-06-04T02:00:00.000Z",
+    "from": "BOOKED",
+    "reason": null,
+    "to": "CANCELLED",
+  },
+]
+
++ Received: 
+undefined
+
+ ❯ tests/api/history.api.test.ts:78:30
+     76|     expect(own.status).toBe(200);
+     77|     expect(own.body.booking.reference).toBe(ref);
+     78|     expect(own.body.history).toEqual([
+       |                              ^
+     79|       { at: booked.body.booking.createdAt, from: null, to: 'BOOKED', a…
+     80|       { at: '2030-06-04T02:00:00.000Z', from: 'BOOKED', to: 'CANCELLED…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  4 failed (4)
+   Start at  18:14:12
+   Duration  4.52s (transform 219ms, setup 0ms, collect 746ms, tests 1.35s, environment 0ms, prepare 192ms)
+
+
+===== $ cd client && npx vitest run tests/BookingDetailPage.test.tsx (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/client
+
+stderr | tests/BookingDetailPage.test.tsx > BookingDetailPage history (F-10) > UI-06: ordered History list with actor and reason; callout "Cancelled by Anan Wong: Staff illness"
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ❯ tests/BookingDetailPage.test.tsx (1 test | 1 failed) 1036ms
+   × BookingDetailPage history (F-10) > UI-06: ordered History list with actor and reason; callout "Cancelled by Anan Wong: Staff illness" 1035ms
+     → Unable to find role="region" and name "History"
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <h1
+      tabindex="-1"
+    >
+      Booking 
+      BK-2030-000031
+    </h1>
+    <div
+      class="panel detail"
+    >
+      <dl>
+        <dt>
+          Status
+        </dt>
+        <dd>
+          <span
+            class="badge status-cancelled"
+          >
+            Cancelled
+          </span>
+        </dd>
+        <dt>
+          Date and time
+        </dt>
+        <dd>
+          Mon 10 Jun 2030
+          , 
+          09:00–09:30
+        </dd>
+        <dt>
+          Service
+        </dt>
+        <dd>
+          Academic advising
+        </dd>
+        <dt>
+          Staff
+        </dt>
+        <dd>
+          Anan Wong
+        </dd>
+        <dt>
+          Note
+        </dt>
+        <dd>
+          —
+        </dd>
+        <dt>
+          Booked on
+        </dt>
+        <dd>
+          Mon 3 Jun 2030, 08:00
+        </dd>
+        <dt>
+          Cancelled on
+        </dt>
+        <dd>
+          Tue 4 Jun 2030, 10:00
+        </dd>
+      </dl>
+    </div>
+    <p>
+      <a
+        href="/bookings"
+      >
+        Back to My Bookings
+      </a>
+    </p>
+  </div>
+</body>
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <h1
+      tabindex="-1"
+    >
+      Booking 
+      BK-2030-000031
+    </h1>
+    <div
+      class="panel detail"
+    >
+      <dl>
+        <dt>
+          Status
+        </dt>
+        <dd>
+          <span
+            class="badge status-cancelled"
+          >
+            Cancelled
+          </span>
+        </dd>
+        <dt>
+          Date and time
+        </dt>
+        <dd>
+          Mon 10 Jun 2030
+          , 
+          09:00–09:30
+        </dd>
+        <dt>
+          Service
+        </dt>
+        <dd>
+          Academic advising
+        </dd>
+        <dt>
+          Staff
+        </dt>
+        <dd>
+          Anan Wong
+        </dd>
+        <dt>
+          Note
+        </dt>
+        <dd>
+          —
+        </dd>
+        <dt>
+          Booked on
+        </dt>
+        <dd>
+          Mon 3 Jun 2030, 08:00
+        </dd>
+        <dt>
+          Cancelled on
+        </dt>
+        <dd>
+          Tue 4 Jun 2030, 10:00
+        </dd>
+      </dl>
+    </div>
+    <p>
+      <a
+        href="/bookings"
+      >
+        Back to My Bookings
+      </a>
+    </p>
+  </div>
+</body>
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/BookingDetailPage.test.tsx > BookingDetailPage history (F-10) > UI-06: ordered History list with actor and reason; callout "Cancelled by Anan Wong: Staff illness"
+TestingLibraryElementError: Unable to find role="region" and name "History"
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <h1
+      tabindex="-1"
+    >
+      Booking 
+      BK-2030-000031
+    </h1>
+    <div
+      class="panel detail"
+    >
+      <dl>
+        <dt>
+          Status
+        </dt>
+        <dd>
+          <span
+            class="badge status-cancelled"
+          >
+            Cancelled
+          </span>
+        </dd>
+        <dt>
+          Date and time
+        </dt>
+        <dd>
+          Mon 10 Jun 2030
+          , 
+          09:00–09:30
+        </dd>
+        <dt>
+          Service
+        </dt>
+        <dd>
+          Academic advising
+        </dd>
+        <dt>
+          Staff
+        </dt>
+        <dd>
+          Anan Wong
+        </dd>
+        <dt>
+          Note
+        </dt>
+        <dd>
+          —
+        </dd>
+        <dt>
+          Booked on
+        </dt>
+        <dd>
+          Mon 3 Jun 2030, 08:00
+        </dd>
+        <dt>
+          Cancelled on
+        </dt>
+        <dd>
+          Tue 4 Jun 2030, 10:00
+        </dd>
+      </dl>
+    </div>
+    <p>
+      <a
+        href="/bookings"
+      >
+        Back to My Bookings
+      </a>
+    </p>
+  </div>
+</body>
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <h1
+      tabindex="-1"
+    >
+      Booking 
+      BK-2030-000031
+    </h1>
+    <div
+      class="panel detail"
+    >
+      <dl>
+        <dt>
+          Status
+        </dt>
+        <dd>
+          <span
+            class="badge status-cancelled"
+          >
+            Cancelled
+          </span>
+        </dd>
+        <dt>
+          Date and time
+        </dt>
+        <dd>
+          Mon 10 Jun 2030
+          , 
+          09:00–09:30
+        </dd>
+        <dt>
+          Service
+        </dt>
+        <dd>
+          Academic advising
+        </dd>
+        <dt>
+          Staff
+        </dt>
+        <dd>
+          Anan Wong
+        </dd>
+        <dt>
+          Note
+        </dt>
+        <dd>
+          —
+        </dd>
+        <dt>
+          Booked on
+        </dt>
+        <dd>
+          Mon 3 Jun 2030, 08:00
+        </dd>
+        <dt>
+          Cancelled on
+        </dt>
+        <dd>
+          Tue 4 Jun 2030, 10:00
+        </dd>
+      </dl>
+    </div>
+    <p>
+      <a
+        href="/bookings"
+      >
+        Back to My Bookings
+      </a>
+    </p>
+  </div>
+</body>
+ ❯ waitForWrapper ../../slotbook/client/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../slotbook/client/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ tests/BookingDetailPage.test.tsx:33:34
+     31|     );
+     32| 
+     33|     const section = await screen.findByRole('region', { name: 'History…
+       |                                  ^
+     34|     const items = within(section).getAllByRole('listitem');
+     35|     expect(items).toHaveLength(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  18:14:17
+   Duration  1.88s (transform 155ms, setup 139ms, collect 147ms, tests 1.04s, environment 293ms, prepare 66ms)
+
+

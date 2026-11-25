@@ -5,7 +5,7 @@
 | Linked requirements | FR-16, BR-17, BR-08, BR-09, NFR-06, NFR-10 |
 | Issue / owner / reviewer | Issue #50 — Yanis Amrane (author), Simeon Audouit (reviewer) |
 | Depends on | F-05 (cancel), F-04 (book). **Lands first in Sprint 2**: F-07, F-08 and F-09 write history through it. |
-| Contract version | 1.0 (2026-11-25) — history in §8 |
+| Contract version | 1.1 (2026-11-25) — history in §8 |
 
 ## 1. Behavior and Workflow
 
@@ -32,8 +32,12 @@
    - every booking: `null → BOOKED`, actor = customer, time = `createdAt`;
    - `CANCELLED`: `BOOKED → CANCELLED`, actor = `cancelledById` (customer if null), time = `cancelledAt`;
    - `COMPLETED` / `NO_SHOW` (seed only): `BOOKED → <status>`, actor = slot staff, time = slot `endAt`;
+   - the time of a second row is never earlier than the booking's `createdAt` (`GREATEST`), so the history
+     reads in order even for seed bookings created after their slot ended;
    - backfilled rows carry `reason = 'Recorded before history (Sprint 1)'` for the second row only, so a
-     reader can tell them apart. The seed writes the same rows for the bookings it creates.
+     reader can tell them apart. The SQL lives in `server/prisma/sql/backfill-history.sql`; the migration contains
+     the same text between `-- backfill:start` / `-- backfill:end` (DB-06 checks they match) and the seed runs the
+     file after creating its bookings. It only fills bookings that have no history, so reruns add nothing.
 6. The Customer sees the history on the booking detail (`/bookings/:reference`); the Staff member who owns the
    slot sees it on the new staff booking detail (`/staff/bookings/:reference`). Both are read-only timelines.
 
@@ -107,3 +111,4 @@ Two status changes in the same second (order by `id`), history of a booking canc
 | Version | Date | Author | Change |
 | :--- | :--- | :--- | :--- |
 | 1.0 | 2026-11-25 | Yanis Amrane | Sprint 2 contract, recorded before implementation (Issue #49), reviewed by Simeon Audouit. |
+| 1.1 | 2026-11-25 | Yanis Amrane | Issue #50: §1 step 5 backfill times use `GREATEST(createdAt, …)` (a seed booking of a past slot is created after the slot ended, which put its outcome before its creation) and the backfill SQL is one file shared by the migration and the seed. Found while writing DB-06. Behavior of the API unchanged. |
