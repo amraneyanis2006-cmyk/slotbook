@@ -1,7 +1,7 @@
 # SlotBook — System-Level Software Design Specification (SDS)
 
-Version 1.4 (2026-11-14). Applies to the whole product; Sprint 1 feature contracts in
-`docs/sprints/sprint-1/` give the detailed endpoints and screens.
+Version 1.5 (2026-11-25). Applies to the whole product; the feature contracts in `docs/sprints/sprint-1/` and
+`docs/sprints/sprint-2/` give the detailed endpoints and screens.
 
 ---
 
@@ -62,6 +62,8 @@ erDiagram
   User ||--o{ Booking : "makes (customerId)"
   Service ||--o{ Slot : "is delivered in"
   Slot ||--o{ Booking : "has (max 1 BOOKED)"
+  Booking ||--o{ BookingStatusChange : "history (append-only)"
+  User ||--o{ BookingStatusChange : "acts (actorId)"
   User { int id PK
          string email UK
          string name
@@ -86,6 +88,13 @@ erDiagram
             string note
             datetime cancelledAt
             int cancelledById FK }
+  BookingStatusChange { int id PK
+            int bookingId FK
+            BookingStatus fromStatus
+            BookingStatus toStatus
+            int actorId FK
+            string reason
+            datetime createdAt }
 ```
 
 | Entity | Important fields and constraints | Ownership |
@@ -95,7 +104,9 @@ erDiagram
 | `Slot` | `staffId` → User(STAFF); `serviceId` → Service; `startAt`/`endAt` timestamptz (UTC), `endAt > startAt` (check constraint); `status` enum `OPEN`/`CLOSED`/`CANCELLED`; index `(staffId, startAt)`, `(status, startAt)`. Overlap per staff (BR-07) checked in the transaction while holding a row lock on the staff user. | The Staff member in `staffId`. |
 | `Booking` | `reference` unique `BK-YYYY-NNNNNN` from PostgreSQL sequence `booking_ref_seq`; `slotId` → Slot; `customerId` → User(CUSTOMER); `status` enum `BOOKED`/`CANCELLED`/`COMPLETED`/`NO_SHOW`; `note` ≤ 300 chars; `cancelledAt`, `cancelledById`; **partial unique index `booking_one_active_per_slot ON "Booking"("slotId") WHERE status = 'BOOKED'`**; index `(customerId, status)`. | The Customer in `customerId`; readable by the slot's Staff member. |
 | `session` | `sid` PK, `sess` json, `expire` timestamptz (+ index) — table used by `connect-pg-simple`, created by a Prisma migration so the schema stays reproducible. | System. |
-| *Sprint 2+* | `BookingStatusChange` (append-only history, BR-17), `AvailabilityTemplate` (Sprint 3), `Notification` (Sprint 3). | — |
+| `BookingStatusChange` (Sprint 2, F-10) | `bookingId` → Booking (`ON DELETE CASCADE`, never used by the app); `fromStatus` nullable (creation); `toStatus`; `actorId` → User; `reason` ≤ 200 chars; `createdAt`; index `(bookingId, createdAt)`. Written only by `historyService.recordStatusChange` in the transaction of the change; trigger `booking_history_append_only` refuses direct UPDATE/DELETE (BR-17, D-07). The migration backfills existing bookings. | Readable by the booking's Customer and the slot's Staff member. |
+| `Service` (Sprint 2, F-11) | Adds unique index `service_name_ci` on `lower(name)`; services are never deleted (A-06). | Shared by all Staff. |
+| *Sprint 3* | `AvailabilityTemplate` (F-14), `Notification` (F-16), suspension data for BR-19 (F-17). | — |
 
 **Times.** All timestamps are stored as UTC `timestamptz`. The API accepts local dates/times
 (`date: "YYYY-MM-DD"`, `startTime: "HH:mm"`) interpreted in `Asia/Bangkok` (UTC+7, no DST) and
@@ -128,7 +139,11 @@ returns ISO-8601 UTC strings; the UI formats them in Asia/Bangkok (NFR-10).
 | `/bookings`, `/bookings/:reference` | Customer | My Bookings (Upcoming / Past and cancelled), booking detail, cancel | 1 |
 | `/staff/slots` | Staff (home) | My Slots — create-slot form + upcoming slots | 1 |
 | `/staff/schedule` | Staff | Daily schedule | 1 |
-| `/staff/services`, `/staff/dashboard`, `/staff/users` | Staff | Service catalogue, dashboard, accounts | 2–3 |
+| `/staff/services` | Staff | Service catalogue (F-11) | 2 |
+| `/staff/bookings/:reference` | Staff | Booking detail with history and outcome buttons (F-10, F-09) | 2 |
+| `/bookings/:reference/reschedule` | Customer | Reschedule (F-08) | 2 |
+| `/search` | Customer | Find a Slot — date range, service and staff search (F-12) | 2 |
+| `/staff/dashboard`, `/staff/users` | Staff | Dashboard, accounts | 3 |
 
 Header (all authenticated pages): product name, role navigation with the active item marked
 `aria-current="page"`, the user's name and role badge, **Log out** button. Unauthenticated access to
@@ -167,7 +182,7 @@ any page redirects to `/login`; a page of the other role redirects to the user's
 | 401 | `UNAUTHENTICATED`, `INVALID_CREDENTIALS` |
 | 403 | `FORBIDDEN` (authenticated but wrong role) |
 | 404 | `NOT_FOUND` (missing **or not owned** — BR-09) |
-| 409 | `SLOT_ALREADY_BOOKED`, `SLOT_NOT_BOOKABLE`, `BOOKING_LIMIT_REACHED`, `BOOKING_OVERLAP`, `SLOT_OVERLAP`, `CANCELLATION_WINDOW_CLOSED`, `BOOKING_NOT_ACTIVE`; `SLOT_HAS_BOOKING` (Sprint 2), `OUTCOME_TOO_EARLY` (Sprint 2), `BOOKING_SUSPENDED` (Sprint 3) |
+| 409 | `SLOT_ALREADY_BOOKED`, `SLOT_NOT_BOOKABLE`, `BOOKING_LIMIT_REACHED`, `BOOKING_OVERLAP`, `SLOT_OVERLAP`, `CANCELLATION_WINDOW_CLOSED`, `BOOKING_NOT_ACTIVE`; `SLOT_HAS_BOOKING`, `SLOT_NOT_EDITABLE`, `OUTCOME_TOO_EARLY`, `SERVICE_NAME_TAKEN` (Sprint 2), `BOOKING_SUSPENDED` (Sprint 3) |
 | 422 | `VALIDATION_ERROR` with `fields` |
 | 503 | `GET /api/health` and `GET /api/ready` only (the exceptions above) |
 | 500 | `INTERNAL_ERROR` — generic message, error logged server-side with a request id, no stack/SQL in the body (NFR-06) |
@@ -192,6 +207,20 @@ any page redirects to `/login`; a page of the other role redirects to the user's
 | `GET /api/bookings/:reference` | Own booking detail | Customer |
 | `POST /api/bookings/:reference/cancel` | Cancel own booking | Customer |
 
+### 4.2 Endpoint Overview (Sprint 2)
+
+| Method and path | Purpose | Roles | Contract |
+| :--- | :--- | :--- | :--- |
+| `GET /api/bookings/:reference` | Now also returns `history` | Customer | F-10 |
+| `GET /api/staff/bookings/:reference` | Booking of an own slot with history | Staff | F-10 |
+| `GET`, `POST /api/staff/services`, `PATCH /api/staff/services/:id` | Service catalogue | Staff | F-11 |
+| `PATCH /api/staff/slots/:id` | Move an own unbooked slot | Staff | F-07 |
+| `POST /api/staff/slots/:id/close`, `…/reopen`, `…/cancel` | Close, reopen, cancel with reason | Staff | F-07 |
+| `POST /api/staff/bookings/:reference/outcome` | Record COMPLETED / NO_SHOW | Staff | F-09 |
+| `POST /api/bookings/:reference/reschedule` | Move own booking atomically | Customer | F-08 |
+| `GET /api/slots/search?from=&to=&serviceId=&staffId=` | Search bookable slots | Customer | F-12 |
+| `GET /api/staff-members` | Active staff names for the search filter | any authenticated | F-12 |
+
 ## 5. Roles, Permissions and Ownership
 
 Backend middleware: `requireAuth` (401) → `requireRole(...)` (403) → service-level ownership filter
@@ -210,6 +239,8 @@ is never the protection.**
 | Cancel own booking | ✔ | 403 | 401 | own active bookings only (others → 404) |
 | *S2:* edit/close/cancel slot, record outcome | 403 | ✔ own slots | 401 | own slots only |
 | *S2:* reschedule, view history | ✔ own | ✔ history of own slots | 401 | — |
+| *S2:* search bookable slots | ✔ | 403 | 401 | bookable slots (no customer data) |
+| *S2:* list active staff names | ✔ | ✔ | 401 | names only |
 | *S2–3:* manage services, dashboard, accounts | 403 | ✔ | 401 | all |
 
 ## 6. Authentication and Session
@@ -266,3 +297,4 @@ is never the protection.**
 | 1.2 | 2026-11-10 | Simeon Audouit | Decisions by Yanis Amrane for Issue #8: §3.2 empty-state example now matches the F-04 text; versions unified to "Node 20 or newer (tested with 20 and 24), PostgreSQL 16 or newer (tested with 16 and 18)". |
 | 1.3 | 2026-11-11 | Yanis Amrane | Lab 5 (Issue #20): `GET /api/ready` in §4 (probe exception, 503, endpoint table); §7 variables follow the new `.env.example` (placeholders, `SEED_DEMO_DATA`, `CLIENT_DIST`, production seed opt-in, startup refusal). |
 | 1.4 | 2026-11-14 | Simeon Audouit | Lab 5 (Issue #25): `GET /api/version` in §4.1; `APP_COMMIT` in §7. |
+| 1.5 | 2026-11-25 | Yanis Amrane | Sprint 2 contracts (Issue #49): §2 `BookingStatusChange` and `service_name_ci`; §3.1 Sprint 2 screens; §4 codes `SLOT_NOT_EDITABLE`, `SERVICE_NAME_TAKEN`; new §4.2 Sprint 2 endpoints. Reviewed by Simeon Audouit. |

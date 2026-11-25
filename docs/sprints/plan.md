@@ -31,6 +31,8 @@
 - **Dependencies:** F-07 needs F-03/F-05; F-08 needs F-04/F-05 and reuses the booking rules inside one
   transaction; F-10 must land before F-08/F-09 write history (history table introduced first);
   F-13 needs only F-00 and is done in Lab 5.
+- **Contracts and Issues:** `sprints/sprint-2/` (Issue #49), implementation Issues #50–#55 in the order F-10,
+  F-11, F-07, F-09, F-08, F-12, release Issue #56.
 - **Completion outcome:** Deliverable 2 release on `main`, deployed on Cloud Run with Cloud SQL, CI green;
   staff can manage their day completely (close/cancel, outcomes) and customers can reschedule; every
   booking change has history.
