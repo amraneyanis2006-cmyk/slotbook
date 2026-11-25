@@ -7,10 +7,10 @@ regression suite.
 
 | Test ID | AC | Level | Precondition / input | Expected result | File | Result |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| UNIT-15 | AC-69 | Unit | Slots OPEN/CLOSED with and without bookings; BOOKED past/future, COMPLETED, NO_SHOW; 3 services | Disjoint counts, `pending` = started BOOKED only, rate rounded to 3 decimals or null, `perService` ordered | `server/tests/unit/dashboardRules.test.ts` | Pending (#58) |
-| API-50 | AC-70 | API | Anan's and Mali's slots over a period, a cancelled slot, a cancelled booking; Customer; bad periods | Only Anan's non-cancelled slots in range; figures of §2; 403; 422 messages; 92 days allowed, 93 refused | `server/tests/api/dashboard.api.test.ts` | Pending (#58) |
-| UI-12 | AC-71 | UI | Mocked dashboard, rate null case | Four tiles with labels, "—" and the sentence for a null rate, per-service table, URL updated on Show | `client/tests/DashboardPage.test.tsx` | Pending (#58) |
-| E2E-16 | AC-71 | E2E | Seed data (a COMPLETED and a NO_SHOW booking of Anan/Mali in the last days) | Anan opens Dashboard, sees the tiles and table; changes the period; no horizontal scroll at 320 px | `e2e/sprint3-dashboard.spec.ts` | Pending (#58) |
+| UNIT-15 | AC-69 | Unit | Slots OPEN/CLOSED with and without bookings; BOOKED past/future, COMPLETED, NO_SHOW; 3 services | Disjoint counts, `pending` = started BOOKED only, rate rounded to 3 decimals or null, `perService` ordered | `server/tests/unit/dashboardRules.test.ts` | Pass — PR #72, CI run 45642012387 |
+| API-50 | AC-70 | API | Anan's and Mali's slots over a period, a cancelled slot, a cancelled booking; Customer; bad periods | Only Anan's non-cancelled slots in range; figures of §2; 403; 422 messages; 92 days allowed, 93 refused | `server/tests/api/dashboard.api.test.ts` | Pass — PR #72, CI run 45642012387 |
+| UI-12 | AC-71 | UI | Mocked dashboard, rate null case | Four tiles with labels, "—" and the sentence for a null rate, per-service table, URL updated on Show | `client/tests/DashboardPage.test.tsx` | Pass — PR #72, CI run 45642012387 |
+| E2E-16 | AC-71 | E2E | Seed data (a COMPLETED and a NO_SHOW booking of Anan/Mali in the last days) | Anan opens Dashboard, sees the tiles and table; changes the period; no horizontal scroll at 320 px | `e2e/sprint3-dashboard.spec.ts` | Pass — PR #72, CI run 45642012387 |
 | UNIT-16 | AC-72 | Unit | Entries on several weekdays; existing slots; inactive service; times at the edges | Accepted and skipped lists with the F-03 reasons, in date then time order | `server/tests/unit/templateRules.test.ts` | Planned (#59) |
 | API-51 | AC-73 | API | Template with 2 entries, 2-week range, one existing overlapping slot | 200 created + skipped; second run creates nothing | `server/tests/api/templates.api.test.ts` | Planned (#59) |
 | API-52 | AC-74 | API | Other staff, Customer, invalid bodies/ranges | 404, 403, 422 | `server/tests/api/templates.api.test.ts` | Planned (#59) |
