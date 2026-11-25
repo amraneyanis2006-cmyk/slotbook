@@ -1,0 +1,206 @@
+# Issue:   #51
+# Branch:  feature/51-service-catalogue
+# Commit:  2638c2a (test(F-11): service catalogue and A-04 tests, red (#51))
+# Date:    2026-11-25 18:15:14 +0700
+# Env:     Node v22.23.4, PostgreSQL 16 local slotbook_test (reset + seeded by server/tests/setup.ts), Chrome for Playwright
+
+===== $ cd server && npx vitest run tests/unit/serviceRules.test.ts tests/unit/bookingRules.test.ts tests/api/services.api.test.ts tests/db/services.db.test.ts tests/api/bookings.api.test.ts (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/server
+
+ ❯ tests/api/bookings.api.test.ts (9 tests | 1 failed) 1591ms
+   ✓ GET /api/slots/available (F-04) > API-14: only OPEN slots of that Bangkok day starting ≥ 60 min from now, unbooked, active service, ordered, filtered; no customer data; Staff 403; bad query 422 95ms
+   ✓ POST /api/bookings (F-04) > API-15: Ploy books a bookable slot → 201 BOOKED with a BK-YYYY-NNNNNN reference, owned by Ploy, gone from the available list 43ms
+   ✓ POST /api/bookings (F-04) > API-15: a note of exactly 300 characters is accepted; 301 characters or a bad slotId → 422 with the field, nothing stored 46ms
+   ✓ POST /api/bookings (F-04) > API-16: booking a slot Ken already booked → 409 SLOT_ALREADY_BOOKED; exactly one BOOKED booking remains 35ms
+   ✓ POST /api/bookings (F-04) > API-17: Ploy and Nina book the same free slot in parallel → one 201 and one 409; one BOOKED row (NFR-04) 47ms
+   ✓ POST /api/bookings (F-04) > API-17: a race lost on the partial unique index (Prisma P2002) is answered 409 SLOT_ALREADY_BOOKED 21ms
+   ✓ POST /api/bookings (F-04) > API-18: a slot starting in 30 min, a CLOSED slot and a slot of the inactive service → 409 SLOT_NOT_BOOKABLE; unknown slot → 404; nothing stored 51ms
+   ✓ POST /api/bookings (F-04) > API-19: Nina with 3 active future bookings → 409 BOOKING_LIMIT_REACHED; Ploy overlapping her own booking → 409 BOOKING_OVERLAP; nothing stored 105ms
+   × BR-04 against bookings that have started (F-11 §1 step 6, A-04) > API-34: a 120-minute booking that started 30 min ago blocks an overlapping slot 60 min ahead; the slot at its end is bookable 29ms
+     → expected 201 to be 409 // Object.is equality
+ ❯ tests/api/services.api.test.ts (3 tests | 3 failed) 1014ms
+   × service catalogue (F-11) > API-31: Staff lists all services with upcomingSlots, creates, renames and changes the duration; the new service is offered and usable; older slots keep their times 18ms
+     → expected 404 to be 200 // Object.is equality
+   × service catalogue (F-11) > API-32: invalid bodies → 422; a used name in another case → 409 SERVICE_NAME_TAKEN; Customer → 403; unknown id → 404; nothing changes 9ms
+     → expected 404 to be 422 // Object.is equality
+   × service catalogue (F-11) > API-33: deactivating hides the service and its open slots, booking one → 409 SLOT_NOT_BOOKABLE, the existing booking stays; reactivating restores both 5ms
+     → Cannot read properties of undefined (reading 'id')
+ ❯ tests/db/services.db.test.ts (1 test | 1 failed) 60ms
+   × service name uniqueness (F-11 §5) > DB-07: the unique index service_name_ci refuses a name that differs only in case 52ms
+     → promise resolved "1" instead of rejecting
+ ❯ tests/unit/bookingRules.test.ts (3 tests | 1 failed) 10ms
+   ✓ formatReference (F-04, BR-10) > UNIT-03: formats BK-YYYY-NNNNNN and throws when the sequence exceeds 999999 2ms
+   × isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04) > UNIT-04: +60 min is bookable; +59 min, CLOSED/CANCELLED and inactive service are not; 3 active → limit; past/cancelled not counted; overlap vs back-to-back 6ms
+     → expected 'BOOKING_LIMIT_REACHED' to be null
+   ✓ canCustomerCancel (F-05, BR-05, BR-13) > UNIT-05 (CR-01): +1440 min → allowed; +1439, +180 and +120 min → CANCELLATION_WINDOW_CLOSED; CANCELLED/COMPLETED/NO_SHOW → BOOKING_NOT_ACTIVE, checked first 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/serviceRules.test.ts [ tests/unit/serviceRules.test.ts ]
+Error: Cannot find module '../../src/rules/serviceRules.js' imported from '/home/claude/wt/server/tests/unit/serviceRules.test.ts'
+ ❯ tests/unit/serviceRules.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { validateService } from '../../src/rules/serviceRules.js';
+       | ^
+      3| 
+      4| const NAME = 'Enter a name of 3 to 60 characters.';
+
+Caused by: Error: Failed to load url ../../src/rules/serviceRules.js (resolved id: ../../src/rules/serviceRules.js) in /home/claude/wt/server/tests/unit/serviceRules.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../slotbook/server/node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/bookings.api.test.ts > BR-04 against bookings that have started (F-11 §1 step 6, A-04) > API-34: a 120-minute booking that started 30 min ago blocks an overlapping slot 60 min ahead; the slot at its end is bookable
+AssertionError: expected 201 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 201
+
+ ❯ tests/api/bookings.api.test.ts:220:30
+    218|       const atTheEnd = await slot('mali', '2030-02-27', '09:30');
+    219|       const refused = await book(agents.nina, overlapping.id);
+    220|       expect(refused.status).toBe(409);
+       |                              ^
+    221|       expect(refused.body.error).toBe('BOOKING_OVERLAP');
+    222|       expect((await book(agents.nina, atTheEnd.id)).status).toBe(201);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  tests/api/services.api.test.ts > service catalogue (F-11) > API-31: Staff lists all services with upcomingSlots, creates, renames and changes the duration; the new service is offered and usable; older slots keep their times
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/services.api.test.ts:43:25
+     41|   it('API-31: Staff lists all services with upcomingSlots, creates, re…
+     42|     const list = await agents.anan.get('/api/staff/services');
+     43|     expect(list.status).toBe(200);
+       |                         ^
+     44|     const names = (list.body.services as { name: string; isActive: boo…
+     45|     expect(names).toContain('Thesis consultation'); // inactive servic…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  tests/api/services.api.test.ts > service catalogue (F-11) > API-32: invalid bodies → 422; a used name in another case → 409 SERVICE_NAME_TAKEN; Customer → 403; unknown id → 404; nothing changes
+AssertionError: expected 404 to be 422 // Object.is equality
+
+- Expected
++ Received
+
+- 422
++ 404
+
+ ❯ tests/api/services.api.test.ts:71:24
+     69|     const before = await prisma.service.findMany({ orderBy: { id: 'asc…
+     70|     const bad = await create(agents.anan, { name: 'ab', durationMin: 1…
+     71|     expect(bad.status).toBe(422);
+       |                        ^
+     72|     expect(bad.body).toEqual({
+     73|       error: 'VALIDATION_ERROR', message: 'Please correct the highligh…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  tests/api/services.api.test.ts > service catalogue (F-11) > API-33: deactivating hides the service and its open slots, booking one → 409 SLOT_NOT_BOOKABLE, the existing booking stays; reactivating restores both
+TypeError: Cannot read properties of undefined (reading 'id')
+ ❯ tests/api/services.api.test.ts:96:33
+     94|   it('API-33: deactivating hides the service and its open slots, booki…
+     95|     const res = await create(agents.anan, { name: 'Deactivation check'…
+     96|     const id = res.body.service.id as number;
+       |                                 ^
+     97|     const open = await makeSlot(prisma, { staffId: ids.anan, serviceId…
+     98|     const bookedSlot = await makeSlot(prisma, { staffId: ids.anan, ser…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  tests/db/services.db.test.ts > service name uniqueness (F-11 §5) > DB-07: the unique index service_name_ci refuses a name that differs only in case
+AssertionError: promise resolved "1" instead of rejecting
+
+- Expected: 
+Error {
+  "message": "rejected promise",
+}
+
++ Received: 
+1
+
+ ❯ tests/db/services.db.test.ts:9:114
+      7| describe('service name uniqueness (F-11 §5)', () => {
+      8|   it('DB-07: the unique index service_name_ci refuses a name that diff…
+      9|     await expect(prisma.$executeRaw`INSERT INTO "Service" (name, "dura…
+       |                                                                                                                  ^
+     10|       .rejects.toThrow(/23505.*lower\(name\)/s);
+     11|     expect(await prisma.service.count({ where: { name: 'ACADEMIC ADVIS…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  tests/unit/bookingRules.test.ts > isBookable / checkCustomerLimits (F-04, BR-02, BR-03, BR-04) > UNIT-04: +60 min is bookable; +59 min, CLOSED/CANCELLED and inactive service are not; 3 active → limit; past/cancelled not counted; overlap vs back-to-back
+AssertionError: expected 'BOOKING_LIMIT_REACHED' to be null
+
+- Expected: 
+null
+
++ Received: 
+"BOOKING_LIMIT_REACHED"
+
+ ❯ tests/unit/bookingRules.test.ts:48:98
+     46|     const ongoing = { status: 'BOOKED' as const, slot: { startAt: plus…
+     47|     expect(checkCustomerLimits([ongoing], { startAt: plus(60), endAt: …
+     48|     expect(checkCustomerLimits([...two, ongoing], { startAt: plus(90),…
+       |                                                                                                  ^
+     49|     // BR-03 is checked before BR-04 (F-04 §1 step 4).
+     50|     expect(checkCustomerLimits([...two, booking('10:00', '10:30')], ta…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  5 failed (5)
+      Tests  6 failed | 10 passed (16)
+   Start at  18:15:15
+   Duration  7.01s (transform 336ms, setup 0ms, collect 1.29s, tests 2.68s, environment 1ms, prepare 332ms)
+
+
+===== $ cd client && npx vitest run tests/ServicesPage.test.tsx (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/client
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/ServicesPage.test.tsx [ tests/ServicesPage.test.tsx ]
+Error: Failed to resolve import "../src/pages/ServicesPage" from "tests/ServicesPage.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/claude/wt/client/tests/ServicesPage.test.tsx:5:25
+  4  |  import { MemoryRouter } from "react-router-dom";
+  5  |  import { afterEach, describe, expect, it, vi } from "vitest";
+  6  |  import ServicesPage from "../src/pages/ServicesPage";
+     |                            ^
+  7  |  const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  8  |  afterEach(() => vi.unstubAllGlobals());
+ ❯ TransformPluginContext._formatLog ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42846:41
+ ❯ TransformPluginContext.error ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42843:16
+ ❯ normalizeUrl ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40820:23
+ ❯ ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40939:37
+ ❯ TransformPluginContext.transform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40866:7
+ ❯ EnvironmentPluginContainer.transform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42641:18
+ ❯ loadAndTransform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:36053:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  18:15:23
+   Duration  787ms (transform 48ms, setup 154ms, collect 0ms, tests 0ms, environment 348ms, prepare 74ms)
+
+
