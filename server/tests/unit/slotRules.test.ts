@@ -48,3 +48,27 @@ describe('overlaps / findOverlap (F-03, BR-07)', () => {
     expect(findOverlap({ startAt: at('10:00'), endAt: at('10:30') }, [open, cancelled])).toBeNull();
   });
 });
+
+describe('checkSlotChange (F-07 §2, BR-14)', () => {
+  it('UNIT-11: SLOT_NOT_EDITABLE first (cancelled, started, wrong status for close/reopen), then SLOT_HAS_BOOKING for edit/close only', async () => {
+    const { checkSlotChange } = await import('../../src/rules/slotRules.js');
+    const slot = (startMin: number, status: 'OPEN' | 'CLOSED' | 'CANCELLED' = 'OPEN') =>
+      ({ status, startAt: new Date(NOW.getTime() + startMin * 60_000) });
+
+    for (const action of ['edit', 'close', 'reopen', 'cancel'] as const) {
+      expect(checkSlotChange(action, slot(60, 'CANCELLED'), false, NOW)).toBe('SLOT_NOT_EDITABLE');
+      expect(checkSlotChange(action, slot(0), false, NOW)).toBe('SLOT_NOT_EDITABLE'); // starts exactly now
+      expect(checkSlotChange(action, slot(-1, action === 'reopen' ? 'CLOSED' : 'OPEN'), true, NOW)).toBe('SLOT_NOT_EDITABLE');
+    }
+    expect(checkSlotChange('edit', slot(1), false, NOW)).toBeNull(); // one minute ahead: still changeable
+    expect(checkSlotChange('edit', slot(60, 'CLOSED'), false, NOW)).toBeNull();
+    expect(checkSlotChange('close', slot(60), false, NOW)).toBeNull();
+    expect(checkSlotChange('close', slot(60, 'CLOSED'), false, NOW)).toBe('SLOT_NOT_EDITABLE');
+    expect(checkSlotChange('reopen', slot(60, 'CLOSED'), false, NOW)).toBeNull();
+    expect(checkSlotChange('reopen', slot(60), false, NOW)).toBe('SLOT_NOT_EDITABLE');
+    expect(checkSlotChange('edit', slot(60), true, NOW)).toBe('SLOT_HAS_BOOKING');
+    expect(checkSlotChange('close', slot(60), true, NOW)).toBe('SLOT_HAS_BOOKING');
+    expect(checkSlotChange('cancel', slot(60), true, NOW)).toBeNull();
+    expect(checkSlotChange('cancel', slot(60, 'CLOSED'), false, NOW)).toBeNull();
+  });
+});
