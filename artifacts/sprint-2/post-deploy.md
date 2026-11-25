@@ -18,4 +18,6 @@ Run by `.pd/pd.spec.ts` (Playwright, not part of the repository suites) on Yanis
 25/11/2026 23:13 Bangkok; the demo password was read from a local file created by Yanis and deleted after the run.
 Screenshots: `post-deploy/pd-01` … `pd-07`. Test data left in the demo database: slot 79 and bookings
 BK-2026-000033 / BK-2026-000034 CANCELLED (checked by PD-S2-04 and PD-S2-07); the cleanup cancellation of slots 78
-and 80 was sent but its answer was not checked by the script.
+and 80 was not checked by the script; checked afterwards (25/11 23:20 Bangkok, as staff.anan, read-only):
+`GET /api/staff/slots` → 0 upcoming slots and `GET /api/staff/schedule?date=2026-11-28` → 0 slots. Both views list
+every non-cancelled slot of the caller (`slotService.listUpcoming`, `getSchedule`), so slots 78–80 are CANCELLED.
