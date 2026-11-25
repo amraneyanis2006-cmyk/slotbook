@@ -1,0 +1,135 @@
+# Issue:   #55
+# Branch:  feature/55-slot-search
+# Commit:  2ad91c3 (test(F-12): slot search and NFR-11 tests, red (#55))
+# Date:    2026-11-25 18:19:46 +0700
+# Env:     Node v22.23.4, PostgreSQL 16 local slotbook_test (reset + seeded by server/tests/setup.ts), Chrome for Playwright
+
+===== $ cd server && npx vitest run tests/unit/searchRules.test.ts tests/api/search.api.test.ts (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/server
+
+ ❯ tests/api/search.api.test.ts (3 tests | 3 failed) 744ms
+   × GET /api/slots/search (F-12) > API-47: only bookable slots whose Bangkok date is in [from, to], filtered by service and staff, ordered, without customer data 49ms
+     → expected 404 to be 200 // Object.is equality
+   × GET /api/slots/search (F-12) > API-48: bad queries → 422 with the §2 messages; Staff → 403; more than 200 matches → 200 slots and truncated 13ms
+     → expected 404 to be 422 // Object.is equality
+   × GET /api/slots/search (F-12) > API-49: GET /api/staff-members lists active staff by name with id and name only 6ms
+     → expected 404 to be 200 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/searchRules.test.ts [ tests/unit/searchRules.test.ts ]
+Error: Cannot find module '../../src/rules/searchRules.js' imported from '/home/claude/wt/server/tests/unit/searchRules.test.ts'
+ ❯ tests/unit/searchRules.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { validateSearch } from '../../src/rules/searchRules.js';
+       | ^
+      3| 
+      4| const DATE = 'Enter a valid date (YYYY-MM-DD).';
+
+Caused by: Error: Failed to load url ../../src/rules/searchRules.js (resolved id: ../../src/rules/searchRules.js) in /home/claude/wt/server/tests/unit/searchRules.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../slotbook/server/node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/search.api.test.ts > GET /api/slots/search (F-12) > API-47: only bookable slots whose Bangkok date is in [from, to], filtered by service and staff, ordered, without customer data
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/search.api.test.ts:58:24
+     56| 
+     57|     const all = await search(agents.ploy, { from: '2030-12-02', to: '2…
+     58|     expect(all.status).toBe(200);
+       |                        ^
+     59|     expect(idsOf(all)).toEqual([a1.id, m1.id, a2.id, edge.id]);
+     60|     expect(all.body.truncated).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/api/search.api.test.ts > GET /api/slots/search (F-12) > API-48: bad queries → 422 with the §2 messages; Staff → 403; more than 200 matches → 200 slots and truncated
+AssertionError: expected 404 to be 422 // Object.is equality
+
+- Expected
++ Received
+
+- 422
++ 404
+
+ ❯ tests/api/search.api.test.ts:74:24
+     72|   it('API-48: bad queries → 422 with the §2 messages; Staff → 403; mor…
+     73|     const bad = await search(agents.ploy, { from: '2030-12-10', to: '2…
+     74|     expect(bad.status).toBe(422);
+       |                        ^
+     75|     expect(bad.body).toEqual({ error: 'VALIDATION_ERROR', message: 'Pl…
+     76|     expect((await search(agents.ploy, { from: 'x', to: '2030-12-10' })…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/api/search.api.test.ts > GET /api/slots/search (F-12) > API-49: GET /api/staff-members lists active staff by name with id and name only
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/api/search.api.test.ts:97:24
+     95|   it('API-49: GET /api/staff-members lists active staff by name with i…
+     96|     const res = await agents.ploy.get('/api/staff-members');
+     97|     expect(res.status).toBe(200);
+       |                        ^
+     98|     expect(res.body).toEqual({ staff: [{ id: ids.anan, name: 'Anan Won…
+     99|     expect((await agents.anan.get('/api/staff-members')).status).toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed (3)
+   Start at  18:19:47
+   Duration  3.62s (transform 280ms, setup 0ms, collect 719ms, tests 744ms, environment 0ms, prepare 124ms)
+
+
+===== $ cd client && npx vitest run tests/SearchPage.test.tsx (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/client
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/SearchPage.test.tsx [ tests/SearchPage.test.tsx ]
+Error: Failed to resolve import "../src/pages/SearchPage" from "tests/SearchPage.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/claude/wt/client/tests/SearchPage.test.tsx:5:23
+  4  |  import { MemoryRouter, Route, Routes } from "react-router-dom";
+  5  |  import { afterEach, describe, expect, it, vi } from "vitest";
+  6  |  import SearchPage from "../src/pages/SearchPage";
+     |                          ^
+  7  |  const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  8  |  const service = { id: 1, name: "Academic advising", durationMin: 30 };
+ ❯ TransformPluginContext._formatLog ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42846:41
+ ❯ TransformPluginContext.error ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42843:16
+ ❯ normalizeUrl ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40820:23
+ ❯ ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40939:37
+ ❯ TransformPluginContext.transform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40866:7
+ ❯ EnvironmentPluginContainer.transform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42641:18
+ ❯ loadAndTransform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:36053:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  18:19:52
+   Duration  738ms (transform 36ms, setup 112ms, collect 0ms, tests 0ms, environment 312ms, prepare 64ms)
+
+

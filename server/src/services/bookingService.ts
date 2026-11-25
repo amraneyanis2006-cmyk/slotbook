@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../db.js';
 import { AppError } from '../errors.js';
 import { BOOKING_LEAD_MIN, BOOKING_RULE_MESSAGES, canCustomerCancel, canRecordOutcome, checkCustomerLimits, checkRescheduleTarget, formatReference, isBookable } from '../rules/bookingRules.js';
+import { MAX_SEARCH_RESULTS, type SearchQuery } from '../rules/searchRules.js';
 import { now } from '../utils/clock.js';
 import { getHistory, recordStatusChange } from './historyService.js';
 import { addDays, bangkokDate, bangkokToUtc } from '../utils/time.js';
@@ -39,6 +40,28 @@ export function listAvailable(date: string, serviceId?: number) {
     orderBy: [{ startAt: 'asc' }, { id: 'asc' }],
     select: SLOT_PUBLIC_SELECT,
   });
+}
+
+/**
+ * F-12 §1 step 2: the F-04 bookability conditions plus an active staff member, Bangkok dates from..to inclusive,
+ * optional service/staff filters, ordered by start then id; at most 200 with `truncated`.
+ */
+export async function searchSlots({ from, to, serviceId, staffId }: SearchQuery) {
+  const earliest = new Date(now().getTime() + BOOKING_LEAD_MIN * 60_000);
+  const rangeStart = bangkokToUtc(from, '00:00');
+  const slots = await prisma.slot.findMany({
+    where: {
+      status: 'OPEN',
+      startAt: { gte: earliest > rangeStart ? earliest : rangeStart, lt: bangkokToUtc(addDays(to, 1), '00:00') },
+      service: { isActive: true, id: serviceId },
+      staff: { isActive: true, role: 'STAFF', id: staffId },
+      bookings: { none: { status: 'BOOKED' } },
+    },
+    orderBy: [{ startAt: 'asc' }, { id: 'asc' }],
+    take: MAX_SEARCH_RESULTS + 1,
+    select: SLOT_PUBLIC_SELECT,
+  });
+  return { slots: slots.slice(0, MAX_SEARCH_RESULTS), truncated: slots.length > MAX_SEARCH_RESULTS };
 }
 
 /**
