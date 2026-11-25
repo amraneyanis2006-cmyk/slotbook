@@ -5,7 +5,7 @@ import { BOOKING_LEAD_MIN, BOOKING_RULE_MESSAGES, canCustomerCancel, canRecordOu
 import { MAX_SEARCH_RESULTS, type SearchQuery } from '../rules/searchRules.js';
 import { now } from '../utils/clock.js';
 import { getHistory, recordStatusChange } from './historyService.js';
-import { addDays, bangkokDate, bangkokToUtc } from '../utils/time.js';
+import { addDays, bangkokDate, bangkokToUtc, formatBangkok } from '../utils/time.js';
 
 const SERVICE_SELECT = { select: { id: true, name: true, durationMin: true } } as const;
 const STAFF_SELECT = { select: { id: true, name: true } } as const;
@@ -50,9 +50,6 @@ export async function suspensionOf(db: Prisma.TransactionClient | typeof prisma,
   });
   return suspendedUntil(rows.map((r) => r.createdAt), at);
 }
-const formatBangkok = (d: Date) => new Intl.DateTimeFormat('en-GB', {
-  weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Bangkok',
-}).format(d).replace(/^(\w+), /, '$1 ').replace(' at ', ', ');
 
 /**
  * F-12 §1 step 2: the F-04 bookability conditions plus an active staff member, Bangkok dates from..to inclusive,

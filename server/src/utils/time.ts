@@ -21,3 +21,8 @@ export const isIsoDate = (date: string): boolean => {
   const day = new Date(`${date}T00:00:00Z`);
   return /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(day.getTime()) && day.toISOString().startsWith(date);
 };
+
+/** "Tue 6 May 2031, 10:30" in Asia/Bangkok (NFR-10), used in user-facing messages. */
+export const formatBangkok = (d: Date): string => new Intl.DateTimeFormat('en-GB', {
+  weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Bangkok',
+}).format(d).replace(/^(\w+), /, '$1 ').replace(' at ', ', ');
