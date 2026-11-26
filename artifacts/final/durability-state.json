@@ -1,0 +1,20 @@
+{
+  "created": "2026-11-26T06:23:13.042Z",
+  "version": {
+    "commit": "cdaf24f7f63c1c9e60e67f746b251f0cc5fdc6de",
+    "revision": "slotbook-00013-8s5"
+  },
+  "slotId": 81,
+  "customer": "cust.nina@slotbook.test",
+  "first": {
+    "reference": "BK-2026-000035",
+    "status": "BOOKED",
+    "note": "Durability marker 2026-11-26T06:23:13.042Z",
+    "startAt": "2026-12-16T09:45:00.000Z",
+    "staff": "Anan Wong",
+    "service": "Academic advising",
+    "history": [
+      "BOOKED by Nina Park at 2026-11-26T06:23:14.132Z"
+    ]
+  }
+}
