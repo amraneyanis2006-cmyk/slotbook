@@ -106,3 +106,30 @@ show which written records were posted or completed after the merge.
 | F-07 Actions menu | Choosing a dialog action closed the menu, so Esc on the dialog left the focus nowhere | The menu stays open while its dialog is open (found by E2E-15) |
 | STS Sprint 2 §4 | Wrong folder for the client tests (`client/src`) | `client/tests/`, STS 1.1 |
 
+---
+
+# AI Use Declaration — Sprint 3 and Final Release
+
+## Tools and way of working
+
+- **Claude (Anthropic, model Claude Opus 5.5)**, in the same cloud session driven by Yanis, wrote the tests and code
+  of F-17, F-14, F-16 and F-18 on local branches, in the order 61 → 59 → 60 → 62: per Issue a red commit (tests only)
+  and a green commit, then an evidence commit with the red and green outputs (`artifacts/sprint-3/tdd/`). Every
+  commit it wrote carries `Co-Authored-By: Claude Opus 5.5`. The commits of F-17 and F-14 carry Simeon as author
+  (agreed split); Simeon opened those two PRs from his own GitHub account and Yanis reviewed them.
+- **Pushing and merging.** As in Sprint 2: one `git bundle`, verified hash by hash and pushed by Claude Code on
+  Yanis's computer, which also opened Yanis's PRs and ran each merge when Yanis asked, only after the approval and
+  both checks.
+- **Review.** The reviews and approvals of #77–#80 were written and posted by the students themselves; the AI never
+  wrote or posted a review or an approval.
+- **Measurements.** PERF-01/PERF-02 and the axe-core audit are real runs; the deployed PERF-02 runs on Yanis's computer
+  and reads the demo password from a local file at run time, so the AI never sees it.
+
+## What the AI found and the team decided
+
+| Where | Finding | Decision |
+| :--- | :--- | :--- |
+| E2E-20 (axe-core) | Colour contrast below WCAG AA on 13 routes (defect D-05) | Darker accent `#1a5fcf` (Yanis, reviewed by Simeon in #80) |
+| PERF-02 | Measuring booking latency on production would create 30 real bookings | Deployed part read-only; booking measured on the release candidate (F-18 1.1, S3-02) |
+| Release check (first version) | Did not match test names like `UNIT-05 (CR-01):` or rows `UI-13 / E2E-17` | Parser fixed before #80; it now runs in CI |
+| E2E-15 | 30.1 s under full-suite load, over the 30 s default | Timeout 60 s for this screen loop (D-06) |
