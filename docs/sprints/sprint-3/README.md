@@ -52,5 +52,6 @@ AC-69 … AC-87; UNIT-15..18, API-50..57, UI-12..15, E2E-16..21, PERF-02, MAN-03
 
 All Sprint 3 Issues were implemented ahead of the plan dates above, in the planned order, and merged into
 `staging`: #61 → PR #77, #59 → PR #78, #60 → PR #79, #62 → PR #80 (merge `4131d77`). Results: `sts.md` (Result
-column) and `../../traceability.md` §6. Remaining for #63: release PR to `main`, tag `v1.0.0`, deploy, deployed
-PERF-02, durability check after a restart and a redeploy, independent UAT re-test.
+column) and `../../traceability.md` §6. Final release (#63): docs PR #81, release PR #82, tag `v1.0.0` = `cdaf24f`, deployed by
+run 45765537520; PERF-02 deployed, durability after a restart and a redeploy, and the clean-clone check are in
+`artifacts/final/` and `artifacts/sprint-3/perf/`. The independent UAT re-test by Group Paris runs on this version.

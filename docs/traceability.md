@@ -101,116 +101,117 @@ now and receive AC/tests in their own sprint contracts.
   Deliverable 2 (#58), the rest is planned in `sprints/sprint-3/README.md`. Written by Yanis Amrane, reviewed by
   Simeon Audouit.
 
-## 5. Requirement Status at the Final Release
+## 5. Requirement Status at the Final Release (`v1.0.0` = `cdaf24f`)
 
 | Status | Requirements |
 | :--- | :--- |
 | Implemented and verified (tests run and passed together, §6) | FR-01..FR-22; BR-01..BR-19; NFR-01..NFR-06, NFR-08, NFR-09 (axe-core audit of every route, E2E-20), NFR-10, NFR-12, NFR-13 (MAN-03 release check, CI step) |
-| Verified, one measure still to run | NFR-11: PERF-01 passed on the release candidate (p95 22.8 / 11.9 / 40.5 ms); the deployed part of PERF-02 runs after the v1.0.0 deploy (AC-86 INCOMPLETE until then) |
-| Release-level checks | NFR-07: CI clean install, migrate and seed on every run; MAN-02 clean-clone check on the v1.0.0 commit |
+| Verified by measurement | NFR-11: PERF-01 on the release candidate (p95 22.8 / 11.9 / 40.5 ms) and PERF-02 on the deployed v1.0.0 (p95 119 ms search, 162 ms available, network included) |
+| Release-level checks | NFR-07: CI clean install, migrate and seed on every run; MAN-02 clean-clone check of `v1.0.0` passed (`artifacts/final/clean-clone-check.md`). Data durability after a restart and a full redeploy: `artifacts/final/durability.md` |
 | Not implemented | none (Q-03 answered by F-17: BR-19) |
 
-No requirement is without an owning feature. No AC is without an executed test (§6); the only AC not yet PASS is
-AC-86, whose deployed measure is listed above.
+No requirement is without an owning feature. Every AC has an executed test that passed on `v1.0.0` (§6).
 
-## 6. Final AC Verification Results Matrix (`4131d77`)
+## 6. Final AC Verification Results Matrix (`v1.0.0` = `cdaf24f`)
 
 Generated from the STS Result columns (Sprint 1 1.6, Sprint 2 1.2, Sprint 3 1.1) and §1–§3: every AC with its
 requirements, feature, sprint, test IDs, test files and result. Result values: PASS, FAIL, SKIPPED, INCOMPLETE (a
 test whose run is not complete, e.g. a deployed measure still to run). "Verified at" is the commit and CI run on
-which the whole suite passed together; "First passed in" is the PR (or release) where the test first passed.
+which the whole suite passed together: the CI of release PR #82 (run 45765183949) ran on `aef14c5`, whose tree is
+identical to the merge commit `cdaf24f` tagged `v1.0.0` (server 108, client 21, Playwright 22, release check PASS);
+the same commit also passed the clean-clone check MAN-02 (`artifacts/final/clean-clone-check.md`). "First passed in" is the PR (or release) where the test first passed.
 A planned or skipped test is never counted as coverage; `scripts/release-check.sh` (MAN-03) checks that every AC
 below has a test ID found in its files and that no test is skipped.
 
 | AC | Requirements | Feature | Sprint | Tests | Files | Result | Verified at | First passed in |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| AC-01 | FR-01, NFR-03, NFR-05 | F-01 | 1 | UNIT-06, API-01 | `server/tests/unit/sessionConfig.test.ts`<br>`server/tests/api/auth.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-02 | FR-01, BR-12 | F-01 | 1 | API-02, API-03 | `server/tests/api/auth.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-03 | FR-03 | F-01 | 1 | API-04 | `server/tests/api/auth.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-04 | FR-02, NFR-05 | F-01 | 1 | API-05, E2E-01 | `server/tests/api/auth.api.test.ts`<br>`e2e/auth.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-05 | FR-01, FR-04, NFR-09 | F-01 | 1 | UI-01, E2E-01 | `client/tests/LoginPage.test.tsx`<br>`e2e/auth.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-06 | NFR-01 | F-02 | 1 | API-06 | `server/tests/api/access.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-07 | NFR-02 | F-02 | 1 | API-07 | `server/tests/api/access.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-08 | BR-08 | F-02 | 1 | API-08 | `server/tests/api/access.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-09 | NFR-06 | F-02 | 1 | API-09 | `server/tests/api/access.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-10 | FR-04 | F-03 | 1 | E2E-02 | `e2e/auth.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-11 | FR-05 | F-03 | 1 | API-10 | `server/tests/api/slots.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-12 | FR-05, BR-06, NFR-10 | F-03 | 1 | UNIT-01, API-11 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slots.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-13 | BR-07 | F-03 | 1 | UNIT-02, API-12 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slots.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-14 | FR-06, BR-09 | F-03 | 1 | API-13 | `server/tests/api/slots.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-15 | FR-05, NFR-09 | F-04 | 1 | UI-02, E2E-03 | `client/tests/MySlotsPage.test.tsx`<br>`e2e/staff-slots.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-16 | FR-07 | F-04 | 1 | API-14 | `server/tests/api/bookings.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-17 | FR-08, BR-10 | F-04 | 1 | UNIT-03, API-15, E2E-04 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/bookings.api.test.ts`<br>`e2e/booking-journey.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-18 | BR-01 | F-04 | 1 | API-16 | `server/tests/api/bookings.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-19 | BR-01, NFR-04 | F-04 | 1 | API-17, DB-01 | `server/tests/api/bookings.api.test.ts`<br>`server/tests/db/constraints.db.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-20 | BR-02, NFR-10 | F-04 | 1 | UNIT-04, API-18 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/bookings.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-21 | BR-03, BR-04 | F-04 | 1 | UNIT-04, API-19 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/bookings.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-22 | FR-08, NFR-09 | F-04 | 1 | UI-03, E2E-04 | `client/tests/BookSlotPage.test.tsx`<br>`e2e/booking-journey.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-23 | FR-09 | F-05 | 1 | API-20, E2E-05 | `server/tests/api/my-bookings.api.test.ts`<br>`e2e/booking-journey.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-24 | BR-09, NFR-02 | F-05 | 1 | API-21 | `server/tests/api/my-bookings.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-25 | FR-10, BR-05, BR-11 | F-05 | 1 | UNIT-05, API-22, E2E-05 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/my-bookings.api.test.ts`<br>`e2e/booking-journey.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | CR-01 d6491a7; Sprint 1 release e5af45c |
-| AC-26 | FR-10, BR-05, BR-13, NFR-10 | F-05 | 1 | UNIT-05, API-23 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/my-bookings.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | CR-01 d6491a7 |
-| AC-27 | FR-09, BR-05, NFR-09 | F-05 | 1 | UI-04, E2E-05 | `client/tests/MyBookingsPage.test.tsx`<br>`e2e/booking-journey.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | CR-01 d6491a7; Sprint 1 release e5af45c |
-| AC-28 | FR-11, BR-09, NFR-02 | F-06 | 1 | API-24 | `server/tests/api/schedule.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-29 | FR-11 | F-06 | 1 | E2E-06 | `e2e/schedule.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-30 | NFR-08, NFR-09 | F-06 | 1 | E2E-07, E2E-08 | `e2e/responsive-a11y.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-31 | NFR-12 | F-00 | 1 | API-25 | `server/tests/api/health.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-32 | NFR-03, NFR-07 | F-00 | 1 | DB-02 | `server/tests/db/seed.db.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-33 | NFR-12 | F-13 | Lab 5 | API-26 | `server/tests/api/health.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Lab 5 |
-| AC-34 | NFR-12 | F-13 | Lab 5 | API-27 | `server/tests/api/production.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Lab 5 |
-| AC-35 | NFR-12 | F-13 | Lab 5 | UNIT-07 | `server/tests/unit/sessionConfig.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Lab 5 |
-| AC-36 | NFR-12 | F-13 | Lab 5 | DB-03 | `server/tests/db/seed.db.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Lab 5 |
-| AC-37 | NFR-12 | F-13 | Lab 5 | DB-04 | `server/tests/db/seed.db.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Lab 5 |
-| AC-38 | NFR-12 | F-13 | Lab 5 | UNIT-08 | `server/tests/unit/sessionConfig.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Lab 5 |
-| AC-39 | NFR-12 | F-13 | Lab 5 | API-28, UI-05 | `server/tests/api/health.api.test.ts`<br>`client/tests/ReleaseFooter.test.tsx` | PASS | staging `4131d77`, CI 45763486080 | Lab 5 |
-| AC-40 | FR-16, BR-17 | F-10 | 2 | UNIT-09, API-29 | `server/tests/unit/historyRules.test.ts`<br>`server/tests/api/history.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #65 |
-| AC-41 | FR-16 | F-10 | 2 | UNIT-09, API-30 | `server/tests/unit/historyRules.test.ts`<br>`server/tests/api/history.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #65 |
-| AC-42 | BR-17 | F-10 | 2 | DB-05, DB-06 | `server/tests/db/history.db.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #65 |
-| AC-43 | FR-16 | F-10 | 2 | UI-06, E2E-09 | `client/tests/BookingDetailPage.test.tsx`<br>`e2e/sprint2-history.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #65 |
-| AC-44 | FR-17 | F-11 | 2 | API-31 | `server/tests/api/services.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #66 |
-| AC-45 | FR-17 | F-11 | 2 | UNIT-10, API-32, DB-07 | `server/tests/unit/serviceRules.test.ts`<br>`server/tests/api/services.api.test.ts`<br>`server/tests/db/services.db.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #66 |
-| AC-46 | FR-17 | F-11 | 2 | API-33 | `server/tests/api/services.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #66 |
-| AC-47 | BR-04 | F-11 | 2 | API-34 | `server/tests/api/bookings.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #66 |
-| AC-48 | FR-17 | F-11 | 2 | UI-07, E2E-10 | `client/tests/ServicesPage.test.tsx`<br>`e2e/sprint2-services.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #66 |
-| AC-49 | FR-12 | F-07 | 2 | UNIT-11, API-35 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slotMaintenance.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #67 |
-| AC-50 | FR-12 | F-07 | 2 | UNIT-11, API-36 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slotMaintenance.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #67 |
-| AC-51 | BR-14 | F-07 | 2 | UNIT-11, API-37 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slotMaintenance.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #67 |
-| AC-52 | FR-13, BR-14 | F-07 | 2 | UNIT-11, API-38 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slotMaintenance.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #67 |
-| AC-53 | FR-12 | F-07 | 2 | UNIT-11, API-39 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slotMaintenance.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #67 |
-| AC-54 | FR-12, FR-13 | F-07 | 2 | UI-08, E2E-11 | `client/tests/MySlotsPage.test.tsx`<br>`e2e/sprint2-slot-maintenance.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #67 |
-| AC-55 | FR-15, BR-15 | F-09 | 2 | UNIT-12, API-40 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/attendance.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #68 |
-| AC-56 | BR-15 | F-09 | 2 | UNIT-12, API-41 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/attendance.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #68 |
-| AC-57 | FR-15 | F-09 | 2 | API-42 | `server/tests/api/attendance.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #68 |
-| AC-58 | FR-15 | F-09 | 2 | UI-09, E2E-12 | `client/tests/SchedulePage.test.tsx`<br>`e2e/sprint2-attendance.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #68 |
-| AC-59 | FR-14 | F-08 | 2 | API-43 | `server/tests/api/reschedule.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #69 |
-| AC-60 | BR-16 | F-08 | 2 | API-44 | `server/tests/api/reschedule.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #69 |
-| AC-61 | BR-16 | F-08 | 2 | API-45 | `server/tests/api/reschedule.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #69 |
-| AC-62 | FR-14 | F-08 | 2 | UNIT-13, API-46 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/reschedule.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #69 |
-| AC-63 | FR-14 | F-08 | 2 | UI-10, E2E-13 | `client/tests/ReschedulePage.test.tsx`<br>`e2e/sprint2-reschedule.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #69 |
-| AC-64 | FR-18 | F-12 | 2 | API-47, API-49 | `server/tests/api/search.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #70 |
-| AC-65 | FR-18 | F-12 | 2 | UNIT-14, API-48 | `server/tests/unit/searchRules.test.ts`<br>`server/tests/api/search.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #70 |
-| AC-66 | NFR-11 | F-12 | 2 | PERF-01 | `server/tests/perf/perf.test.ts` | PASS | staging `4131d77`, CI 45763486080 | Sprint 1 release e5af45c |
-| AC-67 | FR-18 | F-12 | 2 | UI-11, E2E-14 | `client/tests/SearchPage.test.tsx`<br>`e2e/sprint2-search.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #70 |
-| AC-68 | NFR-08, NFR-09 | NFR-08/09 | 2 | E2E-15 | `e2e/sprint2-responsive.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #73 |
-| AC-69 | FR-20 | F-15 | 3 | UNIT-15 | `server/tests/unit/dashboardRules.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #72 |
-| AC-70 | FR-20 | F-15 | 3 | API-50 | `server/tests/api/dashboard.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #72 |
-| AC-71 | FR-20 | F-15 | 3 | UI-12, E2E-16 | `client/tests/DashboardPage.test.tsx`<br>`e2e/sprint3-dashboard.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #72 |
-| AC-72 | FR-19, BR-18 | F-14 | 3 | UNIT-16 | `server/tests/unit/templateRules.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #78 |
-| AC-73 | FR-19, BR-18 | F-14 | 3 | API-51 | `server/tests/api/templates.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #78 |
-| AC-74 | FR-19 | F-14 | 3 | API-52 | `server/tests/api/templates.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #78 |
-| AC-75 | FR-19 | F-14 | 3 | UI-13, E2E-17 | `client/tests/TemplatesPage.test.tsx`<br>`e2e/sprint3-templates.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #78 |
-| AC-76 | FR-21 | F-16 | 3 | UNIT-17, API-53 | `server/tests/unit/notificationRules.test.ts`<br>`server/tests/api/notifications.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #79 |
-| AC-77 | FR-21 | F-16 | 3 | API-54 | `server/tests/api/notifications.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #79 |
-| AC-78 | FR-21 | F-16 | 3 | UI-14, E2E-18 | `client/tests/NotificationsPage.test.tsx`<br>`e2e/sprint3-notifications.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #79 |
-| AC-79 | BR-19 | F-17 | 3 | UNIT-18 | `server/tests/unit/bookingRules.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #77 |
-| AC-80 | BR-19 | F-17 | 3 | API-55 | `server/tests/api/noShowPolicy.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #77 |
-| AC-81 | FR-22 | F-17 | 3 | API-56 | `server/tests/api/accounts.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #77 |
-| AC-82 | FR-22 | F-17 | 3 | API-57 | `server/tests/api/accounts.api.test.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #77 |
-| AC-83 | FR-22 | F-17 | 3 | UI-15, E2E-19 | `client/tests/AccountsPage.test.tsx`<br>`e2e/sprint3-accounts.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #77 |
-| AC-84 | NFR-09 | F-18 | 3 | E2E-20 | `e2e/a11y-audit.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #80 |
-| AC-85 | NFR-08, NFR-09 | F-18 | 3 | E2E-21 | `e2e/sprint3-responsive.spec.ts` | PASS | staging `4131d77`, CI 45763486080 | PR #80 |
-| AC-86 | NFR-11 | F-18 | 3 | PERF-02 | `server/tests/perf/perf.test.ts`<br>`server/tests/perf/deployed.perf.test.ts` | PERF-02 INCOMPLETE | staging `4131d77`, CI 45763486080 | — |
-| AC-87 | NFR-13 | F-18 | 3 | MAN-03 | `scripts/release-check.sh` | PASS | staging `4131d77`, CI 45763486080 | PR #80 |
+| AC-01 | FR-01, NFR-03, NFR-05 | F-01 | 1 | UNIT-06, API-01 | `server/tests/unit/sessionConfig.test.ts`<br>`server/tests/api/auth.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-02 | FR-01, BR-12 | F-01 | 1 | API-02, API-03 | `server/tests/api/auth.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-03 | FR-03 | F-01 | 1 | API-04 | `server/tests/api/auth.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-04 | FR-02, NFR-05 | F-01 | 1 | API-05, E2E-01 | `server/tests/api/auth.api.test.ts`<br>`e2e/auth.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-05 | FR-01, FR-04, NFR-09 | F-01 | 1 | UI-01, E2E-01 | `client/tests/LoginPage.test.tsx`<br>`e2e/auth.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-06 | NFR-01 | F-02 | 1 | API-06 | `server/tests/api/access.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-07 | NFR-02 | F-02 | 1 | API-07 | `server/tests/api/access.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-08 | BR-08 | F-02 | 1 | API-08 | `server/tests/api/access.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-09 | NFR-06 | F-02 | 1 | API-09 | `server/tests/api/access.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-10 | FR-04 | F-03 | 1 | E2E-02 | `e2e/auth.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-11 | FR-05 | F-03 | 1 | API-10 | `server/tests/api/slots.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-12 | FR-05, BR-06, NFR-10 | F-03 | 1 | UNIT-01, API-11 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slots.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-13 | BR-07 | F-03 | 1 | UNIT-02, API-12 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slots.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-14 | FR-06, BR-09 | F-03 | 1 | API-13 | `server/tests/api/slots.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-15 | FR-05, NFR-09 | F-04 | 1 | UI-02, E2E-03 | `client/tests/MySlotsPage.test.tsx`<br>`e2e/staff-slots.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-16 | FR-07 | F-04 | 1 | API-14 | `server/tests/api/bookings.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-17 | FR-08, BR-10 | F-04 | 1 | UNIT-03, API-15, E2E-04 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/bookings.api.test.ts`<br>`e2e/booking-journey.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-18 | BR-01 | F-04 | 1 | API-16 | `server/tests/api/bookings.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-19 | BR-01, NFR-04 | F-04 | 1 | API-17, DB-01 | `server/tests/api/bookings.api.test.ts`<br>`server/tests/db/constraints.db.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-20 | BR-02, NFR-10 | F-04 | 1 | UNIT-04, API-18 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/bookings.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-21 | BR-03, BR-04 | F-04 | 1 | UNIT-04, API-19 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/bookings.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-22 | FR-08, NFR-09 | F-04 | 1 | UI-03, E2E-04 | `client/tests/BookSlotPage.test.tsx`<br>`e2e/booking-journey.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-23 | FR-09 | F-05 | 1 | API-20, E2E-05 | `server/tests/api/my-bookings.api.test.ts`<br>`e2e/booking-journey.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-24 | BR-09, NFR-02 | F-05 | 1 | API-21 | `server/tests/api/my-bookings.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-25 | FR-10, BR-05, BR-11 | F-05 | 1 | UNIT-05, API-22, E2E-05 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/my-bookings.api.test.ts`<br>`e2e/booking-journey.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | CR-01 d6491a7; Sprint 1 release e5af45c |
+| AC-26 | FR-10, BR-05, BR-13, NFR-10 | F-05 | 1 | UNIT-05, API-23 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/my-bookings.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | CR-01 d6491a7 |
+| AC-27 | FR-09, BR-05, NFR-09 | F-05 | 1 | UI-04, E2E-05 | `client/tests/MyBookingsPage.test.tsx`<br>`e2e/booking-journey.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | CR-01 d6491a7; Sprint 1 release e5af45c |
+| AC-28 | FR-11, BR-09, NFR-02 | F-06 | 1 | API-24 | `server/tests/api/schedule.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-29 | FR-11 | F-06 | 1 | E2E-06 | `e2e/schedule.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-30 | NFR-08, NFR-09 | F-06 | 1 | E2E-07, E2E-08 | `e2e/responsive-a11y.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-31 | NFR-12 | F-00 | 1 | API-25 | `server/tests/api/health.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-32 | NFR-03, NFR-07 | F-00 | 1 | DB-02 | `server/tests/db/seed.db.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-33 | NFR-12 | F-13 | Lab 5 | API-26 | `server/tests/api/health.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Lab 5 |
+| AC-34 | NFR-12 | F-13 | Lab 5 | API-27 | `server/tests/api/production.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Lab 5 |
+| AC-35 | NFR-12 | F-13 | Lab 5 | UNIT-07 | `server/tests/unit/sessionConfig.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Lab 5 |
+| AC-36 | NFR-12 | F-13 | Lab 5 | DB-03 | `server/tests/db/seed.db.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Lab 5 |
+| AC-37 | NFR-12 | F-13 | Lab 5 | DB-04 | `server/tests/db/seed.db.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Lab 5 |
+| AC-38 | NFR-12 | F-13 | Lab 5 | UNIT-08 | `server/tests/unit/sessionConfig.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Lab 5 |
+| AC-39 | NFR-12 | F-13 | Lab 5 | API-28, UI-05 | `server/tests/api/health.api.test.ts`<br>`client/tests/ReleaseFooter.test.tsx` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Lab 5 |
+| AC-40 | FR-16, BR-17 | F-10 | 2 | UNIT-09, API-29 | `server/tests/unit/historyRules.test.ts`<br>`server/tests/api/history.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #65 |
+| AC-41 | FR-16 | F-10 | 2 | UNIT-09, API-30 | `server/tests/unit/historyRules.test.ts`<br>`server/tests/api/history.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #65 |
+| AC-42 | BR-17 | F-10 | 2 | DB-05, DB-06 | `server/tests/db/history.db.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #65 |
+| AC-43 | FR-16 | F-10 | 2 | UI-06, E2E-09 | `client/tests/BookingDetailPage.test.tsx`<br>`e2e/sprint2-history.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #65 |
+| AC-44 | FR-17 | F-11 | 2 | API-31 | `server/tests/api/services.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #66 |
+| AC-45 | FR-17 | F-11 | 2 | UNIT-10, API-32, DB-07 | `server/tests/unit/serviceRules.test.ts`<br>`server/tests/api/services.api.test.ts`<br>`server/tests/db/services.db.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #66 |
+| AC-46 | FR-17 | F-11 | 2 | API-33 | `server/tests/api/services.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #66 |
+| AC-47 | BR-04 | F-11 | 2 | API-34 | `server/tests/api/bookings.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #66 |
+| AC-48 | FR-17 | F-11 | 2 | UI-07, E2E-10 | `client/tests/ServicesPage.test.tsx`<br>`e2e/sprint2-services.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #66 |
+| AC-49 | FR-12 | F-07 | 2 | UNIT-11, API-35 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slotMaintenance.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #67 |
+| AC-50 | FR-12 | F-07 | 2 | UNIT-11, API-36 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slotMaintenance.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #67 |
+| AC-51 | BR-14 | F-07 | 2 | UNIT-11, API-37 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slotMaintenance.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #67 |
+| AC-52 | FR-13, BR-14 | F-07 | 2 | UNIT-11, API-38 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slotMaintenance.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #67 |
+| AC-53 | FR-12 | F-07 | 2 | UNIT-11, API-39 | `server/tests/unit/slotRules.test.ts`<br>`server/tests/api/slotMaintenance.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #67 |
+| AC-54 | FR-12, FR-13 | F-07 | 2 | UI-08, E2E-11 | `client/tests/MySlotsPage.test.tsx`<br>`e2e/sprint2-slot-maintenance.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #67 |
+| AC-55 | FR-15, BR-15 | F-09 | 2 | UNIT-12, API-40 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/attendance.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #68 |
+| AC-56 | BR-15 | F-09 | 2 | UNIT-12, API-41 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/attendance.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #68 |
+| AC-57 | FR-15 | F-09 | 2 | API-42 | `server/tests/api/attendance.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #68 |
+| AC-58 | FR-15 | F-09 | 2 | UI-09, E2E-12 | `client/tests/SchedulePage.test.tsx`<br>`e2e/sprint2-attendance.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #68 |
+| AC-59 | FR-14 | F-08 | 2 | API-43 | `server/tests/api/reschedule.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #69 |
+| AC-60 | BR-16 | F-08 | 2 | API-44 | `server/tests/api/reschedule.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #69 |
+| AC-61 | BR-16 | F-08 | 2 | API-45 | `server/tests/api/reschedule.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #69 |
+| AC-62 | FR-14 | F-08 | 2 | UNIT-13, API-46 | `server/tests/unit/bookingRules.test.ts`<br>`server/tests/api/reschedule.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #69 |
+| AC-63 | FR-14 | F-08 | 2 | UI-10, E2E-13 | `client/tests/ReschedulePage.test.tsx`<br>`e2e/sprint2-reschedule.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #69 |
+| AC-64 | FR-18 | F-12 | 2 | API-47, API-49 | `server/tests/api/search.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #70 |
+| AC-65 | FR-18 | F-12 | 2 | UNIT-14, API-48 | `server/tests/unit/searchRules.test.ts`<br>`server/tests/api/search.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #70 |
+| AC-66 | NFR-11 | F-12 | 2 | PERF-01 | `server/tests/perf/perf.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-67 | FR-18 | F-12 | 2 | UI-11, E2E-14 | `client/tests/SearchPage.test.tsx`<br>`e2e/sprint2-search.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #70 |
+| AC-68 | NFR-08, NFR-09 | NFR-08/09 | 2 | E2E-15 | `e2e/sprint2-responsive.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #73 |
+| AC-69 | FR-20 | F-15 | 3 | UNIT-15 | `server/tests/unit/dashboardRules.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #72 |
+| AC-70 | FR-20 | F-15 | 3 | API-50 | `server/tests/api/dashboard.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #72 |
+| AC-71 | FR-20 | F-15 | 3 | UI-12, E2E-16 | `client/tests/DashboardPage.test.tsx`<br>`e2e/sprint3-dashboard.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #72 |
+| AC-72 | FR-19, BR-18 | F-14 | 3 | UNIT-16 | `server/tests/unit/templateRules.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #78 |
+| AC-73 | FR-19, BR-18 | F-14 | 3 | API-51 | `server/tests/api/templates.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #78 |
+| AC-74 | FR-19 | F-14 | 3 | API-52 | `server/tests/api/templates.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #78 |
+| AC-75 | FR-19 | F-14 | 3 | UI-13, E2E-17 | `client/tests/TemplatesPage.test.tsx`<br>`e2e/sprint3-templates.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #78 |
+| AC-76 | FR-21 | F-16 | 3 | UNIT-17, API-53 | `server/tests/unit/notificationRules.test.ts`<br>`server/tests/api/notifications.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #79 |
+| AC-77 | FR-21 | F-16 | 3 | API-54 | `server/tests/api/notifications.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #79 |
+| AC-78 | FR-21 | F-16 | 3 | UI-14, E2E-18 | `client/tests/NotificationsPage.test.tsx`<br>`e2e/sprint3-notifications.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #79 |
+| AC-79 | BR-19 | F-17 | 3 | UNIT-18 | `server/tests/unit/bookingRules.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #77 |
+| AC-80 | BR-19 | F-17 | 3 | API-55 | `server/tests/api/noShowPolicy.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #77 |
+| AC-81 | FR-22 | F-17 | 3 | API-56 | `server/tests/api/accounts.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #77 |
+| AC-82 | FR-22 | F-17 | 3 | API-57 | `server/tests/api/accounts.api.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #77 |
+| AC-83 | FR-22 | F-17 | 3 | UI-15, E2E-19 | `client/tests/AccountsPage.test.tsx`<br>`e2e/sprint3-accounts.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #77 |
+| AC-84 | NFR-09 | F-18 | 3 | E2E-20 | `e2e/a11y-audit.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #80 |
+| AC-85 | NFR-08, NFR-09 | F-18 | 3 | E2E-21 | `e2e/sprint3-responsive.spec.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #80 |
+| AC-86 | NFR-11 | F-18 | 3 | PERF-02 | `server/tests/perf/perf.test.ts`<br>`server/tests/perf/deployed.perf.test.ts` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | Sprint 1 release e5af45c |
+| AC-87 | NFR-13 | F-18 | 3 | MAN-03 | `scripts/release-check.sh` | PASS | v1.0.0 `cdaf24f`, CI 45765183949 | PR #80 |
 
-**Summary:** PASS 86; INCOMPLETE 1 (87 AC). Not yet PASS: AC-86.
+**Summary:** PASS 87 (87 AC).
 
