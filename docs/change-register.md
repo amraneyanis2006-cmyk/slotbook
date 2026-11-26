@@ -29,6 +29,7 @@ evidence. Contract-level detail stays in the version history of each contract; t
 | D-04 | Sprint 2 implementation (E2E-15) | Esc on the Cancel slot / Edit time dialog lost the keyboard focus | Low (NFR-09) | Menu stays open while its dialog is open | #52 | E2E-15 |
 | D-05 | F-18 accessibility audit (E2E-20), 26 Nov | `color-contrast` (serious) on 13 routes: badge and secondary-button text `#1f6feb` gave 4.0:1 on `#e8effd` (WCAG AA needs 4.5:1) | Medium (NFR-09) | Accent `#1a5fcf` (5.1:1 on the badge, 5.9:1 on white) | #62 | E2E-20 |
 | D-06 | Full local Playwright run, 26 Nov | E2E-15 (18 page loads) took 30.1 s under full-suite load and hit the 30 s default timeout | Low (test-only) | Timeout raised to 60 s for this screen loop, like E2E-20/21 | #62 | E2E-15 |
+| D-07 | Local test of the durability script, 26 Nov | The deployed PERF-02 test (and the new script) sent the next request before reading the whole login answer; the session is stored before the response ends, so that request could get 401 (about 1 in 4 locally). The app is not affected: a browser reads the whole answer | Low (test-only) | Both read the login answer first (60/60 OK locally) before PERF-02 ran on production | `evidence/final-checks` | PERF-02 |
 
 ## 3. Sprint 1 Still Works
 

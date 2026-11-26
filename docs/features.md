@@ -57,7 +57,9 @@ Sprint 2 release: Issue #56 → PRs #73 (preparation) and #74 (`staging` → `ma
 | F-17 | Implemented, reviewed, merged | #61 → #77 (author Simeon, reviewer Yanis) | AC-79..AC-83 |
 | F-14 | Implemented, reviewed, merged | #59 → #78 (author Simeon, reviewer Yanis) | AC-72..AC-75 |
 | F-16 | Implemented, reviewed, merged | #60 → #79 (author Yanis, reviewer Simeon) | AC-76..AC-78 |
-| F-18 | Implemented, reviewed, merged | #62 → #80 (author Yanis, reviewer Simeon) | AC-84, AC-85, AC-87; AC-86 deployed part after the deploy |
+| F-18 | Implemented, reviewed, merged | #62 → #80 (author Yanis, reviewer Simeon) | AC-84..AC-87 (PERF-02 deployed on v1.0.0) |
 
 The whole suite ran together in the CI of #80 (run 45763486080: server 108, client 21, Playwright 22, release check
-PASS). Final release: Issue #63 → release PR `staging` → `main`, tag `v1.0.0`.
+PASS). Final release: Issue #63 → docs PR #81 and release PR #82 (`staging` → `main`), tag `v1.0.0` = `cdaf24f`,
+Deploy run 45765537520 (revision `slotbook-00013-8s5`); restart and redeploy runs 45767850166 and 45767974071
+(revision `slotbook-00015-kdj`, same commit).
