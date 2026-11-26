@@ -97,6 +97,7 @@ model BookingStatusChange {
   createdAt  DateTime       @db.Timestamptz(3)
 
   @@index([bookingId, createdAt])
+  @@index([toStatus, createdAt])
 }
 
 // Table used by connect-pg-simple (express-session store).
