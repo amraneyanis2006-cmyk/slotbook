@@ -6,6 +6,7 @@ import ReleaseFooter from './components/ReleaseFooter';
 import BookingDetailPage from './pages/BookingDetailPage';
 import BookSlotPage from './pages/BookSlotPage';
 import AccountsPage from './pages/AccountsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import MyBookingsPage from './pages/MyBookingsPage';
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/bookings" element={<MyBookingsPage />} />
           <Route path="/bookings/:reference" element={<BookingDetailPage />} />
           <Route path="/bookings/:reference/reschedule" element={<ReschedulePage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
         <Route element={<RequireRole role="STAFF"><AppShell /></RequireRole>}>
           <Route path="/staff/slots" element={<MySlotsPage />} />

@@ -40,6 +40,7 @@ model User {
   cancelledBookings Booking[]              @relation("CancelledBy")
   historyActions    BookingStatusChange[]
   templates         AvailabilityTemplate[]
+  notifications     Notification[]
 }
 
 model Service {
@@ -81,6 +82,7 @@ model Booking {
   cancelledById Int?
   cancelledBy   User?                 @relation("CancelledBy", fields: [cancelledById], references: [id])
   history       BookingStatusChange[]
+  notifications Notification[]
 
   @@index([customerId, status])
 }
@@ -134,4 +136,18 @@ model TemplateEntry {
   service    Service              @relation(fields: [serviceId], references: [id])
 
   @@unique([templateId, weekday, startTime])
+}
+
+// In-app notifications (F-16): written by historyService.recordStatusChange when a Staff member changes a booking.
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookingId Int
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  message   String    @db.VarChar(300)
+  createdAt DateTime  @db.Timestamptz(3)
+  readAt    DateTime? @db.Timestamptz(3)
+
+  @@index([userId, createdAt])
 }

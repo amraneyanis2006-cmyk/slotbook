@@ -20,6 +20,7 @@ import { staffScheduleRouter } from './routes/staffSchedule.js';
 import { staffServicesRouter } from './routes/staffServices.js';
 import { staffTemplatesRouter } from './routes/staffTemplates.js';
 import { staffUsersRouter } from './routes/staffUsers.js';
+import { notificationsRouter } from './routes/notifications.js';
 import { staffSlotsRouter } from './routes/staffSlots.js';
 import { testOnlyRouter } from './routes/testOnly.js';
 
@@ -59,6 +60,7 @@ export function createApp() {
   app.use('/api/slots', slotsRouter);
   app.use('/api/staff-members', staffMembersRouter);
   app.use('/api/bookings', bookingsRouter);
+  app.use('/api/notifications', notificationsRouter);
   if (process.env.NODE_ENV === 'test') app.use('/api/__test__', testOnlyRouter);
 
   app.use('/api', (_req, _res, next) => next(new AppError(404, 'NOT_FOUND', 'Not found.')));
