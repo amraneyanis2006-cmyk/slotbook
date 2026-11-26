@@ -1,0 +1,4 @@
+PERF-02 deployed (NFR-11, AC-86) — 2026-11-26T06:23:05.218Z, slotbook-mivepbjoza-as.a.run.app, commit cdaf24f7f63c1c9e60e67f746b251f0cc5fdc6de, revision slotbook-00013-8s5, node v26.7.0
+Sequential calls as cust.ploy@slotbook.test from the tester's machine (network included). Threshold: p95 < 500 ms.
+GET /api/slots/search (14 days)      n=30 min=73 median=79 p95=119 max=146 ms
+GET /api/slots/available (one day)   n=30 min=65 median=77 p95=162 max=188 ms

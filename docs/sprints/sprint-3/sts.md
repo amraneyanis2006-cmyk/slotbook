@@ -3,7 +3,7 @@
 Version 1.1 (2026-11-26; 1.0 of 2026-11-25 was written with the Sprint 3 contracts before any Sprint 3 code, Issue #57). Same
 conventions as Sprints 1 and 2. F-15 is implemented in Deliverable 2 (Issue #58); the other rows are the plan
 for Sprint 3. Results filled on 2026-11-26 from the CI run of each Sprint 3 PR (#77 F-17, #78 F-14, #79 F-16,
-#80 F-18); the whole suite ran together in the CI of #80 on staging `4131d77` (server 108, client 21, Playwright 22,
+#80 F-18; PERF-02 deployed part on v1.0.0 after the deploy); the whole suite ran together in the CI of #80 on staging `4131d77` (server 108, client 21, Playwright 22,
 release check PASS). Sprint 1 and Sprint 2 tests stay in the regression suite.
 
 | Test ID | AC | Level | Precondition / input | Expected result | File | Result |
@@ -27,7 +27,7 @@ release check PASS). Sprint 1 and Sprint 2 tests stay in the regression suite.
 | UI-15 / E2E-19 | AC-83 | UI / E2E | Deactivate dialog | Bookings named; Inactive badge; customer redirected to login | `client/tests/AccountsPage.test.tsx`, `e2e/sprint3-accounts.spec.ts` | Pass — PR #77, CI run 45762058513 |
 | E2E-20 | AC-84 | E2E | Every route, both roles | axe-core: 0 serious/critical | `e2e/a11y-audit.spec.ts` | Pass — PR #80, CI run 45763486080 |
 | E2E-21 | AC-85 | E2E | Sprint 3 routes at 3 widths | No horizontal scroll / clipped control | `e2e/sprint3-responsive.spec.ts` | Pass — PR #80, CI run 45763486080 |
-| PERF-02 | AC-86 | Perf | Release candidate + deployed URL | PERF-01 green; deployed p95 recorded | `server/tests/perf/perf.test.ts`, `server/tests/perf/deployed.perf.test.ts` | Partial — release-candidate part Pass (PERF-01 re-run on `d49db27`: p95 22.8 / 11.9 / 40.5 ms, `artifacts/sprint-3/perf/perf-d49db27.txt`); deployed part run after the v1.0.0 deploy |
+| PERF-02 | AC-86 | Perf | Release candidate + deployed URL | PERF-01 green; deployed p95 recorded | `server/tests/perf/perf.test.ts`, `server/tests/perf/deployed.perf.test.ts` | Pass — release candidate: PERF-01 re-run on `d49db27`, p95 22.8 / 11.9 / 40.5 ms (`artifacts/sprint-3/perf/perf-d49db27.txt`); deployed: v1.0.0 `cdaf24f`, revision `slotbook-00013-8s5`, 30 calls each, p95 119 ms (search) and 162 ms (available), network included (`artifacts/sprint-3/perf/perf-02-deployed-2026-11-26.txt`) |
 | MAN-03 | AC-87 | Script | Release commit | `scripts/release-check.sh` exits 0 (no skip/only, every AC has a test) | `scripts/release-check.sh` | Pass — PR #80, CI run 45763486080 |
 
 ## Earlier Tests Changed by Sprint 3
