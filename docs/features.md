@@ -48,3 +48,16 @@ NFR-13 is a release-check responsibility of every sprint (see `traceability.md`)
 
 Sprint 2 release: Issue #56 → PRs #73 (preparation) and #74 (`staging` → `main`), tag `v0.2.0-sprint2`, Deploy run
 45649617286. Owners above follow the agreed split; see `contributions.md` and `ai-use.md`.
+
+## Status at the Final Release (Sprint 3 merged into `staging` = `4131d77`)
+
+| ID | Status | Delivered in (Issue → PR) | Verification (all passed unless stated) |
+| :--- | :--- | :--- | :--- |
+| F-00 … F-13, F-15 | As above (accepted or released) | see the Deliverable 2 table | re-run in every Sprint 3 CI run |
+| F-17 | Implemented, reviewed, merged | #61 → #77 (author Simeon, reviewer Yanis) | AC-79..AC-83 |
+| F-14 | Implemented, reviewed, merged | #59 → #78 (author Simeon, reviewer Yanis) | AC-72..AC-75 |
+| F-16 | Implemented, reviewed, merged | #60 → #79 (author Yanis, reviewer Simeon) | AC-76..AC-78 |
+| F-18 | Implemented, reviewed, merged | #62 → #80 (author Yanis, reviewer Simeon) | AC-84, AC-85, AC-87; AC-86 deployed part after the deploy |
+
+The whole suite ran together in the CI of #80 (run 45763486080: server 108, client 21, Playwright 22, release check
+PASS). Final release: Issue #63 → release PR `staging` → `main`, tag `v1.0.0`.

@@ -13,6 +13,11 @@ evidence. Contract-level detail stays in the version history of each contract; t
 | S2-02 | 25 Nov | SRS A-05: a reschedule respects the 24 h window of BR-05 | Same rule as cancel + rebook | Yanis, reviewed by Simeon | #49, #54 | API-46 |
 | S2-03 | 25 Nov | F-10 1.1: backfill times never before `createdAt`; one backfill SQL file shared by the migration and the seed | Found while writing DB-06 | Yanis, reviewed in the #50 PR | #50 | DB-06 |
 | S2-04 | 25 Nov | `GET /api/bookings/:reference` and `GET /api/staff/schedule` gain fields (`history`, `canRecordOutcome`) | F-10, F-09 | Contracts 2.0 | #50, #53 | API-20, API-24 (STS Sprint 2 §7) |
+| S3-01 | 26 Nov | F-17 1.1: `activeBookingRefs` in the account list (the deactivate dialog names the bookings it cancels); BR-19 date formatted in Bangkok time | Found while implementing the dialog | Simeon (author), reviewed by Yanis in the #61 PR | #61 | API-57, UI-15, API-55 |
+| S3-02 | 26 Nov | F-18 1.1: the deployed part of PERF-02 is read-only (search and available); booking latency stays measured on the release candidate | 30 bookings in production would change the demo data and the dashboard figures | Yanis, reviewed by Simeon in the #62 PR | #62 | PERF-02 |
+| S3-03 | 26 Nov | Accent colour `#1f6feb` → `#1a5fcf` (all screens) | Contrast defect D-05 | Yanis, reviewed by Simeon in the #62 PR | #62 | E2E-20 |
+| S3-04 | 26 Nov | `scripts/release-check.sh` added as a CI step of `test-and-docker` | NFR-13 checked on every PR, not only at release | Yanis, reviewed by Simeon in the #62 PR | #62 | MAN-03 |
+| S3-05 | 26 Nov | Notifications written by `recordStatusChange` (the single history writer), so F-07, F-09 and F-17 notify without changing their code | One transaction for status, history and notification (F-16 §1 step 2) | Contract F-16 1.0 | #60 | API-53 |
 
 ## 2. Defects
 
@@ -22,6 +27,8 @@ evidence. Contract-level detail stays in the version history of each contract; t
 | D-02 | Lab 6 controlled exercise | The same defect reintroduced on purpose on `staging` to check that UAT finds it | — (exercise) | Reverted by PR #44 | PR #42 | as D-01 |
 | D-03 | Sprint 2 implementation | History label broke the strict Sprint 1 check E2E-05 | Low (test-only symptom) | One text node per history line | #50 | E2E-05, UI-06 |
 | D-04 | Sprint 2 implementation (E2E-15) | Esc on the Cancel slot / Edit time dialog lost the keyboard focus | Low (NFR-09) | Menu stays open while its dialog is open | #52 | E2E-15 |
+| D-05 | F-18 accessibility audit (E2E-20), 26 Nov | `color-contrast` (serious) on 13 routes: badge and secondary-button text `#1f6feb` gave 4.0:1 on `#e8effd` (WCAG AA needs 4.5:1) | Medium (NFR-09) | Accent `#1a5fcf` (5.1:1 on the badge, 5.9:1 on white) | #62 | E2E-20 |
+| D-06 | Full local Playwright run, 26 Nov | E2E-15 (18 page loads) took 30.1 s under full-suite load and hit the 30 s default timeout | Low (test-only) | Timeout raised to 60 s for this screen loop, like E2E-20/21 | #62 | E2E-15 |
 
 ## 3. Sprint 1 Still Works
 
