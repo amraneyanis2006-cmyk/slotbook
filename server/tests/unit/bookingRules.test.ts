@@ -94,3 +94,22 @@ describe('checkRescheduleTarget (F-08 §2)', () => {
   });
 });
 
+describe('suspendedUntil (F-17 §2, BR-19)', () => {
+  it('UNIT-18: third no-show within 30 days + 7 days while that is after now; only the last 30 days count; null otherwise', async () => {
+    const { suspendedUntil } = await import('../../src/rules/bookingRules.js');
+    const day = 24 * 60; // minutes
+    const ago = (minutes: number) => plus(-minutes);
+    // three in the last 30 days, third 2 days ago → suspended until third + 7 days
+    expect(suspendedUntil([ago(20 * day), ago(10 * day), ago(2 * day)], NOW)).toEqual(new Date(ago(2 * day).getTime() + 7 * day * 60_000));
+    expect(suspendedUntil([ago(2 * day), ago(20 * day), ago(10 * day)], NOW)).toEqual(new Date(ago(2 * day).getTime() + 7 * day * 60_000)); // order-free
+    expect(suspendedUntil([ago(10 * day), ago(2 * day)], NOW)).toBeNull(); // only two
+    expect(suspendedUntil([ago(30 * day), ago(10 * day), ago(2 * day)], NOW)).toBeNull(); // exactly 30 days ago is excluded
+    expect(suspendedUntil([ago(29 * day), ago(10 * day), ago(2 * day)], NOW)).not.toBeNull();
+    expect(suspendedUntil([ago(20 * day), ago(15 * day), ago(7 * day)], NOW)).toBeNull(); // 7 days over to the minute
+    expect(suspendedUntil([ago(20 * day), ago(15 * day), ago(7 * day - 1)], NOW)).toEqual(plus(1));
+    // four no-shows: the latest window of three gives the latest end
+    expect(suspendedUntil([ago(25 * day), ago(20 * day), ago(12 * day), ago(1 * day)], NOW)).toEqual(new Date(ago(1 * day).getTime() + 7 * day * 60_000));
+    expect(suspendedUntil([], NOW)).toBeNull();
+  });
+});
+

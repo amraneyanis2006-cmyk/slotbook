@@ -97,6 +97,9 @@ jobs:
         working-directory: client
         run: npx vitest run 2>&1 | tee ../ci-output/client-tests.txt
 
+      - name: Release check (MAN-03, no skipped/focused test, every AC has a test)
+        run: bash scripts/release-check.sh 2>&1 | tee ci-output/release-check.txt
+
       - name: Build server and client
         run: npm run build 2>&1 | tee ci-output/build.txt
 

@@ -6,7 +6,7 @@
 | Team | EN-036 "Y Que Fue" — Yanis Amrane (69540460041), Simeon Audouit (65540460046) |
 | Theme | 1 — Appointment and Scheduling System (Sprint 1 roles: Customer / Staff) |
 | Product | **SlotBook** |
-| Version | 1.4 (Deliverable 1 baseline + pre-review fixes + A-04 + CR-01 + Sprint 2 decisions) — history in §8 |
+| Version | 1.5 (Deliverable 1 baseline + pre-review fixes + A-04 + CR-01 + Sprint 2 decisions + final release) — history in §8 |
 
 ---
 
@@ -38,7 +38,8 @@ by the backend, and a reliable record of every booking.
 | *Course TA* (external) | Reviews the running system with seeded accounts. | Uses the documented local seed procedure. |
 
 Two roles exist in the database: `CUSTOMER` and `STAFF`. Account administration is done by seed in
-Sprint 1 (not required by the deliverable); a staff-side user overview is planned in Sprint 3.
+Sprint 1 (not required by the deliverable); since Sprint 3 Staff see the customer accounts and can deactivate and
+reactivate them (FR-22, F-17).
 
 ## 3. Product Scope
 
@@ -163,3 +164,4 @@ Sprint allocation is detailed in `features.md` and `traceability.md`.
 | 1.2 | 2026-11-10 | Simeon Audouit | A-04 added (BR-04 compares only against future bookings), decided by Yanis Amrane for Issue #8. |
 | 1.3 | 2026-11-25 | Yanis Amrane | CR-01 (Lab 7 maintenance change, Issue #45; TA/instructor approval requested 2026-11-25, recorded in the Issue before implementation): BR-05 cancellation cutoff 2 h → 24 h; exactly 24 h allowed. Reviewed by Simeon Audouit before implementation. |
 | 1.4 | 2026-11-25 | Yanis Amrane | Sprint 2 contracts (Issue #49): A-04 resolved, A-05 (reschedule respects BR-05), A-06 (shared service catalogue), D-07 (history table). No FR/BR/NFR wording changed. Reviewed by Simeon Audouit. |
+| 1.5 | 2026-11-26 | Yanis Amrane | Final release (Issue #63): §2 account administration now done by Staff (F-17). No FR/BR/NFR wording changed. Reviewed by Simeon Audouit in the release PR. |

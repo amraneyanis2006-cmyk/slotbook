@@ -5,7 +5,7 @@
 | Linked requirements | FR-22, BR-19, BR-12, BR-17, Q-03, BR-08, BR-09 |
 | Issue / owner / reviewer | Issue #61 — Simeon Audouit (author), Yanis Amrane (reviewer) |
 | Depends on | F-09 (NO_SHOW outcomes), F-10 (history) |
-| Contract version | 1.0 (2026-11-25) — history in §8 |
+| Contract version | 1.1 (2026-11-26) — history in §8 |
 
 ## 1. Behavior and Workflow
 
@@ -33,7 +33,7 @@ the third; return the latest end that is after `now`, else `null`.
 
 | Method and path | Request | Success | Errors |
 | :--- | :--- | :--- | :--- |
-| `GET /api/staff/users` | query `q` (optional) | `200 { "users": [{ id, name, email, isActive, suspendedUntil, activeBookings, noShows30d }] }` customers only, by name | 401, 403 |
+| `GET /api/staff/users` | query `q` (optional) | `200 { "users": [{ id, name, email, isActive, suspendedUntil, activeBookings, activeBookingRefs, noShows30d }] }` customers only, by name; `activeBookingRefs` = references of the active future bookings, used by the dialog of §4 | 401, 403 |
 | `POST /api/staff/users/:id/deactivate` | `{}` | `200 { "user": …, "cancelledBookings": ["BK-…"] }` | 401, 403, 404 (not a customer) |
 | `POST /api/staff/users/:id/reactivate` | `{}` | `200 { "user": … }` | 401, 403, 404 |
 | `POST /api/bookings`, `POST /api/bookings/:reference/reschedule` (changed) | — | — | adds 409 `BOOKING_SUSPENDED`, checked after BR-02/BR-01 and before BR-03/BR-04 |
@@ -68,3 +68,4 @@ already inactive account (200, nothing cancelled), a booking that started 10 min
 | Version | Date | Author | Change |
 | :--- | :--- | :--- | :--- |
 | 1.0 | 2026-11-25 | Yanis Amrane | Sprint 3 contract drafted for Simeon Audouit's Issue (Issue #57); reviewed by Simeon Audouit, the implementer. |
+| 1.1 | 2026-11-26 | Simeon Audouit | Issue #61: `activeBookingRefs` added to the list (the §4 dialog names the bookings to be cancelled); suspension date in the 409 message formatted as “Sat 22 Feb 2031, 10:00” (Asia/Bangkok). Found while implementing; reviewed in the #61 PR. |

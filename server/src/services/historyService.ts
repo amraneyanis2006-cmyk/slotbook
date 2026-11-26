@@ -1,6 +1,7 @@
 import type { BookingStatus, Prisma } from '@prisma/client';
 import { prisma } from '../db.js';
 import { isValidTransition, toHistoryView } from '../rules/historyRules.js';
+import { notificationFor } from '../rules/notificationRules.js';
 
 type Tx = Prisma.TransactionClient;
 export type StatusChange = {
@@ -14,6 +15,12 @@ export type StatusChange = {
 export async function recordStatusChange(tx: Tx, { bookingId, from, to, actorId, reason = null, at }: StatusChange) {
   if (!isValidTransition(from, to)) throw new Error(`Invalid booking status change ${from} -> ${to}`);
   await tx.bookingStatusChange.create({ data: { bookingId, fromStatus: from, toStatus: to, actorId, reason, createdAt: at } });
+  // F-16 §1 step 2: a Staff member's change notifies the customer in the same transaction.
+  const actor = await tx.user.findUniqueOrThrow({ where: { id: actorId }, select: { id: true, name: true, role: true } });
+  if (actor.role !== 'STAFF') return;
+  const booking = await tx.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { customerId: true, reference: true, slot: { select: { startAt: true } } } });
+  const note = notificationFor({ to, reason }, { ...booking, startAt: booking.slot.startAt }, actor);
+  if (note) await tx.notification.create({ data: { ...note, bookingId, createdAt: at } });
 }
 
 /** HistoryEntry[] of one booking, oldest first (F-10 §3). */

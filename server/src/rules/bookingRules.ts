@@ -43,6 +43,21 @@ export function canCustomerCancel(booking: { status: BookingStatus }, slot: { st
   return slot.startAt.getTime() - now.getTime() >= CANCEL_WINDOW_MIN * 60_000 ? null : 'CANCELLATION_WINDOW_CLOSED';
 }
 
+const DAY_MS = 24 * 3_600_000;
+/**
+ * BR-19 (F-17 §2): NO_SHOW times within (now − 30 days, now]; for each window of 3 consecutive ones the suspension
+ * ends 7 days after the third; returns the latest end that is after now, else null.
+ */
+export function suspendedUntil(noShowTimes: Date[], now: Date): Date | null {
+  const recent = noShowTimes.filter((t) => t.getTime() > now.getTime() - 30 * DAY_MS && t <= now).sort((a, b) => a.getTime() - b.getTime());
+  let end: Date | null = null;
+  for (let i = 2; i < recent.length; i++) {
+    const e = new Date(recent[i].getTime() + 7 * DAY_MS);
+    if (e > now && (!end || e > end)) end = e;
+  }
+  return end;
+}
+
 /** F-09 §2: BR-13 first (only BOOKED), then BR-15 (now ≥ start; exactly at the start is allowed). */
 export function canRecordOutcome(booking: { status: BookingStatus }, slot: { startAt: Date }, now: Date): null | 'BOOKING_NOT_ACTIVE' | 'OUTCOME_TOO_EARLY' {
   if (booking.status !== 'BOOKED') return 'BOOKING_NOT_ACTIVE';

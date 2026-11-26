@@ -44,7 +44,7 @@ beforeAll(async () => {
 afterAll(async () => {
   const root = fileURLToPath(new URL('../../../', import.meta.url));
   const commit = (() => { try { return execSync('git rev-parse --short HEAD', { cwd: root }).toString().trim(); } catch { return 'unknown'; } })();
-  const dir = `${root}artifacts/sprint-2/perf`;
+  const dir = `${root}artifacts/${process.env.SLOTBOOK_PERF_SPRINT ?? 'sprint-2'}/perf`; // PERF-02 re-run: SLOTBOOK_PERF_SPRINT=sprint-3
   mkdirSync(dir, { recursive: true });
   writeFileSync(`${dir}/perf-${commit}.txt`, [
     `PERF-01 (NFR-11, AC-66) — commit ${commit}, ${new Date().toISOString()}, node ${process.version}`,

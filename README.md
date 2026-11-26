@@ -71,7 +71,16 @@ The seed also creates 4 services (one inactive), slots at fixed times from 2 day
 npm test                    # server (Vitest + Supertest, resets and seeds slotbook_test) then client (Vitest + jsdom)
 npm run test:e2e            # Playwright; starts the API on the test database and the app itself
 npm run test:perf           # PERF-01 (NFR-11): seed ×10 in slotbook_test, p95 of search/available/book < 500 ms;
-                            # timings written to artifacts/sprint-2/perf/ (not part of npm test)
+                            # timings written to artifacts/sprint-2/perf/ (SLOTBOOK_PERF_SPRINT=sprint-3 → sprint-3/perf/)
+bash scripts/release-check.sh   # MAN-03 (NFR-13): no skipped/focused test, every AC of docs/traceability.md §6 has
+                                # a test found in its files (also a CI step)
+```
+
+PERF-02, deployed part (read-only: 30 calls each of search and available against the deployed URL; the demo password
+is read at run time from `~/.slotbook_pw`, `chmod 600`, and never printed; delete the file afterwards):
+
+```bash
+SLOTBOOK_PERF_URL=https://slotbook-mivepbjoza-as.a.run.app npm run test:perf:deployed --prefix server
 ```
 
 Ports 3000 and 5173 must be free before `npm run test:e2e` (stop `npm run dev` first). The suite includes
@@ -82,8 +91,13 @@ commit them only when you mean to replace the evidence, otherwise restore them w
 
 ## Known limitations
 
-- `npm audit` (2026-11-10) reports advisories that `npm audit fix` cannot fix without breaking upgrades
-  (`npm audit fix --force`), so they are not applied in Sprint 1:
+- Notifications are in-app only (F-16): no e-mail or SMS. Accounts come from the seed (or are added directly in the
+  database): there is no self-registration and no password reset screen.
+- The BR-19 suspension is checked when a customer books or reschedules: each no-show is notified, but no message
+  announces the suspension itself before the customer tries to book.
+- Template generation covers at most 31 days per run; generated slots are independent of their template afterwards.
+- `npm audit` (2026-11-10, unchanged on 2026-11-26) reports advisories that `npm audit fix` cannot fix without
+  breaking upgrades (`npm audit fix --force`), so they are not applied:
   - `vitest` and `tinypool` (**critical**) and `@vitest/mocker` (moderate), in `server/` and `client/`, fixed in
     vitest 5. They are development-only test tools and are not shipped with the app.
   - `zod` (**high**, `server/`, fixed in zod 4): memory exhaustion when validating oversized constrained

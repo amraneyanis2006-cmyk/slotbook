@@ -5,12 +5,15 @@ import AppShell from './components/AppShell';
 import ReleaseFooter from './components/ReleaseFooter';
 import BookingDetailPage from './pages/BookingDetailPage';
 import BookSlotPage from './pages/BookSlotPage';
+import AccountsPage from './pages/AccountsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import MySlotsPage from './pages/MySlotsPage';
 import ReschedulePage from './pages/ReschedulePage';
 import SchedulePage from './pages/SchedulePage';
+import TemplatesPage from './pages/TemplatesPage';
 import SearchPage from './pages/SearchPage';
 import ServicesPage from './pages/ServicesPage';
 import StaffBookingPage from './pages/StaffBookingPage';
@@ -26,6 +29,7 @@ export default function App() {
           <Route path="/bookings" element={<MyBookingsPage />} />
           <Route path="/bookings/:reference" element={<BookingDetailPage />} />
           <Route path="/bookings/:reference/reschedule" element={<ReschedulePage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
         <Route element={<RequireRole role="STAFF"><AppShell /></RequireRole>}>
           <Route path="/staff/slots" element={<MySlotsPage />} />
@@ -33,6 +37,8 @@ export default function App() {
           <Route path="/staff/bookings/:reference" element={<StaffBookingPage />} />
           <Route path="/staff/services" element={<ServicesPage />} />
           <Route path="/staff/dashboard" element={<DashboardPage />} />
+          <Route path="/staff/users" element={<AccountsPage />} />
+          <Route path="/staff/templates" element={<TemplatesPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

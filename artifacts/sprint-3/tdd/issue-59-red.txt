@@ -1,0 +1,119 @@
+# Issue:   #59
+# Branch:  feature/59-templates
+# Commit:  3d7afa0 (test(F-14): availability template tests, red (#59))
+# Date:    2026-11-26 00:20:45 +0700
+# Env:     Node v22.23.4, PostgreSQL 16 local slotbook_test (reset + seeded by server/tests/setup.ts), Chrome for Playwright
+
+===== $ cd server && npx vitest run tests/unit/templateRules.test.ts tests/api/templates.api.test.ts (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/server
+
+ ❯ tests/api/templates.api.test.ts (2 tests | 2 failed) 1075ms
+   × availability templates (F-14) > API-51: creates a template and generates 2 weeks: accepted slots in one transaction, skipped list with reasons; a second run creates nothing 22ms
+     → expected 404 to be 201 // Object.is equality
+   × availability templates (F-14) > API-52: another staff member's template → 404; Customer → 403; invalid bodies and ranges → 422 9ms
+     → Cannot read properties of undefined (reading 'id')
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/templates.api.test.ts [ tests/api/templates.api.test.ts ]
+TypeError: Cannot read properties of undefined (reading 'deleteMany')
+ ❯ tests/api/templates.api.test.ts:26:37
+     24| afterEach(unfreezeClock);
+     25| afterAll(async () => {
+     26|   await prisma.availabilityTemplate.deleteMany({ where: { staffId: ids…
+       |                                     ^
+     27|   await removeSlotsBetween(prisma, bkk('2031-04-01', '00:00'), bkk('20…
+     28|   await prisma.$disconnect();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/unit/templateRules.test.ts [ tests/unit/templateRules.test.ts ]
+Error: Cannot find module '../../src/rules/templateRules.js' imported from '/home/claude/wt/server/tests/unit/templateRules.test.ts'
+ ❯ tests/unit/templateRules.test.ts:2:1
+      1| import { describe, expect, it } from 'vitest';
+      2| import { planTemplateRun, validateTemplate, weekdayOf } from '../../sr…
+       | ^
+      3| 
+      4| const NOW = new Date('2031-04-07T10:00:00+07:00'); // Monday
+
+Caused by: Error: Failed to load url ../../src/rules/templateRules.js (resolved id: ../../src/rules/templateRules.js) in /home/claude/wt/server/tests/unit/templateRules.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../slotbook/server/node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/api/templates.api.test.ts > availability templates (F-14) > API-51: creates a template and generates 2 weeks: accepted slots in one transaction, skipped list with reasons; a second run creates nothing
+AssertionError: expected 404 to be 201 // Object.is equality
+
+- Expected
++ Received
+
+- 201
++ 404
+
+ ❯ tests/api/templates.api.test.ts:39:28
+     37|     await makeSlot(prisma, { staffId: ids.anan, serviceId: ids.advisin…
+     38|     const created = await agents.anan.post('/api/staff/templates').sen…
+     39|     expect(created.status).toBe(201);
+       |                            ^
+     40|     expect(created.body.template).toMatchObject({ name: 'Term weeks', …
+     41|       { weekday: 1, startTime: '09:00', service: { id: ids.advising, n…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/api/templates.api.test.ts > availability templates (F-14) > API-52: another staff member's template → 404; Customer → 403; invalid bodies and ranges → 422
+TypeError: Cannot read properties of undefined (reading 'id')
+ ❯ tests/api/templates.api.test.ts:66:92
+     64| 
+     65|   it('API-52: another staff member\'s template → 404; Customer → 403; …
+     66|     const id = (await agents.anan.post('/api/staff/templates').send(bo…
+       |                                                                                            ^
+     67|     for (const res of [await agents.mali.put(`/api/staff/templates/${i…
+     68|       await agents.mali.post(`/api/staff/templates/${id}/generate`).se…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed (2)
+   Start at  00:20:45
+   Duration  4.35s (transform 368ms, setup 0ms, collect 857ms, tests 1.08s, environment 0ms, prepare 139ms)
+
+
+===== $ cd client && npx vitest run tests/TemplatesPage.test.tsx (exit 1)
+
+ RUN  v3.2.7 /home/claude/wt/client
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/TemplatesPage.test.tsx [ tests/TemplatesPage.test.tsx ]
+Error: Failed to resolve import "../src/pages/TemplatesPage" from "tests/TemplatesPage.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/claude/wt/client/tests/TemplatesPage.test.tsx:5:26
+  4  |  import { MemoryRouter } from "react-router-dom";
+  5  |  import { afterEach, describe, expect, it, vi } from "vitest";
+  6  |  import TemplatesPage from "../src/pages/TemplatesPage";
+     |                             ^
+  7  |  const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  8  |  const advising = { id: 1, name: "Academic advising", durationMin: 30 };
+ ❯ TransformPluginContext._formatLog ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42846:41
+ ❯ TransformPluginContext.error ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42843:16
+ ❯ normalizeUrl ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40820:23
+ ❯ ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40939:37
+ ❯ TransformPluginContext.transform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:40866:7
+ ❯ EnvironmentPluginContainer.transform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:42641:18
+ ❯ loadAndTransform ../../slotbook/client/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:36053:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  00:20:51
+   Duration  814ms (transform 57ms, setup 139ms, collect 0ms, tests 0ms, environment 373ms, prepare 71ms)
+
+

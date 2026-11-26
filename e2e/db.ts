@@ -6,7 +6,7 @@ import { formatReference } from '../server/src/rules/bookingRules';
 // purpose; INDEX.md says so. @prisma/client lives in server/node_modules, so it is resolved from there.
 type Row = { id: number };
 type Client = {
-  user: { findUniqueOrThrow(args: object): Promise<Row> };
+  user: { findUniqueOrThrow(args: object): Promise<Row & { passwordHash: string }>; create(args: object): Promise<Row>; delete(args: object): Promise<Row> };
   service: { findUniqueOrThrow(args: object): Promise<Row> };
   slot: { create(args: object): Promise<Row>; delete(args: object): Promise<Row> };
   booking: { create(args: object): Promise<Row & { reference: string }>; delete(args: object): Promise<Row & { slotId: number }> };
@@ -42,3 +42,11 @@ export const deleteBooking = (reference: string) => withDb(async (prisma) => {
   const booking = await prisma.booking.delete({ where: { reference } });
   await prisma.slot.delete({ where: { id: booking.slotId } });
 });
+
+/** A throw-away customer with the seed password (copied hash of cust.ploy), for specs that deactivate an account (E2E-19). */
+export const createCustomer = (email: string, name: string) => withDb(async (prisma) => {
+  const { passwordHash } = await prisma.user.findUniqueOrThrow({ where: { email: 'cust.ploy@slotbook.test' } });
+  return (await prisma.user.create({ data: { email, name, role: 'CUSTOMER', passwordHash } })).id;
+});
+export const deleteUser = (email: string) => withDb(async (prisma) => { await prisma.user.delete({ where: { email } }); });
+

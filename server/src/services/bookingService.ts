@@ -1,11 +1,11 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../db.js';
 import { AppError } from '../errors.js';
-import { BOOKING_LEAD_MIN, BOOKING_RULE_MESSAGES, canCustomerCancel, canRecordOutcome, checkCustomerLimits, checkRescheduleTarget, formatReference, isBookable } from '../rules/bookingRules.js';
+import { BOOKING_LEAD_MIN, BOOKING_RULE_MESSAGES, canCustomerCancel, canRecordOutcome, checkCustomerLimits, checkRescheduleTarget, suspendedUntil, formatReference, isBookable } from '../rules/bookingRules.js';
 import { MAX_SEARCH_RESULTS, type SearchQuery } from '../rules/searchRules.js';
 import { now } from '../utils/clock.js';
 import { getHistory, recordStatusChange } from './historyService.js';
-import { addDays, bangkokDate, bangkokToUtc } from '../utils/time.js';
+import { addDays, bangkokDate, bangkokToUtc, formatBangkok } from '../utils/time.js';
 
 const SERVICE_SELECT = { select: { id: true, name: true, durationMin: true } } as const;
 const STAFF_SELECT = { select: { id: true, name: true } } as const;
@@ -40,6 +40,15 @@ export function listAvailable(date: string, serviceId?: number) {
     orderBy: [{ startAt: 'asc' }, { id: 'asc' }],
     select: SLOT_PUBLIC_SELECT,
   });
+}
+
+/** BR-19: the end of the customer's suspension computed from the NO_SHOW history rows of the last 30 days, or null. */
+export async function suspensionOf(db: Prisma.TransactionClient | typeof prisma, customerId: number, at: Date) {
+  const rows = await db.bookingStatusChange.findMany({
+    where: { toStatus: 'NO_SHOW', booking: { customerId }, createdAt: { gt: new Date(at.getTime() - 30 * 24 * 3_600_000), lte: at } },
+    select: { createdAt: true },
+  });
+  return suspendedUntil(rows.map((r) => r.createdAt), at);
 }
 
 /**
@@ -80,6 +89,10 @@ async function bookInTx(tx: Prisma.TransactionClient, customerId: number, slotId
   });
   if (isBookable(slot, at)) throw reject('SLOT_NOT_BOOKABLE');
   if (slot.bookings.length) throw reject('SLOT_ALREADY_BOOKED');
+
+  // BR-19 (F-17): after BR-02/BR-01, before BR-03/BR-04.
+  const until = await suspensionOf(tx, customerId, at);
+  if (until) throw new AppError(409, 'BOOKING_SUSPENDED', `Your booking access is suspended until ${formatBangkok(until)} after 3 missed appointments.`);
 
   // Not yet ended (A-04): a booking that has started still counts for BR-04, not for BR-03 (checkCustomerLimits).
   const notEnded = await tx.booking.findMany({

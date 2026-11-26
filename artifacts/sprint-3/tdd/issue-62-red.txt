@@ -1,0 +1,92 @@
+# Issue:   #62
+# Branch:  feature/62-hardening
+# Commit:  a02fb0e (test(F-18): accessibility audit, Sprint 3 responsive, deployed perf and release check, red (#62))
+# Date:    2026-11-26 00:24:06 +0700
+# Env:     Node v22.23.4, PostgreSQL 16 local slotbook_test (reset + seeded by server/tests/setup.ts), Chrome for Playwright
+
+===== $ npx playwright test --config pw-local.config.ts --reporter=line e2e/a11y-audit.spec.ts e2e/sprint3-responsive.spec.ts (exit 1)
+
+Running 2 tests using 1 worker
+
+[1/2] e2e/a11y-audit.spec.ts:13:1 › E2E-20: axe-core finds no serious or critical violation on the login page and every customer and staff route
+  1) e2e/a11y-audit.spec.ts:13:1 › E2E-20: axe-core finds no serious or critical violation on the login page and every customer and staff route 
+
+    Error: /book: color-contrast (serious) .badge
+    /search: color-contrast (serious) .badge
+    /bookings: color-contrast (serious) .user > .badge, .status-booked
+    /bookings/BK-2026-000003: color-contrast (serious) .user > .badge, .status-booked
+    /bookings/BK-2026-000003/reschedule: color-contrast (serious) .badge, .secondary:nth-child(1), .day-picker > .secondary:nth-child(3)
+    /notifications: color-contrast (serious) .badge
+    /staff/slots: color-contrast (serious) .user > .badge, tr:nth-child(4) > td[data-label="Status"] > .status-booked.badge, tr:nth-child(11) > td[data-label="Status"] > .status-booked.badge
+    /staff/templates: color-contrast (serious) .badge
+    /staff/schedule: color-contrast (serious) .user > .badge, button:nth-child(1), .day-picker > button:nth-child(3)
+    /staff/services: color-contrast (serious) .user > .badge
+    /staff/dashboard: color-contrast (serious) .badge
+    /staff/users: color-contrast (serious) .user > .badge
+    /staff/bookings/BK-2026-000003: color-contrast (serious) .user > .badge, .status-booked
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 15
+
+    - Array []
+    + Array [
+    +   "/book: color-contrast (serious) .badge",
+    +   "/search: color-contrast (serious) .badge",
+    +   "/bookings: color-contrast (serious) .user > .badge, .status-booked",
+    +   "/bookings/BK-2026-000003: color-contrast (serious) .user > .badge, .status-booked",
+    +   "/bookings/BK-2026-000003/reschedule: color-contrast (serious) .badge, .secondary:nth-child(1), .day-picker > .secondary:nth-child(3)",
+    +   "/notifications: color-contrast (serious) .badge",
+    +   "/staff/slots: color-contrast (serious) .user > .badge, tr:nth-child(4) > td[data-label=\"Status\"] > .status-booked.badge, tr:nth-child(11) > td[data-label=\"Status\"] > .status-booked.badge",
+    +   "/staff/templates: color-contrast (serious) .badge",
+    +   "/staff/schedule: color-contrast (serious) .user > .badge, button:nth-child(1), .day-picker > button:nth-child(3)",
+    +   "/staff/services: color-contrast (serious) .user > .badge",
+    +   "/staff/dashboard: color-contrast (serious) .badge",
+    +   "/staff/users: color-contrast (serious) .user > .badge",
+    +   "/staff/bookings/BK-2026-000003: color-contrast (serious) .user > .badge, .status-booked",
+    + ]
+
+      31 |     }
+      32 |   }
+    > 33 |   expect(blocking, blocking.join('\n')).toEqual([]); // every route is audited before failing, so all findings are listed
+         |                                         ^
+      34 | });
+      35 |
+        at /home/claude/wt/e2e/a11y-audit.spec.ts:33:41
+
+    Error Context: test-results/a11y-audit-E2E-20-axe-core-41ca6-ry-customer-and-staff-route/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/a11y-audit-E2E-20-axe-core-41ca6-ry-customer-and-staff-route/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/a11y-audit-E2E-20-axe-core-41ca6-ry-customer-and-staff-route/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[2/2] e2e/sprint3-responsive.spec.ts:13:1 › E2E-21: Sprint 3 screens have no horizontal scroll or clipped control at 320, 768 and 1280 px; the Deactivate dialog traps focus and closes with Esc
+  1 failed
+    e2e/a11y-audit.spec.ts:13:1 › E2E-20: axe-core finds no serious or critical violation on the login page and every customer and staff route 
+  1 passed (43.5s)
+
+===== $ bash scripts/release-check.sh (exit 1)
+# Release check (MAN-03)
+
+Commit `a02fb0e`, 2026-11-25T17:24:51.753Z, command `bash scripts/release-check.sh`.
+
+- Test files scanned: 75; files with a skipped or focused test: 0.
+- ACs in traceability §6: 87; ACs without a test ID or with a test ID not found: 6.
+
+| AC | Test IDs | Not found |
+| :--- | :--- | :--- |
+| AC-25 | UNIT-05, API-22, E2E-05 | UNIT-05, API-22 |
+| AC-26 | UNIT-05, API-23 | UNIT-05, API-23 |
+| AC-75 | (none) | — |
+| AC-78 | (none) | — |
+| AC-83 | (none) | — |
+| AC-86 | PERF-02 | PERF-02 |
+
+Result: **FAIL**
+
