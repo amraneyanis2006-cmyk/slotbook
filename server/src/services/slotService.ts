@@ -6,7 +6,7 @@ import { recordStatusChange } from './historyService.js';
 import { now } from '../utils/clock.js';
 import { addDays, bangkokToUtc } from '../utils/time.js';
 
-const SLOT_STAFF_INCLUDE = {
+export const SLOT_STAFF_INCLUDE = {
   service: { select: { id: true, name: true, durationMin: true } },
   bookings: { where: { status: 'BOOKED' }, take: 1, select: { reference: true, status: true, customer: { select: { id: true, name: true } } } },
 } satisfies Prisma.SlotInclude;
