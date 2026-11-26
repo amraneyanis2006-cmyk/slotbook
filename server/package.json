@@ -10,7 +10,8 @@
     "prisma": "node --env-file=../.env node_modules/prisma/build/index.js",
     "postinstall": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
-    "test:perf": "SLOTBOOK_PERF=1 vitest run"
+    "test:perf": "SLOTBOOK_PERF=1 vitest run",
+    "test:perf:deployed": "SLOTBOOK_PERF=1 vitest run"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
