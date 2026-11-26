@@ -21,6 +21,7 @@ describe('NFR-11 deployed latency (F-18)', () => {
     const password = readFileSync(process.env.SLOTBOOK_PW_FILE ?? `${homedir()}/.slotbook_pw`, 'utf8').trim();
     const login = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
     expect(login.status).toBe(200);
+    await login.json(); // the session is stored before the response ends: read it whole before the next call
     const cookie = (login.headers.getSetCookie?.() ?? []).map((c) => c.split(';')[0]).join('; ');
     const version = await (await fetch(`${base}/api/version`)).json() as { commit?: string; revision?: string };
 
